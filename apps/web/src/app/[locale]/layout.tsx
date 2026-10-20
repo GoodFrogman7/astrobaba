@@ -1,12 +1,14 @@
-import { BRAND_NAME, DISCLAIMER, type Locale } from "@astro/shared";
 import type { Metadata } from "next";
 import { hasLocale, NextIntlClientProvider } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Noto_Sans, Noto_Sans_Devanagari } from "next/font/google";
 import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
-import { Link } from "@/i18n/navigation";
+import { JsonLd } from "@/components/JsonLd";
+import { SiteFooter } from "@/components/SiteFooter";
+import { SiteHeader } from "@/components/SiteHeader";
 import { routing } from "@/i18n/routing";
+import { organizationLd } from "@/lib/seo";
 import { SITE_URL } from "@/site";
 import "../globals.css";
 
@@ -34,8 +36,6 @@ export default async function LocaleLayout({
   if (!hasLocale(routing.locales, locale)) notFound();
   setRequestLocale(locale);
   const t = await getTranslations({ locale, namespace: "nav" });
-  const tf = await getTranslations({ locale, namespace: "footer" });
-  const other: Locale = locale === "en" ? "hi" : "en";
 
   return (
     <html lang={locale} className={`${latin.variable} ${devanagari.variable}`}>
@@ -50,30 +50,10 @@ export default async function LocaleLayout({
           >
             {t("skipToContent")}
           </a>
-          <header className="border-b border-border">
-            <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-4">
-              <Link href="/" className="text-lg font-semibold tracking-tight">
-                {BRAND_NAME}
-              </Link>
-              <nav aria-label={t("language")}>
-                <Link
-                  href="/"
-                  locale={other}
-                  hrefLang={other}
-                  className="rounded-sm border border-border px-3 py-1.5 text-sm hover:bg-surface"
-                >
-                  {t("switchTo")}
-                </Link>
-              </nav>
-            </div>
-          </header>
+          <JsonLd data={organizationLd()} />
+          <SiteHeader locale={locale} />
           {children}
-          <footer className="mt-16 border-t border-border">
-            <div className="mx-auto max-w-5xl space-y-2 px-4 py-8 text-sm text-muted">
-              <p data-testid="disclaimer">{DISCLAIMER[locale]}</p>
-              <p>{tf("rights", { year: new Date().getUTCFullYear(), brand: BRAND_NAME })}</p>
-            </div>
-          </footer>
+          <SiteFooter locale={locale} />
         </NextIntlClientProvider>
       </body>
     </html>

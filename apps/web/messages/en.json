@@ -6,7 +6,13 @@
   "nav": {
     "skipToContent": "Skip to content",
     "language": "Language",
-    "switchTo": "हिन्दी"
+    "switchTo": "हिन्दी",
+    "main": "Main",
+    "kundli": "Kundli",
+    "matching": "Kundli matching",
+    "panchang": "Panchang",
+    "horoscope": "Horoscope",
+    "tools": "Free tools"
   },
   "home": {
     "eyebrow": "Today in India · {date}",
@@ -36,6 +42,17 @@
     "status": "We are building this now. The tools above open soon."
   },
   "footer": {
-    "rights": "© {year} {brand}"
+    "rights": "© {year} {brand}",
+    "dataCredits": "Astronomical calculations: Swiss Ephemeris (AGPL). Place data © GeoNames, CC-BY 4.0."
+  },
+  "shell": {
+    "home": "Home",
+    "breadcrumbs": "Breadcrumb",
+    "faq": "Frequently asked questions"
+  },
+  "cta": {
+    "heading": "Want to talk it through with an astrologer?",
+    "body": "The calculations above are exact, but what they mean for your life is a conversation. We are bringing vetted astrologers onto the platform, each checked for identity, qualifications and experience.",
+    "status": "Consultations open soon. No astrologer profiles are shown until they are real and verified."
   }
 }
