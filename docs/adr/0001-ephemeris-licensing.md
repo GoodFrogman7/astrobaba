@@ -1,6 +1,6 @@
 # ADR-0001: Ephemeris engine and licensing
 
-- Status: **Proposed**. Needs the founder's call (PLAN.md §9.2) before Phase 1 code is merged.
+- Status: **Accepted: option C** (founder decision, 2026-10-20). Conditions below.
 - Date: 2026-10-20
 
 ## Context
@@ -47,7 +47,7 @@ Things worth knowing either way:
 | Lock-in | Licence covers unlimited projects | None | Must keep the astro service public |
 | Legal risk | Low (contract) | Lowest | Medium (AGPL scope) |
 
-## Proposal
+## Original proposal (before the founder's decision)
 
 **Option A**, with two safeguards that keep B open:
 
@@ -61,13 +61,39 @@ Until the licence is signed, Swiss Ephemeris runs **only in local development an
 a deployment reachable by users. If the founder prefers not to pay, choose **B**. The interface
 and the fixtures stay the same; Phase 1 grows by the ayanamsha/node work and their validation.
 
+## Decision: option C
+
+The founder chose **C**: Swiss Ephemeris under AGPL-3.0, with the astro engine published as
+open source. How the code keeps that boundary:
+
+- Only `services/astro` may import `swisseph`. A test (`test_only_the_astro_service_imports_swiss_ephemeris`)
+  fails the build if any other code does. The eval harness may use it only through the engine.
+- `services/astro` is licensed `AGPL-3.0-only` (`services/astro/LICENSE`, `pyproject.toml`).
+  Every other service talks to it over HTTP only; nothing links to it.
+- `/v1/source` and `/v1/meta` link to the engine's source, as AGPL §13 requires for users who
+  interact with it over a network.
+- The ephemeris files are fetched with pinned SHA-256 checksums (`data/fetch_ephemeris.py`).
+
+**Conditions before any public deployment** (tracked in COMPLIANCE.md):
+
+1. A lawyer confirms that keeping the AGPL engine as a separate network service is enough for
+   the rest of the platform to stay outside the AGPL's "corresponding source".
+2. The engine's source is reachable at the `/v1/source` URL. Today that points at this repo;
+   if the repo stays private, publish `services/astro` (with `data/astro` and the data
+   scripts) as a public repository and update `SOURCE_URL`.
+3. Any change to the engine is published there before it is deployed.
+
+If the lawyer says no, switch to option A (buy the licence; no code change) or B (implement the
+`EphemerisBackend` interface on Skyfield + JPL; the golden fixtures stay the same).
+
 ## Decisions this ADR also fixes
 
 - Default ayanamsha: **Lahiri** (Swiss Ephemeris `SE_SIDM_LAHIRI`), configurable per request.
 - Default node: **mean node** for Rahu/Ketu, true node available as an option. Most Indian
   almanacs use mean; record the choice in every API response.
-- Ephemeris files: Swiss Ephemeris `.se1` files (1800–2400 CE) shipped in the astro image;
-  Moshier fallback disabled in production so precision never silently drops.
+- Ephemeris files: Swiss Ephemeris `sepl_18.se1` and `semo_18.se1` (1800–2399 CE) shipped in
+  the astro image. The Moshier fallback is refused unless `ALLOW_MOSHIER` is set outside
+  production, so precision never silently drops: a call that falls back raises an error.
 - Every response carries `engine`, `engine_version`, `ayanamsha`, `node_type` so results are
   reproducible.
 

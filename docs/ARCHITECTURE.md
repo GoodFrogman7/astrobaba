@@ -1,6 +1,6 @@
 # Architecture
 
-Living document. Updated at the end of every phase (PLAN.md §0.6). Current state: **Phase 0**.
+Living document. Updated at the end of every phase (PLAN.md §0.6). Current state: **Phase 1**.
 
 ## Repo
 
@@ -12,15 +12,20 @@ apps/
 services/
   api/            FastAPI core API: health, flags; auth/marketplace/wallet/sessions later
     migrations/   Alembic (baseline: citext, pg_trgm)
-  astro/          FastAPI astro engine: skeleton; calculations in Phase 1
+  astro/          FastAPI astro engine (AGPL-3.0-only, ADR-0001): kundli, panchang, dasha,
+                  doshas, matching, transits, city search
   worker/         Background jobs entry point (queue chosen with the first job)
 packages/
   shared/         TS: brand, locales, disclaimer, IST date source, design tokens,
                   feature flags, analytics schema. JSON parts are read by Python too.
-data/             Static tables and import scripts (Phase 1+)
+data/
+  astro/          Jyotish tables (names en/hi, lords, panchang lists, dasha, dosha rules,
+                  Ashtakoota); each cites its source, some await astrologer review
+  fetch_ephemeris.py, import_cities.py   `make data`: Swiss Ephemeris files, GeoNames index
 docs/             PLAN, ARCHITECTURE, COMPLIANCE, adr/, reference/
 evals/
-  astro/          Golden fixtures (proposal; Phase 1 fills and enforces)
+  astro/          Golden fixtures (inputs), reference/ (JPL Horizons + USNO raw data with
+                  provenance), test_golden.py (hard gate in CI)
   safety/         Chat safety fixtures (Phase 7)
 .github/workflows/ci.yml
 docker-compose.yml, Makefile, pyproject.toml (uv workspace), pnpm-workspace.yaml
@@ -36,7 +41,35 @@ browser ──> web :3000 (Next.js SSR) ──> api :8000 (FastAPI) ──> Post
 - `make dev` builds and starts all five containers and waits for health checks.
 - API: `/healthz` (process up), `/readyz` (Postgres + Redis reachable, 503 otherwise),
   `/v1/flags`. Migrations run on container start in dev; a release step in production.
-- Astro engine: `/healthz`, `/v1/meta`. No calculations until Phase 1.
+- Astro engine (stateless, no database):
+
+  | Endpoint | What |
+  |---|---|
+  | `POST /v1/kundli` | Sidereal grahas, lagna, whole-sign houses; unknown-time handling |
+  | `POST /v1/dasha` | Vimshottari mahadashas + antardashas, current period |
+  | `POST /v1/doshas` | Mangal, Kaal Sarp, Sade Sati (blocked in production until tables are reviewed) |
+  | `POST /v1/match` | Ashtakoota /36, per-koota detail, nadi/bhakoot dosha, both Mangal doshas (same gate) |
+  | `GET /v1/panchang?lat&lon&tz&date` | Sunrise/sunset, tithi, nakshatra, yoga, karana spans, Rahu Kaal |
+  | `GET /v1/transits?at` | Positions at an instant, optional houses from natal Moon |
+  | `GET /v1/cities?q` | Place search (Latin + Devanagari), returns lat/lon/IANA tz; GeoNames attribution |
+  | `GET /v1/meta`, `/v1/source` | Engine, conventions, table review status, AGPL source link |
+
+  Birth details travel in POST bodies, never in URLs. Every response carries a `settings` block
+  (engine, version, ayanamsha, node, house system) and instants as UTC plus the IANA zone.
+  Conventions: [ADR-0004](adr/0004-astro-conventions.md).
+
+### Astro engine internals
+
+```
+main.py (routes) ─> kundli / panchang / dasha / doshas / matching / transits
+                         │                       │
+                         ▼                       ▼
+              ephemeris.EphemerisBackend    tables (data/astro/*.json)
+                 └─ SwissEphemeris (pyswisseph, per-thread state, Moshier fallback refused)
+```
+
+Transition times (tithi, nakshatra, yoga, karana ends) are solved by Newton iteration on the
+angle and its rate from the ephemeris, to well under a second.
 
 ## Cross-cutting rules in code
 
@@ -48,12 +81,15 @@ browser ──> web :3000 (Next.js SSR) ──> api :8000 (FastAPI) ──> Post
 | No chat content in analytics (§6) | `packages/shared/analytics/events.json`: closed property types, no free text; validators in TS and Python share `cases.json` |
 | Secrets only in `.env`; redact PII in logs (§0.5) | `.gitignore`, `SecretStr` settings, `services/api/src/astro_api/logs.py`, CI hygiene job |
 | Feature flags | `packages/shared/flags/flags.json` + `FLAG_<NAME>` env; `/v1/flags` |
+| Astro values only from the engine or static tables (§0.4, §6) | `services/astro`; `data/astro/*.json` with sources; golden fixtures from JPL/USNO |
+| AGPL boundary (ADR-0001) | Only `services/astro` imports `swisseph` (test enforced); `/v1/source` |
+| Unreviewed Jyotish tables never public | `/v1/match`, `/v1/doshas` return 503 `tables_not_reviewed` in staging/production |
 | Own design system (§0.1) | `packages/shared/src/tokens.ts` + `tokens/tokens.css`, AA contrast tested |
 
 ## Checks
 
-`make ci` = lint (ESLint, Prettier, Ruff) → types (tsc, mypy strict) → unit tests (Vitest,
-pytest) → integration tests (Postgres + Redis, migrations up/down/up) → web production build →
+`make ci` = lint (ESLint, Prettier, Ruff) → types (tsc, mypy strict) → `make data` → unit and
+property tests (Vitest, pytest + Hypothesis) → golden astro fixtures → integration tests (Postgres + Redis, migrations up/down/up) → web production build →
 SSR smoke test of `/` and `/hi`. GitHub Actions runs the same, plus a Docker build of every
 image and a repo-hygiene job (no `.env` files or live keys committed).
 

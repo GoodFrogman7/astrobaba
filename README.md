@@ -4,7 +4,7 @@ Two-sided astrology marketplace (users ↔ vetted astrologers) fed by free, accu
 tools. Plan: [docs/PLAN.md](docs/PLAN.md). Architecture: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 Decisions: [docs/adr/](docs/adr/README.md).
 
-Status: **Phase 0 (foundations)** complete. Phase 1 (astro engine) waits on ADR-0001.
+Status: **Phase 1 (astro engine)** complete: see `services/astro` and `evals/astro`. Phase 2 (free-tools SEO funnel) waits on the go-ahead.
 
 ## Quick start
 
@@ -20,7 +20,7 @@ make down
 Working on code (Node 22 + pnpm 10, Python 3.13 + uv):
 
 ```sh
-make setup      # pnpm install + uv sync, creates .env from .env.example
+make setup      # pnpm install + uv sync + `make data` (ephemeris files, city index); creates .env
 make ci         # lint, types, unit + integration tests, build, SSR smoke (needs `make dev` running for Postgres/Redis)
 make help       # every target
 ```
