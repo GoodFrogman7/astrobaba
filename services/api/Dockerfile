@@ -1,7 +1,8 @@
 # Build from the repo root: docker build -f services/api/Dockerfile .
 FROM python:3.13-slim AS base
 RUN pip install --no-cache-dir "uv>=0.11,<0.12"
-ENV UV_COMPILE_BYTECODE=1 UV_LINK_MODE=copy PYTHONUNBUFFERED=1 SHARED_DIR=/app/packages/shared
+ENV UV_COMPILE_BYTECODE=1 UV_LINK_MODE=copy PYTHONUNBUFFERED=1 SHARED_DIR=/app/packages/shared \
+    DATA_DIR=/app/data/astro
 WORKDIR /app
 
 COPY pyproject.toml uv.lock ./
@@ -12,6 +13,8 @@ RUN uv sync --frozen --no-dev --package astro-api --no-install-workspace
 
 COPY packages/shared/flags packages/shared/flags
 COPY packages/shared/analytics packages/shared/analytics
+# Planet and sign names for the horoscope text validator (admin edits are re-validated).
+COPY data/astro data/astro
 COPY services/api services/api
 RUN uv sync --frozen --no-dev --package astro-api
 

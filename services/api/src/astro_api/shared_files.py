@@ -18,3 +18,16 @@ def shared_dir() -> Path:
         if candidate.is_dir():
             return candidate
     raise FileNotFoundError("packages/shared not found; set SHARED_DIR")
+
+
+@cache
+def data_dir() -> Path:
+    """data/astro (Jyotish tables). Set DATA_DIR in containers."""
+    env = os.environ.get("DATA_DIR")
+    if env:
+        return Path(env)
+    for parent in Path(__file__).resolve().parents:
+        candidate = parent / "data" / "astro"
+        if candidate.is_dir():
+            return candidate
+    raise FileNotFoundError("data/astro not found; set DATA_DIR")

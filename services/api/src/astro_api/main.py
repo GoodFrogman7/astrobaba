@@ -8,13 +8,16 @@ from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from redis.asyncio import Redis
-from sqlalchemy.ext.asyncio import create_async_engine
 
-from astro_api import __version__
-from astro_api.config import Settings, get_settings
+from astro_api import __version__, auth, horoscopes, kundlis
+from astro_api.config import Settings, check_production_settings, get_settings
+from astro_api.db import make_engine, make_sessionmaker
+from astro_api.errors import ApiError, api_error_handler
 from astro_api.flags import all_flags
 from astro_api.health import check_dependencies
 from astro_api.logs import configure_logging
+from astro_api.otp import OtpService
+from astro_api.sms import make_sms_sender
 
 log = logging.getLogger("astro_api")
 
@@ -22,13 +25,16 @@ log = logging.getLogger("astro_api")
 def create_app(settings: Settings | None = None) -> FastAPI:
     settings = settings or get_settings()
     configure_logging(settings.log_level)
+    check_production_settings(settings)
+    sms = make_sms_sender(settings)
 
     @asynccontextmanager
     async def lifespan(app: FastAPI) -> AsyncIterator[None]:
-        app.state.engine = create_async_engine(
-            settings.database_url.get_secret_value(), pool_pre_ping=True, pool_size=5
-        )
+        app.state.settings = settings
+        app.state.engine = make_engine(settings.database_url.get_secret_value())
+        app.state.sessionmaker = make_sessionmaker(app.state.engine)
         app.state.redis = Redis.from_url(settings.redis_url.get_secret_value())
+        app.state.otp = OtpService(app.state.redis, settings, sms)
         log.info("api started", extra={"env": settings.app_env, "version": __version__})
         try:
             yield
@@ -43,6 +49,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         docs_url=None if settings.app_env == "production" else "/docs",
         redoc_url=None,
     )
+    app.add_exception_handler(ApiError, api_error_handler)
+    for router in (auth.router, kundlis.router, horoscopes.public, horoscopes.admin):
+        app.include_router(router)
     app.add_middleware(
         CORSMiddleware,
         allow_origins=settings.cors_origins,

@@ -3,6 +3,7 @@ import asyncio
 from alembic import context
 from sqlalchemy.ext.asyncio import create_async_engine
 
+from astro_api import models  # noqa: F401 - registers tables on Base.metadata
 from astro_api.config import get_settings
 from astro_api.db import Base
 
