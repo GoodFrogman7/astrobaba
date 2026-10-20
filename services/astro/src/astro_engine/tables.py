@@ -70,3 +70,9 @@ def get_tables() -> Tables:
         matching=_load("matching.json"),
         nakshatra_review=nak["review"]["status"],
     )
+
+
+@cache
+def get_table(name: str) -> dict[str, Any]:
+    """Any data/astro table by file stem (e.g. "choghadiya"), loaded once."""
+    return _load(f"{name}.json")

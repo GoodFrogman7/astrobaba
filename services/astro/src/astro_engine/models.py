@@ -58,3 +58,9 @@ class MatchRequest(BaseModel):
     groom: Birth
     bride: Birth
     ayanamsha: Ayanamsha = "lahiri"
+
+
+class NumerologyRequest(BaseModel):
+    name: str | None = Field(default=None, max_length=120)
+    date_of_birth: dt.date | None = Field(default=None, ge=MIN_DATE, le=MAX_DATE)
+    system: Literal["chaldean", "pythagorean"] = "chaldean"

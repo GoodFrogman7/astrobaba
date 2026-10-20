@@ -118,6 +118,41 @@ def test_ephemeris_files_used_from_every_worker_thread() -> None:
 def test_dates_outside_ephemeris_range_rejected() -> None:
     old = {**BIRTH, "date": "1750-01-01"}
     assert client.post("/v1/kundli", json={"birth": old}).status_code == 422
-    params = {"lat": 28.6, "lon": 77.2, "tz": "Asia/Kolkata", "date": "2450-01-01"}
+    params: dict[str, str | float] = {
+        "lat": 28.6,
+        "lon": 77.2,
+        "tz": "Asia/Kolkata",
+        "date": "2450-01-01",
+    }
     assert client.get("/v1/panchang", params=params).status_code == 422
     assert client.get("/v1/transits", params={"at": "1700-01-01T00:00:00Z"}).status_code == 422
+
+
+def test_numerology_endpoint() -> None:
+    r = client.post("/v1/numerology", json={"name": "Asha Verma", "date_of_birth": "1990-07-29"})
+    assert r.status_code == 200 and r.json()["mulank"]["number"] == 2
+    bad = client.post("/v1/numerology", json={"name": "आशा"})
+    assert bad.status_code == 422 and bad.json()["detail"]["code"] == "latin_letters_required"
+    empty = client.post("/v1/numerology", json={})
+    assert empty.json()["detail"]["code"] == "nothing_to_compute"
+
+
+def test_horoscope_facts_endpoint() -> None:
+    params = {"sign": "aries", "period": "daily", "date": "2026-10-21"}
+    body = client.get("/v1/horoscope/facts", params=params).json()
+    assert body["window"]["start_ist_date"] == "2026-10-21"
+    assert body["settings"]["rules_review_status"] == "needs_astrologer_review"
+    assert (
+        client.get("/v1/horoscope/facts", params={**params, "sign": "ophiuchus"}).status_code == 422
+    )
+
+
+def test_panchang_includes_choghadiya_and_hora() -> None:
+    params: dict[str, str | float] = {
+        "lat": 28.6139,
+        "lon": 77.209,
+        "tz": "Asia/Kolkata",
+        "date": "2025-10-20",
+    }
+    p = client.get("/v1/panchang", params=params).json()
+    assert len(p["choghadiya"]["day"]) == 8 and len(p["hora"]) == 24

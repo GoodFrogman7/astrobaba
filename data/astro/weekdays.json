@@ -1,55 +1,62 @@
 {
-  "$comment": "ISO weekday order (Monday=1). rahu_kaal_part: which of the 8 equal parts of daytime (sunrise to sunset) is Rahu Kaal.",
-  "source": "Standard Rahu Kaal weekday table.",
+  "$comment": "ISO weekday order (Monday=1). lord: the planet ruling the weekday. rahu_kaal_part: which of the 8 equal parts of daytime (sunrise to sunset) is Rahu Kaal.",
+  "source": "Standard weekday lords and Rahu Kaal weekday table.",
   "weekdays": [
     {
       "iso": 1,
       "id": "monday",
       "en": "Monday",
       "hi": "सोमवार",
-      "rahu_kaal_part": 2
+      "rahu_kaal_part": 2,
+      "lord": "moon"
     },
     {
       "iso": 2,
       "id": "tuesday",
       "en": "Tuesday",
       "hi": "मंगलवार",
-      "rahu_kaal_part": 7
+      "rahu_kaal_part": 7,
+      "lord": "mars"
     },
     {
       "iso": 3,
       "id": "wednesday",
       "en": "Wednesday",
       "hi": "बुधवार",
-      "rahu_kaal_part": 5
+      "rahu_kaal_part": 5,
+      "lord": "mercury"
     },
     {
       "iso": 4,
       "id": "thursday",
       "en": "Thursday",
       "hi": "गुरुवार",
-      "rahu_kaal_part": 6
+      "rahu_kaal_part": 6,
+      "lord": "jupiter"
     },
     {
       "iso": 5,
       "id": "friday",
       "en": "Friday",
       "hi": "शुक्रवार",
-      "rahu_kaal_part": 4
+      "rahu_kaal_part": 4,
+      "lord": "venus"
     },
     {
       "iso": 6,
       "id": "saturday",
       "en": "Saturday",
       "hi": "शनिवार",
-      "rahu_kaal_part": 3
+      "rahu_kaal_part": 3,
+      "lord": "saturn"
     },
     {
       "iso": 7,
       "id": "sunday",
       "en": "Sunday",
       "hi": "रविवार",
-      "rahu_kaal_part": 8
+      "rahu_kaal_part": 8,
+      "lord": "sun"
     }
   ]
 }

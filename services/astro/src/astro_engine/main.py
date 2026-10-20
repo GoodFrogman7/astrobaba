@@ -5,7 +5,7 @@ This service uses Swiss Ephemeris under AGPL-3.0 (ADR-0001); /v1/source links to
 """
 
 from datetime import UTC, date, datetime, time
-from typing import Annotated, Any
+from typing import Annotated, Any, Literal
 
 from fastapi import FastAPI, HTTPException, Query, Request
 from fastapi.responses import JSONResponse
@@ -16,6 +16,7 @@ from astro_engine.config import get_settings
 from astro_engine.dasha import vimshottari
 from astro_engine.doshas import kaal_sarp, mangal_dosha, sade_sati
 from astro_engine.ephemeris import Ayanamsha, EphemerisError, NodeType, get_backend
+from astro_engine.horoscope import Period, compute_horoscope_facts
 from astro_engine.kundli import compute_kundli
 from astro_engine.matching import ashtakoota
 from astro_engine.models import (
@@ -26,7 +27,9 @@ from astro_engine.models import (
     DoshaRequest,
     KundliRequest,
     MatchRequest,
+    NumerologyRequest,
 )
+from astro_engine.numerology import compute_numerology
 from astro_engine.panchang import compute_panchang
 from astro_engine.tables import get_tables
 from astro_engine.timeutil import TimeInputError, resolve_local
@@ -179,6 +182,29 @@ def match(req: MatchRequest) -> dict[str, Any]:
         "mangal_dosha": mangal_dosha(bride),
     }
     return result
+
+
+@app.post("/v1/numerology", tags=["numerology"])
+def numerology(req: NumerologyRequest) -> dict[str, Any]:
+    return compute_numerology(req.name, req.date_of_birth, req.system)
+
+
+SignId = Literal[
+    "aries", "taurus", "gemini", "cancer", "leo", "virgo",
+    "libra", "scorpio", "sagittarius", "capricorn", "aquarius", "pisces",
+]  # fmt: skip
+
+
+@app.get("/v1/horoscope/facts", tags=["almanac"])
+def horoscope_facts(
+    sign: SignId,
+    period: Period,
+    date_: Annotated[date, Query(alias="date", ge=MIN_DATE, le=MAX_DATE)],
+    ayanamsha: Ayanamsha = "lahiri",
+) -> dict[str, Any]:
+    """Facts behind a horoscope: transits from the Moon sign and rule-based area scores.
+    `date` is an IST calendar date; the window is that day, its ISO week or its month."""
+    return compute_horoscope_facts(get_backend(), sign, period, date_, ayanamsha)
 
 
 @app.get("/v1/panchang", tags=["almanac"])

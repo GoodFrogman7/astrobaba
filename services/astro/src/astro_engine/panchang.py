@@ -6,7 +6,7 @@ from datetime import date
 from typing import Any
 
 from astro_engine.ephemeris import Ayanamsha, EphemerisBackend, norm
-from astro_engine.tables import KARANA_SPAN, NAKSHATRA_SPAN, TITHI_SPAN, get_tables
+from astro_engine.tables import KARANA_SPAN, NAKSHATRA_SPAN, TITHI_SPAN, get_table, get_tables
 from astro_engine.timeutil import (
     TimeInputError,
     iso_z,
@@ -61,6 +61,57 @@ def _named(s: dict[str, Any], entry: dict[str, Any]) -> dict[str, Any]:
         "kshaya": s["kshaya"],
         "vriddhi": s["vriddhi"],
     }
+
+
+def _even_parts(start: float, end: float, n: int) -> list[tuple[float, float]]:
+    step = (end - start) / n
+    return [(start + i * step, start + (i + 1) * step) for i in range(n)]
+
+
+def choghadiya(
+    weekday_lord: str, sunrise: float, sunset: float, next_sunrise: float
+) -> dict[str, Any]:
+    """Day and night choghadiya (data/astro/choghadiya.json)."""
+    table = get_table("choghadiya")
+    cycle: list[dict[str, Any]] = table["cycle"]
+    n = len(cycle)
+    day_start = next(i for i, c in enumerate(cycle) if c["planet"] == weekday_lord)
+    night_start = (day_start + table["night_start_offset"]) % n
+
+    def run(first: int, step: int, start: float, end: float) -> list[dict[str, Any]]:
+        out = []
+        for k, (a, b) in enumerate(_even_parts(start, end, table["parts"])):
+            c = cycle[(first + k * step) % n]
+            out.append({**c, "start": iso_z(utc_from_jd(a)), "end": iso_z(utc_from_jd(b))})
+        return out
+
+    return {
+        "day": run(day_start, table["day_step"], sunrise, sunset),
+        "night": run(night_start, table["night_step"], sunset, next_sunrise),
+    }
+
+
+def horas(
+    weekday_lord: str, sunrise: float, sunset: float, next_sunrise: float
+) -> list[dict[str, Any]]:
+    """24 planetary hours from sunrise (data/astro/hora.json)."""
+    table = get_table("hora")
+    order: list[str] = table["chaldean_order"]
+    first = order.index(weekday_lord)
+    k = table["parts_per_half"]
+    spans_ = [("day", a, b) for a, b in _even_parts(sunrise, sunset, k)] + [
+        ("night", a, b) for a, b in _even_parts(sunset, next_sunrise, k)
+    ]
+    return [
+        {
+            "number": i + 1,
+            "lord": order[(first + i) % len(order)],
+            "part": part,
+            "start": iso_z(utc_from_jd(a)),
+            "end": iso_z(utc_from_jd(b)),
+        }
+        for i, (part, a, b) in enumerate(spans_)
+    ]
 
 
 def compute_panchang(
@@ -139,8 +190,9 @@ def compute_panchang(
             "ayanamsha": ayanamsha,
             "sunrise_convention": "upper limb, standard refraction (1013.25 hPa, 15 °C), sea level",
             "day": "sunrise to next sunrise",
+            "tables_review_status": {"choghadiya": get_table("choghadiya")["review"]["status"]},
         },
-        "vaara": {k: weekday[k] for k in ("iso", "id", "en", "hi")},
+        "vaara": {k: weekday[k] for k in ("iso", "id", "en", "hi", "lord")},
         "sunrise": iso_z(utc_from_jd(sunrise)),
         "sunset": iso_z(utc_from_jd(sunset)),
         "next_sunrise": iso_z(utc_from_jd(next_sunrise)),
@@ -155,6 +207,8 @@ def compute_panchang(
         "nakshatras": nakshatras,
         "yogas": yogas,
         "karanas": karanas,
+        "choghadiya": choghadiya(weekday["lord"], sunrise, sunset, next_sunrise),
+        "hora": horas(weekday["lord"], sunrise, sunset, next_sunrise),
         "sun_at_sunrise": placement(sun.sidereal),
         "moon_at_sunrise": placement(moon.sidereal),
     }
