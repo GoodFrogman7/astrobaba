@@ -1,5 +1,6 @@
 pnpm-lock.yaml
 .next
+.next-*
 node_modules
 coverage
 docs
