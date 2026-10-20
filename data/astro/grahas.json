@@ -1,0 +1,60 @@
+{
+  "$comment": "The nine grahas in traditional order (Sun to Ketu).",
+  "source": "Standard Jyotish nomenclature.",
+  "grahas": [
+    {
+      "id": "sun",
+      "en": "Sun",
+      "hi": "सूर्य",
+      "sa": "Surya"
+    },
+    {
+      "id": "moon",
+      "en": "Moon",
+      "hi": "चन्द्र",
+      "sa": "Chandra"
+    },
+    {
+      "id": "mars",
+      "en": "Mars",
+      "hi": "मंगल",
+      "sa": "Mangal"
+    },
+    {
+      "id": "mercury",
+      "en": "Mercury",
+      "hi": "बुध",
+      "sa": "Budh"
+    },
+    {
+      "id": "jupiter",
+      "en": "Jupiter",
+      "hi": "गुरु",
+      "sa": "Guru"
+    },
+    {
+      "id": "venus",
+      "en": "Venus",
+      "hi": "शुक्र",
+      "sa": "Shukra"
+    },
+    {
+      "id": "saturn",
+      "en": "Saturn",
+      "hi": "शनि",
+      "sa": "Shani"
+    },
+    {
+      "id": "rahu",
+      "en": "Rahu",
+      "hi": "राहु",
+      "sa": "Rahu"
+    },
+    {
+      "id": "ketu",
+      "en": "Ketu",
+      "hi": "केतु",
+      "sa": "Ketu"
+    }
+  ]
+}

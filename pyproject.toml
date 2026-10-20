@@ -28,6 +28,10 @@ dev = [
   "httpx>=0.27",
   "ruff>=0.7",
   "mypy>=1.13",
+  # eval harness only: independent ascendant check and fixture files
+  "skyfield>=1.49",
+  "pyyaml>=6.0",
+  "types-pyyaml>=6.0",
 ]
 
 [tool.ruff]
@@ -49,6 +53,10 @@ python_version = "3.12"
 strict = true
 plugins = ["pydantic.mypy"]
 files = ["services/api/src", "services/astro/src", "services/worker/src", "services/api/tests", "services/astro/tests", "services/worker/tests"]
+
+[[tool.mypy.overrides]]
+module = ["swisseph", "geonamescache", "skyfield.*"]
+ignore_missing_imports = true
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"

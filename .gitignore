@@ -24,6 +24,7 @@ __pycache__/
 
 # data downloads (import scripts fetch these)
 data/raw/
+data/build/
 
 # os / editors
 .DS_Store

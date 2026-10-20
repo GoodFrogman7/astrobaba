@@ -1,0 +1,55 @@
+{
+  "$comment": "ISO weekday order (Monday=1). rahu_kaal_part: which of the 8 equal parts of daytime (sunrise to sunset) is Rahu Kaal.",
+  "source": "Standard Rahu Kaal weekday table.",
+  "weekdays": [
+    {
+      "iso": 1,
+      "id": "monday",
+      "en": "Monday",
+      "hi": "सोमवार",
+      "rahu_kaal_part": 2
+    },
+    {
+      "iso": 2,
+      "id": "tuesday",
+      "en": "Tuesday",
+      "hi": "मंगलवार",
+      "rahu_kaal_part": 7
+    },
+    {
+      "iso": 3,
+      "id": "wednesday",
+      "en": "Wednesday",
+      "hi": "बुधवार",
+      "rahu_kaal_part": 5
+    },
+    {
+      "iso": 4,
+      "id": "thursday",
+      "en": "Thursday",
+      "hi": "गुरुवार",
+      "rahu_kaal_part": 6
+    },
+    {
+      "iso": 5,
+      "id": "friday",
+      "en": "Friday",
+      "hi": "शुक्रवार",
+      "rahu_kaal_part": 4
+    },
+    {
+      "iso": 6,
+      "id": "saturday",
+      "en": "Saturday",
+      "hi": "शनिवार",
+      "rahu_kaal_part": 3
+    },
+    {
+      "iso": 7,
+      "id": "sunday",
+      "en": "Sunday",
+      "hi": "रविवार",
+      "rahu_kaal_part": 8
+    }
+  ]
+}

@@ -3,11 +3,16 @@ name = "astro-engine"
 version = "0.0.0"
 description = "Astro engine: kundli, panchang, dasha, doshas, matching, transits (Phase 1)."
 requires-python = ">=3.12"
+license = "AGPL-3.0-only"
 dependencies = [
   "fastapi>=0.115",
   "uvicorn[standard]>=0.32",
   "pydantic>=2.9",
   "pydantic-settings>=2.6",
+  # AGPL-3.0 (ADR-0001 option C): only this service may import it.
+  "pyswisseph>=2.10.3",
+  # MIT library bundling GeoNames cities (CC-BY 4.0); fallback source for the city index.
+  "geonamescache>=2.0",
 ]
 
 [build-system]

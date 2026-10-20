@@ -1,0 +1,75 @@
+{
+  "$comment": "Naisargika (natural) planetary relationships, used by Graha Maitri. Any planet not listed as friend or enemy is neutral.",
+  "source": "Brihat Parashara Hora Shastra, natural relationships.",
+  "relations": {
+    "sun": {
+      "friends": [
+        "moon",
+        "mars",
+        "jupiter"
+      ],
+      "enemies": [
+        "venus",
+        "saturn"
+      ]
+    },
+    "moon": {
+      "friends": [
+        "sun",
+        "mercury"
+      ],
+      "enemies": []
+    },
+    "mars": {
+      "friends": [
+        "sun",
+        "moon",
+        "jupiter"
+      ],
+      "enemies": [
+        "mercury"
+      ]
+    },
+    "mercury": {
+      "friends": [
+        "sun",
+        "venus"
+      ],
+      "enemies": [
+        "moon"
+      ]
+    },
+    "jupiter": {
+      "friends": [
+        "sun",
+        "moon",
+        "mars"
+      ],
+      "enemies": [
+        "mercury",
+        "venus"
+      ]
+    },
+    "venus": {
+      "friends": [
+        "mercury",
+        "saturn"
+      ],
+      "enemies": [
+        "sun",
+        "moon"
+      ]
+    },
+    "saturn": {
+      "friends": [
+        "mercury",
+        "venus"
+      ],
+      "enemies": [
+        "sun",
+        "moon",
+        "mars"
+      ]
+    }
+  }
+}
