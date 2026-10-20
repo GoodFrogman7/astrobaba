@@ -1,4 +1,5 @@
 from datetime import date, time
+from typing import Any
 
 from astro_engine.ephemeris import get_backend
 from astro_engine.kundli import compute_kundli
@@ -7,7 +8,9 @@ from astro_engine.timeutil import resolve_local
 DELHI = (28.6139, 77.2090)
 
 
-def _chart(d: date, t: time | None, tz: str = "Asia/Kolkata", lat: float = DELHI[0], lon: float = DELHI[1]):  # type: ignore[no-untyped-def]
+def _chart(
+    d: date, t: time | None, tz: str = "Asia/Kolkata", lat: float = DELHI[0], lon: float = DELHI[1]
+) -> dict[str, Any]:
     return compute_kundli(get_backend(), resolve_local(d, t, tz), lat, lon)
 
 

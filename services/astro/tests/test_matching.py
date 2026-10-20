@@ -13,7 +13,14 @@ moons = st.floats(0, 360, exclude_max=True)
 def test_total_is_sum_of_eight_kootas_and_within_maxima(groom: float, bride: float) -> None:
     r = ashtakoota(placement(groom), placement(bride))
     assert [k["koota"] for k in r["kootas"]] == [
-        "varna", "vashya", "tara", "yoni", "graha_maitri", "gana", "bhakoot", "nadi",
+        "varna",
+        "vashya",
+        "tara",
+        "yoni",
+        "graha_maitri",
+        "gana",
+        "bhakoot",
+        "nadi",
     ]
     assert [k["max"] for k in r["kootas"]] == [1, 2, 3, 4, 5, 6, 7, 8]
     assert r["total"] == sum(k["points"] for k in r["kootas"])
@@ -37,8 +44,15 @@ def test_tables_shape() -> None:
     assert all(yoni[i][j] == yoni[j][i] for i in range(14) for j in range(14))
     assert all(yoni[i][i] == 4 for i in range(14))
     a = m["yoni"]["animals"]
-    for x, y in [("horse", "buffalo"), ("elephant", "lion"), ("sheep", "monkey"), ("serpent", "mongoose"),
-                 ("dog", "deer"), ("cat", "rat"), ("cow", "tiger")]:
+    for x, y in [
+        ("horse", "buffalo"),
+        ("elephant", "lion"),
+        ("sheep", "monkey"),
+        ("serpent", "mongoose"),
+        ("dog", "deer"),
+        ("cat", "rat"),
+        ("cow", "tiger"),
+    ]:
         assert yoni[a.index(x)][a.index(y)] == 0, (x, y)
     assert len(m["vashya"]["matrix"]) == 5 and len(m["gana"]["matrix"]) == 3
     assert sum(m["maxima"].values()) == 36

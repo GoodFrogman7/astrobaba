@@ -52,6 +52,9 @@ known-first-party = ["astro_api", "astro_engine", "astro_worker"]
 python_version = "3.12"
 strict = true
 plugins = ["pydantic.mypy"]
+# Each service has a tests/conftest.py; name modules by path so they do not collide.
+explicit_package_bases = true
+mypy_path = ["services/api/src", "services/astro/src", "services/worker/src"]
 files = ["services/api/src", "services/astro/src", "services/worker/src", "services/api/tests", "services/astro/tests", "services/worker/tests"]
 
 [[tool.mypy.overrides]]

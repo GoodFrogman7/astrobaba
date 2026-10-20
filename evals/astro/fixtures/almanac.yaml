@@ -56,8 +56,8 @@ rows:
   - { id: A24, date: "2026-02-15", place: chennai, why: "Maha Shivaratri (Chaturdashi)", expected: {} }
 
   # Adhik (intercalary) month 2026: first and last day as published.
-  - { id: A25, date: "2026-05-17", place: delhi, why: "start of adhik masa (verify)", expected: {} }
-  - { id: A26, date: "2026-06-15", place: delhi, why: "end of adhik masa (verify)", expected: {} }
+  - { id: A25, date: "2026-05-17", place: delhi, why: "start of adhik masa (masa naming is Phase 2; checks sunrise, tithi, nakshatra here)", expected: {} }
+  - { id: A26, date: "2026-06-15", place: delhi, why: "end of adhik masa (masa naming is Phase 2; checks sunrise, tithi, nakshatra here)", expected: {} }
 
   # Today/tomorrow pair: the teardown's "tomorrow shows today" bug.
   - { id: A27, date: "2026-10-20", place: delhi, why: "today page", expected: {} }
@@ -70,10 +70,11 @@ rows:
   - { id: A30, date: "2025-03-30", place: london, why: "DST starts; sunrise in BST", expected: {} }
   - { id: A31, date: "2025-06-21", place: london, why: "high-latitude long day", expected: {} }
 
-  # Selected by criterion from the reference almanac while transcribing (exact dates fixed then).
-  - { id: A32, criterion: "a kshaya tithi (no sunrise falls inside it), Delhi, 2025", expected: {} }
-  - { id: A33, criterion: "a vriddhi tithi (spans two sunrises), Delhi, 2025", expected: {} }
-  - { id: A34, criterion: "a nakshatra ending within 5 minutes after sunrise, any India place, 2026", expected: {} }
+  # Edge cases. Dates were found by scanning with the engine (it only picks where to look);
+  # the expected values still come from the independent references.
+  - { id: A32, date: "2025-02-02", place: delhi, why: "kshaya tithi: one tithi starts and ends between two sunrises", expected: {} }
+  - { id: A33, date: "2025-02-18", place: delhi, why: "vriddhi tithi: the sunrise tithi is still current at the next sunrise", expected: {} }
+  - { id: A34, date: "2026-11-21", place: delhi, why: "nakshatra ends within 5 minutes after sunrise", expected: {} }
 
 # Static rule, not an engine output: the 8 equal parts of daytime and the Rahu Kaal part per weekday.
 rahu_kaal_slot_by_weekday: { Mon: 2, Tue: 7, Wed: 5, Thu: 6, Fri: 4, Sat: 3, Sun: 8 }

@@ -2,7 +2,7 @@
 SHELL := /bin/bash
 COMPOSE := docker compose
 
-.PHONY: help setup env dev down logs ps lint typecheck test test-integration build smoke ci fmt migrate clean
+.PHONY: help setup env data dev down logs ps lint typecheck test test-integration build smoke ci fmt migrate clean
 
 help: ## List targets
 	@grep -hE '^[a-z-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-18s %s\n", $$1, $$2}'
@@ -10,9 +10,18 @@ help: ## List targets
 env: ## Create .env from .env.example if missing
 	@test -f .env || (cp .env.example .env && echo "created .env from .env.example")
 
-setup: env ## Install JS and Python dependencies
+setup: env ## Install JS and Python dependencies, fetch engine data
 	pnpm install --frozen-lockfile
 	uv sync --frozen
+	$(MAKE) data
+
+data: data/raw/ephe/sepl_18.se1 data/build/cities.tsv.gz ## Swiss Ephemeris files + city index
+
+data/raw/ephe/sepl_18.se1: data/fetch_ephemeris.py
+	uv run python data/fetch_ephemeris.py
+
+data/build/cities.tsv.gz: data/import_cities.py
+	uv run python data/import_cities.py
 
 dev: env ## Boot Postgres, Redis, API, astro engine and web in Docker, wait until healthy
 	$(COMPOSE) up --build --detach --wait
@@ -42,7 +51,7 @@ typecheck: ## Type-check TS and Python
 	pnpm typecheck
 	uv run mypy
 
-test: ## Unit tests (no services needed)
+test: data ## Unit tests (no services needed)
 	pnpm test
 	uv run pytest
 

@@ -59,6 +59,10 @@ jobs:
           python-version-file: .python-version
           enable-cache: true
       - run: uv sync --frozen
+      - name: Engine data (Swiss Ephemeris files, GeoNames city index)
+        run: |
+          uv run python data/fetch_ephemeris.py
+          uv run python data/import_cities.py --source geonames
       - run: uv run ruff check .
       - run: uv run ruff format --check .
       - run: uv run mypy

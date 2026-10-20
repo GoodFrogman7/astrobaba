@@ -56,4 +56,10 @@ def test_invalid_offset() -> None:
 def test_julian_day_round_trip() -> None:
     r = resolve_local(date(1955, 11, 2), time(4, 30), "Asia/Kolkata")
     assert utc_from_jd(jd_from_utc(r.utc)) == r.utc
-    assert abs(jd_from_utc(resolve_local(date(2000, 1, 1), time(17, 30), "Asia/Kolkata").utc) - 2451545.0) < 1e-9
+    assert (
+        abs(
+            jd_from_utc(resolve_local(date(2000, 1, 1), time(17, 30), "Asia/Kolkata").utc)
+            - 2451545.0
+        )
+        < 1e-9
+    )

@@ -50,7 +50,9 @@ def test_sade_sati_periods_are_saturn_in_the_three_signs() -> None:
     when = resolve_local(date(2000, 1, 1), time(12, 0), "Asia/Kolkata")
     k = compute_kundli(get_backend(), when, 28.6139, 77.2090)
     moon = next(g for g in k["grahas"] if g["id"] == "moon")
-    r = sade_sati(get_backend(), moon["sign_index"], when.utc, datetime(2012, 1, 1, tzinfo=UTC), years=60)
+    r = sade_sati(
+        get_backend(), moon["sign_index"], when.utc, datetime(2012, 1, 1, tzinfo=UTC), years=60
+    )
     assert r["active"]
     allowed = {(moon["sign_index"] + o) % 12 for o in (-1, 0, 1)}
     for c in r["cycles"]:

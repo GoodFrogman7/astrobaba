@@ -1,4 +1,5 @@
 from datetime import UTC, datetime, timedelta
+from itertools import pairwise
 
 from hypothesis import given, settings
 from hypothesis import strategies as st
@@ -20,7 +21,7 @@ def test_periods_are_contiguous_and_sum_to_120_years(moon: float) -> None:
     assert len(mds) == 9
     total_days = (ts(mds[-1]["end"]) - ts(mds[0]["start"])).total_seconds() / 86400
     assert abs(total_days - 120 * 365.25) < 1
-    for a, b in zip(mds, mds[1:], strict=False):
+    for a, b in pairwise(mds):
         assert abs((ts(b["start"]) - ts(a["end"])).total_seconds()) <= 1
     for md in mds:
         ads = md["antardashas"]
