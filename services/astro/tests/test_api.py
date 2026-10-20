@@ -113,3 +113,11 @@ def test_ephemeris_files_used_from_every_worker_thread() -> None:
     with ThreadPoolExecutor(8) as pool:
         values = set(pool.map(sun, range(32)))
     assert len(values) == 1
+
+
+def test_dates_outside_ephemeris_range_rejected() -> None:
+    old = {**BIRTH, "date": "1750-01-01"}
+    assert client.post("/v1/kundli", json={"birth": old}).status_code == 422
+    params = {"lat": 28.6, "lon": 77.2, "tz": "Asia/Kolkata", "date": "2450-01-01"}
+    assert client.get("/v1/panchang", params=params).status_code == 422
+    assert client.get("/v1/transits", params={"at": "1700-01-01T00:00:00Z"}).status_code == 422

@@ -5,6 +5,10 @@ from pydantic import BaseModel, Field
 
 from astro_engine.ephemeris import Ayanamsha, NodeType
 
+# The shipped Swiss Ephemeris files (sepl_18, semo_18) cover 1800-2399 CE.
+MIN_DATE = dt.date(1800, 1, 2)
+MAX_DATE = dt.date(2399, 12, 30)
+
 
 class Place(BaseModel):
     lat: float = Field(ge=-90, le=90)
@@ -15,7 +19,7 @@ class Place(BaseModel):
 class Birth(BaseModel):
     """Birth details. Sent in POST bodies, never in URLs, because they are personal data."""
 
-    date: dt.date
+    date: dt.date = Field(ge=MIN_DATE, le=MAX_DATE)
     time: dt.time | None = Field(default=None, description="Local clock time; null if unknown")
     place: Place
     utc_offset: str | None = Field(

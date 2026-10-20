@@ -18,7 +18,15 @@ from astro_engine.doshas import kaal_sarp, mangal_dosha, sade_sati
 from astro_engine.ephemeris import Ayanamsha, EphemerisError, NodeType, get_backend
 from astro_engine.kundli import compute_kundli
 from astro_engine.matching import ashtakoota
-from astro_engine.models import Birth, DashaRequest, DoshaRequest, KundliRequest, MatchRequest
+from astro_engine.models import (
+    MAX_DATE,
+    MIN_DATE,
+    Birth,
+    DashaRequest,
+    DoshaRequest,
+    KundliRequest,
+    MatchRequest,
+)
 from astro_engine.panchang import compute_panchang
 from astro_engine.tables import get_tables
 from astro_engine.timeutil import TimeInputError, resolve_local
@@ -178,7 +186,7 @@ def panchang(
     lat: Annotated[float, Query(ge=-90, le=90)],
     lon: Annotated[float, Query(ge=-180, le=180)],
     tz: Annotated[str, Query(min_length=1, max_length=64)],
-    date_: Annotated[date, Query(alias="date")],
+    date_: Annotated[date, Query(alias="date", ge=MIN_DATE, le=MAX_DATE)],
     ayanamsha: Ayanamsha = "lahiri",
 ) -> dict[str, Any]:
     return compute_panchang(get_backend(), date_, lat, lon, tz, ayanamsha)
@@ -195,5 +203,9 @@ def transits(
     if when.tzinfo is None:
         raise HTTPException(
             422, {"code": "naive_datetime", "message": "`at` needs a UTC offset or Z"}
+        )
+    if not MIN_DATE <= when.astimezone(UTC).date() <= MAX_DATE:
+        raise HTTPException(
+            422, {"code": "date_out_of_range", "message": "Supported dates: 1800-2399 CE"}
         )
     return compute_transits(get_backend(), when.astimezone(UTC), ayanamsha, node, moon_sign_index)
