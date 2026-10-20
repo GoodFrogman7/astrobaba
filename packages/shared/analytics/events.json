@@ -1,0 +1,106 @@
+{
+  "$comment": "Product analytics events. Shared by web (TS) and API (Python). Property types are closed on purpose: there is no free-text string type, so chat content, names, birth details or contact data cannot be sent. Add an event here before emitting it anywhere.",
+  "version": 1,
+  "propertyTypes": {
+    "enum": "one of the listed values",
+    "integer": "non-negative integer, max 10^12",
+    "boolean": "true or false",
+    "slug": "^[a-z0-9-]{1,80}$",
+    "path": "URL path only, no query string or fragment: ^/[a-z0-9/_-]{0,199}$"
+  },
+  "envelope": {
+    "event": "event name from this file",
+    "ts": "ISO-8601 UTC instant",
+    "anonymous_id": "random id from a first-party cookie",
+    "user_id": "opaque internal id or null; never phone or email",
+    "locale": "en | hi",
+    "schema_version": "integer, equals version"
+  },
+  "events": {
+    "page_view": {
+      "description": "A page was rendered to a visitor.",
+      "properties": {
+        "path": { "type": "path", "required": true }
+      }
+    },
+    "tool_started": {
+      "description": "Visitor began filling a free tool form.",
+      "properties": {
+        "tool": { "type": "slug", "required": true }
+      }
+    },
+    "tool_completed": {
+      "description": "A free tool returned a result.",
+      "properties": {
+        "tool": { "type": "slug", "required": true },
+        "unknown_birth_time": { "type": "boolean" }
+      }
+    },
+    "consult_cta_clicked": {
+      "description": "Visitor clicked a consult call-to-action.",
+      "properties": {
+        "source": { "type": "slug", "required": true },
+        "astrologer_slug": { "type": "slug" }
+      }
+    },
+    "otp_requested": {
+      "description": "Phone OTP was requested. The phone number is never sent.",
+      "properties": {
+        "source": { "type": "slug", "required": true }
+      }
+    },
+    "otp_verified": {
+      "description": "Phone OTP verified; the visitor is signed in.",
+      "properties": {
+        "is_new_user": { "type": "boolean", "required": true }
+      }
+    },
+    "kundli_saved": {
+      "description": "Signed-in user saved a kundli. Birth details are never sent.",
+      "properties": {
+        "unknown_birth_time": { "type": "boolean", "required": true }
+      }
+    },
+    "session_requested": {
+      "description": "User asked an astrologer for a session.",
+      "properties": {
+        "session_type": { "type": "enum", "values": ["chat", "call"], "required": true },
+        "is_free_trial": { "type": "boolean", "required": true }
+      }
+    },
+    "session_ended": {
+      "description": "A consultation ended. Message content is never sent.",
+      "properties": {
+        "session_type": { "type": "enum", "values": ["chat", "call"], "required": true },
+        "billed_seconds": { "type": "integer", "required": true },
+        "is_free_trial": { "type": "boolean", "required": true },
+        "end_reason": {
+          "type": "enum",
+          "values": [
+            "user_ended",
+            "astrologer_ended",
+            "balance_exhausted",
+            "connection_lost",
+            "declined",
+            "timeout"
+          ],
+          "required": true
+        }
+      }
+    },
+    "recharge_succeeded": {
+      "description": "Wallet recharge confirmed by the payment webhook.",
+      "properties": {
+        "amount_paise": { "type": "integer", "required": true },
+        "is_first_recharge": { "type": "boolean", "required": true }
+      }
+    },
+    "report_purchased": {
+      "description": "Paid PDF report purchase confirmed.",
+      "properties": {
+        "report": { "type": "slug", "required": true },
+        "amount_paise": { "type": "integer", "required": true }
+      }
+    }
+  }
+}

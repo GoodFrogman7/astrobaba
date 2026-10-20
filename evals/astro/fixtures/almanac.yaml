@@ -1,0 +1,79 @@
+# Golden panchang fixtures (PROPOSAL, Phase 1 fills `expected`).
+#
+# 34 date × place rows. Expected values are transcribed from published almanacs and public
+# astronomical services (sources in README.md). Never typed from memory or produced by an LLM.
+# Each value records its source; rows where two almanacs disagree are kept and marked, because
+# disagreement usually means a convention difference we must document.
+#
+# Per row Phase 1 records, all as UTC instants plus the place's IANA zone:
+#   sunrise, sunset                      tolerance ±1 min (USNO convention: upper limb, 34' refraction)
+#   tithi_at_sunrise + tithi_end         tolerance ±2 min on the end time
+#   nakshatra_at_sunrise + nakshatra_end tolerance ±2 min on the end time
+#   rahu_kaal_start, rahu_kaal_end       tolerance ±1 min given our own sunrise/sunset; slot must match the weekday table
+#   vaara (weekday by sunrise, not midnight)
+
+schema_version: 1
+
+places:
+  delhi:   { name: New Delhi, lat: 28.6139, lon: 77.2090, tz: Asia/Kolkata }
+  mumbai:  { name: Mumbai,    lat: 19.0760, lon: 72.8777, tz: Asia/Kolkata }
+  chennai: { name: Chennai,   lat: 13.0827, lon: 80.2707, tz: Asia/Kolkata }
+  kolkata: { name: Kolkata,   lat: 22.5726, lon: 88.3639, tz: Asia/Kolkata }
+  ujjain:  { name: Ujjain,    lat: 23.1765, lon: 75.7885, tz: Asia/Kolkata }
+  london:  { name: London,    lat: 51.5074, lon: -0.1278, tz: Europe/London }
+
+rows:
+  # Weekday sweep: one full week in Delhi, covers every Rahu Kaal slot.
+  - { id: A01, date: "2026-01-05", place: delhi, why: "Monday, Rahu Kaal slot 2", expected: {} }
+  - { id: A02, date: "2026-01-06", place: delhi, why: "Tuesday, slot 7", expected: {} }
+  - { id: A03, date: "2026-01-07", place: delhi, why: "Wednesday, slot 5", expected: {} }
+  - { id: A04, date: "2026-01-08", place: delhi, why: "Thursday, slot 6", expected: {} }
+  - { id: A05, date: "2026-01-09", place: delhi, why: "Friday, slot 4", expected: {} }
+  - { id: A06, date: "2026-01-10", place: delhi, why: "Saturday, slot 3", expected: {} }
+  - { id: A07, date: "2026-01-11", place: delhi, why: "Sunday, slot 8", expected: {} }
+
+  # Same week in Chennai: lower latitude, different day length.
+  - { id: A08, date: "2026-01-05", place: chennai, why: "latitude contrast with A01", expected: {} }
+  - { id: A09, date: "2026-01-08", place: chennai, why: "latitude contrast with A04", expected: {} }
+
+  # Solstices and equinoxes 2025 (day length extremes).
+  - { id: A10, date: "2025-03-20", place: delhi,   why: "March equinox", expected: {} }
+  - { id: A11, date: "2025-06-21", place: delhi,   why: "June solstice, longest day", expected: {} }
+  - { id: A12, date: "2025-09-22", place: delhi,   why: "September equinox", expected: {} }
+  - { id: A13, date: "2025-12-21", place: delhi,   why: "December solstice, shortest day", expected: {} }
+  - { id: A14, date: "2025-06-21", place: kolkata, why: "east India, earliest sunrise in IST", expected: {} }
+  - { id: A15, date: "2025-12-21", place: mumbai,  why: "west India, latest sunrise in IST", expected: {} }
+
+  # Widely published festival dates (verify each label against the almanac when transcribing).
+  - { id: A16, date: "2025-03-14", place: delhi,   why: "Holi (Purnima region)", expected: {} }
+  - { id: A17, date: "2025-07-10", place: ujjain,  why: "Guru Purnima", expected: {} }
+  - { id: A18, date: "2025-08-16", place: mumbai,  why: "Janmashtami (Ashtami / Rohini)", expected: {} }
+  - { id: A19, date: "2025-08-27", place: mumbai,  why: "Ganesh Chaturthi", expected: {} }
+  - { id: A20, date: "2025-09-22", place: kolkata, why: "Navratri begins (Pratipada)", expected: {} }
+  - { id: A21, date: "2025-10-02", place: delhi,   why: "Dussehra (Dashami)", expected: {} }
+  - { id: A22, date: "2025-10-20", place: delhi,   why: "Diwali (Amavasya)", expected: {} }
+  - { id: A23, date: "2026-01-14", place: ujjain,  why: "Makar Sankranti (Sun enters sidereal Capricorn)", expected: {} }
+  - { id: A24, date: "2026-02-15", place: chennai, why: "Maha Shivaratri (Chaturdashi)", expected: {} }
+
+  # Adhik (intercalary) month 2026: first and last day as published.
+  - { id: A25, date: "2026-05-17", place: delhi, why: "start of adhik masa (verify)", expected: {} }
+  - { id: A26, date: "2026-06-15", place: delhi, why: "end of adhik masa (verify)", expected: {} }
+
+  # Today/tomorrow pair: the teardown's "tomorrow shows today" bug.
+  - { id: A27, date: "2026-10-20", place: delhi, why: "today page", expected: {} }
+  - { id: A28, date: "2026-10-21", place: delhi, why: "tomorrow page must differ from A27", expected: {} }
+
+  # Leap day.
+  - { id: A29, date: "2024-02-29", place: kolkata, why: "leap day", expected: {} }
+
+  # Non-India place: different zone and DST.
+  - { id: A30, date: "2025-03-30", place: london, why: "DST starts; sunrise in BST", expected: {} }
+  - { id: A31, date: "2025-06-21", place: london, why: "high-latitude long day", expected: {} }
+
+  # Selected by criterion from the reference almanac while transcribing (exact dates fixed then).
+  - { id: A32, criterion: "a kshaya tithi (no sunrise falls inside it), Delhi, 2025", expected: {} }
+  - { id: A33, criterion: "a vriddhi tithi (spans two sunrises), Delhi, 2025", expected: {} }
+  - { id: A34, criterion: "a nakshatra ending within 5 minutes after sunrise, any India place, 2026", expected: {} }
+
+# Static rule, not an engine output: the 8 equal parts of daytime and the Rahu Kaal part per weekday.
+rahu_kaal_slot_by_weekday: { Mon: 2, Tue: 7, Wed: 5, Thu: 6, Fri: 4, Sat: 3, Sun: 8 }
