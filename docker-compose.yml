@@ -35,6 +35,10 @@ services:
       DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-astro}:${POSTGRES_PASSWORD:-astro-dev-only}@postgres:5432/${POSTGRES_DB:-astro}
       REDIS_URL: redis://redis:6379/0
       CORS_ORIGINS: '["http://localhost:3000"]'
+      SECRET_KEY: ${SECRET_KEY:-dev-only-change-me}
+      SMS_PROVIDER: ${SMS_PROVIDER:-console}
+      ADMIN_TOKEN: ${ADMIN_TOKEN:-}
+      ASTRO_URL: http://astro:8001
     ports: ["127.0.0.1:8000:8000"]
     depends_on:
       postgres: { condition: service_healthy }
@@ -70,7 +74,8 @@ services:
     build: { context: ., dockerfile: apps/web/Dockerfile }
     environment:
       NEXT_PUBLIC_SITE_URL: http://localhost:3000
-      NEXT_PUBLIC_API_URL: http://localhost:8000
+      ASTRO_URL: http://astro:8001
+      API_URL: http://api:8000
     ports: ["127.0.0.1:3000:3000"]
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://127.0.0.1:3000/"]
@@ -79,6 +84,7 @@ services:
       retries: 20
     depends_on:
       api: { condition: service_healthy }
+      astro: { condition: service_healthy }
 
 volumes:
   pgdata:
