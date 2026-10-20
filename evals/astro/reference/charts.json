@@ -1,0 +1,491 @@
+{
+ "provenance": {
+  "retrieved_at": "2026-10-20T23:11:39Z",
+  "horizons": "https://ssd.jpl.nasa.gov/api/horizons.api (observer table, CENTER=500@399, QUANTITIES=31 apparent ecliptic-of-date)",
+  "usno": "https://aa.usno.navy.mil/api/rstt/oneday (sunrise/sunset: upper limb, standard refraction; minute precision)",
+  "script": "evals/astro/scripts/fetch_reference.py"
+ },
+ "charts": {
+  "C01": {
+   "sun": {
+    "tropical_longitude": 280.1352916,
+    "latitude": 0.0002393,
+    "jd_ut": 2451544.770833333
+   },
+   "moon": {
+    "tropical_longitude": 220.5648873,
+    "latitude": 5.2055967,
+    "jd_ut": 2451544.770833333
+   },
+   "mercury": {
+    "tropical_longitude": 271.5327664,
+    "latitude": -0.9723937,
+    "jd_ut": 2451544.770833333
+   },
+   "venus": {
+    "tropical_longitude": 241.2887372,
+    "latitude": 2.0727561,
+    "jd_ut": 2451544.770833333
+   },
+   "mars": {
+    "tropical_longitude": 327.7855343,
+    "latitude": -1.0706323,
+    "jd_ut": 2451544.770833333
+   },
+   "jupiter": {
+    "tropical_longitude": 25.2438157,
+    "latitude": -1.2633734,
+    "jd_ut": 2451544.770833333
+   },
+   "saturn": {
+    "tropical_longitude": 40.4002552,
+    "latitude": -2.4459401,
+    "jd_ut": 2451544.770833333
+   }
+  },
+  "C02": {
+   "sun": {
+    "tropical_longitude": 112.4844267,
+    "latitude": 5.26e-05,
+    "jd_ut": 2446261.527777778
+   },
+   "moon": {
+    "tropical_longitude": 77.391362,
+    "latitude": 2.6358859,
+    "jd_ut": 2446261.527777778
+   },
+   "mercury": {
+    "tropical_longitude": 138.9986314,
+    "latitude": -0.7233523,
+    "jd_ut": 2446261.527777778
+   },
+   "venus": {
+    "tropical_longitude": 69.4331045,
+    "latitude": -2.5427639,
+    "jd_ut": 2446261.527777778
+   },
+   "mars": {
+    "tropical_longitude": 113.4237885,
+    "latitude": 1.0275294,
+    "jd_ut": 2446261.527777778
+   },
+   "jupiter": {
+    "tropical_longitude": 314.5589701,
+    "latitude": -0.8014846,
+    "jd_ut": 2446261.527777778
+   },
+   "saturn": {
+    "tropical_longitude": 231.5618324,
+    "latitude": 2.1997321,
+    "jd_ut": 2446261.527777778
+   }
+  },
+  "C03": {
+   "sun": {
+    "tropical_longitude": 1.2436947,
+    "latitude": 0.0001816,
+    "jd_ut": 2441398.267361111
+   },
+   "moon": {
+    "tropical_longitude": 87.1378095,
+    "latitude": 3.0300668,
+    "jd_ut": 2441398.267361111
+   },
+   "mercury": {
+    "tropical_longitude": 15.8451482,
+    "latitude": 3.2900235,
+    "jd_ut": 2441398.267361111
+   },
+   "venus": {
+    "tropical_longitude": 46.212429,
+    "latitude": 2.1690769,
+    "jd_ut": 2441398.267361111
+   },
+   "mars": {
+    "tropical_longitude": 56.4549618,
+    "latitude": 0.9500926,
+    "jd_ut": 2441398.267361111
+   },
+   "jupiter": {
+    "tropical_longitude": 276.5427155,
+    "latitude": 0.3267484,
+    "jd_ut": 2441398.267361111
+   },
+   "saturn": {
+    "tropical_longitude": 61.8391718,
+    "latitude": -1.709616,
+    "jd_ut": 2441398.267361111
+   }
+  },
+  "C04": {
+   "sun": {
+    "tropical_longitude": 48.612846,
+    "latitude": -2.35e-05,
+    "jd_ut": 2430854.645833333
+   },
+   "moon": {
+    "tropical_longitude": 114.0219055,
+    "latitude": -2.2463641,
+    "jd_ut": 2430854.645833333
+   },
+   "mercury": {
+    "tropical_longitude": 65.5465686,
+    "latitude": 1.9835494,
+    "jd_ut": 2430854.645833333
+   },
+   "venus": {
+    "tropical_longitude": 88.4486638,
+    "latitude": 2.183309,
+    "jd_ut": 2430854.645833333
+   },
+   "mars": {
+    "tropical_longitude": 347.116148,
+    "latitude": -1.6229393,
+    "jd_ut": 2430854.645833333
+   },
+   "jupiter": {
+    "tropical_longitude": 110.1956664,
+    "latitude": 0.4153999,
+    "jd_ut": 2430854.645833333
+   },
+   "saturn": {
+    "tropical_longitude": 72.3636922,
+    "latitude": -1.3981276,
+    "jd_ut": 2430854.645833333
+   }
+  },
+  "C05": {
+   "sun": {
+    "tropical_longitude": 218.7460617,
+    "latitude": -1.06e-05,
+    "jd_ut": 2435413.458333333
+   },
+   "moon": {
+    "tropical_longitude": 62.2380108,
+    "latitude": 1.3966594,
+    "jd_ut": 2435413.458333333
+   },
+   "mercury": {
+    "tropical_longitude": 200.8768551,
+    "latitude": 2.1634668,
+    "jd_ut": 2435413.458333333
+   },
+   "venus": {
+    "tropical_longitude": 234.8550114,
+    "latitude": -0.0226129,
+    "jd_ut": 2435413.458333333
+   },
+   "mars": {
+    "tropical_longitude": 192.5019504,
+    "latitude": 0.9717653,
+    "jd_ut": 2435413.458333333
+   },
+   "jupiter": {
+    "tropical_longitude": 148.2835675,
+    "latitude": 0.7715063,
+    "jd_ut": 2435413.458333333
+   },
+   "saturn": {
+    "tropical_longitude": 232.0239243,
+    "latitude": 1.963393,
+    "jd_ut": 2435413.458333333
+   }
+  },
+  "C06": {
+   "sun": {
+    "tropical_longitude": 279.8210368,
+    "latitude": -1.1e-05,
+    "jd_ut": 2448257.270138889
+   },
+   "moon": {
+    "tropical_longitude": 99.7603952,
+    "latitude": 1.656043,
+    "jd_ut": 2448257.270138889
+   },
+   "mercury": {
+    "tropical_longitude": 264.4203622,
+    "latitude": 3.1501007,
+    "jd_ut": 2448257.270138889
+   },
+   "venus": {
+    "tropical_longitude": 294.433517,
+    "latitude": -1.2785901,
+    "jd_ut": 2448257.270138889
+   },
+   "mars": {
+    "tropical_longitude": 57.7569592,
+    "latitude": 2.33646,
+    "jd_ut": 2448257.270138889
+   },
+   "jupiter": {
+    "tropical_longitude": 132.0046191,
+    "latitude": 0.6809884,
+    "jd_ut": 2448257.270138889
+   },
+   "saturn": {
+    "tropical_longitude": 295.6361345,
+    "latitude": -0.1427659,
+    "jd_ut": 2448257.270138889
+   }
+  },
+  "C07": {
+   "sun": {
+    "tropical_longitude": 90.2793078,
+    "latitude": -0.000137,
+    "jd_ut": 2455369.270833333
+   },
+   "moon": {
+    "tropical_longitude": 213.549577,
+    "latitude": -4.904144,
+    "jd_ut": 2455369.270833333
+   },
+   "mercury": {
+    "tropical_longitude": 82.1009966,
+    "latitude": 0.1793672,
+    "jd_ut": 2455369.270833333
+   },
+   "venus": {
+    "tropical_longitude": 128.6234728,
+    "latitude": 1.9667954,
+    "jd_ut": 2455369.270833333
+   },
+   "mars": {
+    "tropical_longitude": 157.7829446,
+    "latitude": 1.0479111,
+    "jd_ut": 2455369.270833333
+   },
+   "jupiter": {
+    "tropical_longitude": 1.8133453,
+    "latitude": -1.2395582,
+    "jd_ut": 2455369.270833333
+   },
+   "saturn": {
+    "tropical_longitude": 178.241479,
+    "latitude": 2.3509588,
+    "jd_ut": 2455369.270833333
+   }
+  },
+  "C08": {
+   "sun": {
+    "tropical_longitude": 138.3150117,
+    "latitude": 9.47e-05,
+    "jd_ut": 2451401.924305555
+   },
+   "moon": {
+    "tropical_longitude": 137.7962086,
+    "latitude": 0.4455579,
+    "jd_ut": 2451401.924305555
+   },
+   "mercury": {
+    "tropical_longitude": 120.1395088,
+    "latitude": -2.0213259,
+    "jd_ut": 2451401.924305555
+   },
+   "venus": {
+    "tropical_longitude": 152.1728593,
+    "latitude": -6.8346777,
+    "jd_ut": 2451401.924305555
+   },
+   "mars": {
+    "tropical_longitude": 226.8260663,
+    "latitude": -1.668074,
+    "jd_ut": 2451401.924305555
+   },
+   "jupiter": {
+    "tropical_longitude": 34.6793704,
+    "latitude": -1.3657339,
+    "jd_ut": 2451401.924305555
+   },
+   "saturn": {
+    "tropical_longitude": 46.8753719,
+    "latitude": -2.3987503,
+    "jd_ut": 2451401.924305555
+   }
+  },
+  "C09": {
+   "sun": {
+    "tropical_longitude": 339.7035031,
+    "latitude": 6.04e-05,
+    "jd_ut": 2457447.375
+   },
+   "moon": {
+    "tropical_longitude": 226.5590585,
+    "latitude": 4.3245947,
+    "jd_ut": 2457447.375
+   },
+   "mercury": {
+    "tropical_longitude": 321.0914929,
+    "latitude": -1.9108089,
+    "jd_ut": 2457447.375
+   },
+   "venus": {
+    "tropical_longitude": 314.461859,
+    "latitude": -0.6256695,
+    "jd_ut": 2457447.375
+   },
+   "mars": {
+    "tropical_longitude": 237.6013741,
+    "latitude": 1.326724,
+    "jd_ut": 2457447.375
+   },
+   "jupiter": {
+    "tropical_longitude": 169.4148705,
+    "latitude": 1.4635728,
+    "jd_ut": 2457447.375
+   },
+   "saturn": {
+    "tropical_longitude": 255.8631483,
+    "latitude": 1.7036049,
+    "jd_ut": 2457447.375
+   }
+  },
+  "C10": {
+   "sun": {
+    "tropical_longitude": 270.0342074,
+    "latitude": 0.0001737,
+    "jd_ut": 2456283.0
+   },
+   "moon": {
+    "tropical_longitude": 14.6548134,
+    "latitude": 3.4312843,
+    "jd_ut": 2456283.0
+   },
+   "mercury": {
+    "tropical_longitude": 254.7485719,
+    "latitude": 0.4024866,
+    "jd_ut": 2456283.0
+   },
+   "venus": {
+    "tropical_longitude": 246.6286568,
+    "latitude": 1.1070295,
+    "jd_ut": 2456283.0
+   },
+   "mars": {
+    "tropical_longitude": 296.4542742,
+    "latitude": -1.1642818,
+    "jd_ut": 2456283.0
+   },
+   "jupiter": {
+    "tropical_longitude": 68.8967471,
+    "latitude": -0.7426821,
+    "jd_ut": 2456283.0
+   },
+   "saturn": {
+    "tropical_longitude": 218.6640898,
+    "latitude": 2.3081107,
+    "jd_ut": 2456283.0
+   }
+  },
+  "C11": {
+   "sun": {
+    "tropical_longitude": 90.4881039,
+    "latitude": 1.03e-05,
+    "jd_ut": 2459021.916666667
+   },
+   "moon": {
+    "tropical_longitude": 92.1412641,
+    "latitude": 0.2789595,
+    "jd_ut": 2459021.916666667
+   },
+   "mercury": {
+    "tropical_longitude": 104.3841811,
+    "latitude": -2.2776593,
+    "jd_ut": 2459021.916666667
+   },
+   "venus": {
+    "tropical_longitude": 65.628355,
+    "latitude": -3.0996511,
+    "jd_ut": 2459021.916666667
+   },
+   "mars": {
+    "tropical_longitude": 355.8998218,
+    "latitude": -2.8927631,
+    "jd_ut": 2459021.916666667
+   },
+   "jupiter": {
+    "tropical_longitude": 295.1061713,
+    "latitude": -0.2689247,
+    "jd_ut": 2459021.916666667
+   },
+   "saturn": {
+    "tropical_longitude": 300.6668099,
+    "latitude": -0.1864079,
+    "jd_ut": 2459021.916666667
+   }
+  },
+  "C12": {
+   "sun": {
+    "tropical_longitude": 136.2549413,
+    "latitude": -0.0001274,
+    "jd_ut": 2438981.5625
+   },
+   "moon": {
+    "tropical_longitude": 280.4514068,
+    "latitude": -2.4257983,
+    "jd_ut": 2438981.5625
+   },
+   "mercury": {
+    "tropical_longitude": 147.8821852,
+    "latitude": -4.7371179,
+    "jd_ut": 2438981.5625
+   },
+   "venus": {
+    "tropical_longitude": 167.4267484,
+    "latitude": 1.2117294,
+    "jd_ut": 2438981.5625
+   },
+   "mars": {
+    "tropical_longitude": 202.9019803,
+    "latitude": -0.3438016,
+    "jd_ut": 2438981.5625
+   },
+   "jupiter": {
+    "tropical_longitude": 83.9634385,
+    "latitude": -0.501766,
+    "jd_ut": 2438981.5625
+   },
+   "saturn": {
+    "tropical_longitude": 345.8573265,
+    "latitude": -2.0848085,
+    "jd_ut": 2438981.5625
+   }
+  },
+  "C14": {
+   "sun": {
+    "tropical_longitude": 206.404297,
+    "latitude": -2.1e-05,
+    "jd_ut": 2461333.284722222
+   },
+   "moon": {
+    "tropical_longitude": 308.5923707,
+    "latitude": -1.7042727,
+    "jd_ut": 2461333.284722222
+   },
+   "mercury": {
+    "tropical_longitude": 229.7737031,
+    "latitude": -3.1955097,
+    "jd_ut": 2461333.284722222
+   },
+   "venus": {
+    "tropical_longitude": 213.3621179,
+    "latitude": -7.1299203,
+    "jd_ut": 2461333.284722222
+   },
+   "mars": {
+    "tropical_longitude": 132.2462057,
+    "latitude": 1.3558,
+    "jd_ut": 2461333.284722222
+   },
+   "jupiter": {
+    "tropical_longitude": 142.6754691,
+    "latitude": 0.6504845,
+    "jd_ut": 2461333.284722222
+   },
+   "saturn": {
+    "tropical_longitude": 10.1262122,
+    "latitude": -2.7064582,
+    "jd_ut": 2461333.284722222
+   }
+  }
+ }
+}
