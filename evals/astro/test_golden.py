@@ -95,7 +95,9 @@ def _skyfield_ascendant(utc: datetime, lat: float, lon: float) -> float:
     """Tropical ascendant from Skyfield's apparent sidereal time and true obliquity."""
     from skyfield.api import load
 
-    t = load.timescale(builtin=True).from_datetime(utc)
+    # Civil time is UT-based (UT1 within a second since 1972; before 1972, UTC as a leap-second
+    # scale did not exist), so pass the instant as UT1 rather than through Skyfield's UTC model.
+    t = load.timescale(builtin=True).ut1_jd(utc.timestamp() / 86400.0 + 2440587.5)
     ramc = math.radians((t.gast * 15.0 + lon) % 360.0)
     _dpsi, deps = t._nutation_angles_radians
     eps = t._mean_obliquity_radians + deps

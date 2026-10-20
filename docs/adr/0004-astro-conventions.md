@@ -24,5 +24,6 @@ response states the ones it used (`settings` block), so results are reproducible
 | Kaal Sarp | All seven planets strictly on one side of the nodal axis; type named by Rahu's house | Partial Kaal Sarp not reported in v1 |
 | Sade Sati | Saturn in the 12th, 1st and 2nd sidereal sign from the natal Moon; retrograde re-entries kept as separate phases, gaps under 3 years stay in one cycle | |
 | Ashtakoota | North Indian 36-point system; tables in `data/astro/matching.json` | Yoni, vashya and gana tables vary between sources. **Production refuses `/v1/match` and `/v1/doshas` until an astrologer marks the tables verified** |
+| Time scale | Civil time is converted to UTC and used as UT1 for the ephemeris (Julian day UT) | UTC and UT1 differ by under 1 s since 1972; before 1972 civil time followed UT itself |
 | Time output | UTC instants (ISO-8601 `Z`) plus the IANA zone; formatting at the edge | PLAN.md §5 Phase 1 |
 | Not in Phase 1 | Masa names and adhik masa, yamaganda, gulika, choghadiya, hora, moonrise | Phase 2, with their own fixtures |
