@@ -31,3 +31,6 @@ data/build/
 .DS_Store
 .idea/
 .vscode/
+
+# uploaded KYC documents (local storage backend)
+data/uploads/
