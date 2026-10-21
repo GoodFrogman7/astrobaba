@@ -11,6 +11,9 @@ COPY packages/shared packages/shared
 COPY data/astro data/astro
 COPY data/seo data/seo
 COPY data/marketplace data/marketplace
+# Policy registry and verified helplines, read directly when the API is unreachable.
+COPY data/legal data/legal
+COPY data/safety data/safety
 COPY apps/web apps/web
 ENV NEXT_OUTPUT=standalone NEXT_TELEMETRY_DISABLED=1
 RUN pnpm --filter @astro/web build
