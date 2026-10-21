@@ -81,6 +81,8 @@ export type ServerEvent =
   | { type: "message"; message: ChatMessage }
   | { type: "typing"; sender: ParticipantRole }
   | { type: "low_balance"; minutes_left: number }
+  /** Self-harm language from the client (docs/api/trust.md §3): show crisis resources. */
+  | { type: "safety"; kind: "self_harm" }
   /** Calls only: who is in the audio room (docs/api/portal.md §1). */
   | { type: "call"; joined: Record<ParticipantRole, boolean> }
   | { type: "ended"; session: SessionView }

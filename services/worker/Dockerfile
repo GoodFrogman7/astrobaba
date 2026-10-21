@@ -25,6 +25,8 @@ COPY packages/shared/flags packages/shared/flags
 COPY packages/shared/analytics packages/shared/analytics
 COPY data/astro data/astro
 COPY data/marketplace data/marketplace
+COPY data/legal data/legal
+COPY data/safety data/safety
 COPY data/seo data/seo
 COPY services/api services/api
 COPY services/worker services/worker

@@ -37,6 +37,18 @@ def marketplace_dir() -> Path:
     return _locate("MARKETPLACE_DIR", "data", "marketplace")
 
 
+@cache
+def legal_dir() -> Path:
+    """data/legal (policy versions, operator, processors)."""
+    return _locate("LEGAL_DIR", "data", "legal")
+
+
+@cache
+def safety_dir() -> Path:
+    """data/safety (crisis helplines, conduct rules)."""
+    return _locate("SAFETY_DIR", "data", "safety")
+
+
 def repo_data_dir() -> Path | None:
     """<repo>/data when running from a checkout (for dev-only defaults such as uploads)."""
     for parent in Path(__file__).resolve().parents:

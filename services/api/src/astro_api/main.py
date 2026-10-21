@@ -22,9 +22,11 @@ from astro_api import (
     horoscopes,
     kundlis,
     marketplace,
+    moderation_api,
     payments_webhooks,
     payouts_api,
     portal_api,
+    privacy_api,
     remedies_api,
     reports_api,
     reviews,
@@ -96,6 +98,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         reports_api.router,
         ai_api.router,
         remedies_api.router,
+        privacy_api.router,
+        moderation_api.router,
     ):
         app.include_router(router)
     app.add_middleware(

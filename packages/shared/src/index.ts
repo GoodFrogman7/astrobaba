@@ -8,3 +8,4 @@ export * from "./tokens";
 export * from "./chat";
 export * from "./portal";
 export * from "./products";
+export * from "./trust";

@@ -1,0 +1,39 @@
+{
+  "$comment": "Legal policy registry (Phase 7). Texts live in the web app's content files; this file holds versions, the operator and grievance contact, processors and retention. status stays draft until a lawyer approves a version; production refuses to start unless LEGAL_APPROVED_VERSION equals `version`.",
+  "status": "draft_pending_legal_review",
+  "version": "2026-10-21",
+  "documents": ["terms", "privacy", "refunds", "credit_expiry", "astrologer_terms"],
+  "consents": {
+    "user": ["age_18", "terms", "privacy"],
+    "astrologer": ["astrologer_terms"]
+  },
+  "operator": {
+    "legal_name": null,
+    "address": null,
+    "founder_to_fill": true
+  },
+  "grievance_officer": {
+    "name": null,
+    "email": null,
+    "founder_to_fill": true,
+    "note": "Name and contact are required in the privacy notice; response timelines to be set with the lawyer (DPDP rules)."
+  },
+  "processors": [
+    { "id": "aws", "purpose": "Hosting, database and file storage (ap-south-1)", "data": "All platform data", "region": "India" },
+    { "id": "razorpay", "purpose": "Payments", "data": "Payment details are entered with Razorpay; we receive payment ids, amounts and status", "region": "India" },
+    { "id": "sms_provider", "purpose": "One-time sign-in codes", "data": "Phone number, code", "region": "India", "founder_to_fill": "provider name (e.g. MSG91)" },
+    { "id": "email_provider", "purpose": "Report links and partner enquiries", "data": "Email address (reports), lead details (partner)", "founder_to_fill": "provider name (SMTP / Amazon SES)" },
+    { "id": "livekit", "purpose": "Voice calls (audio relay; nothing recorded)", "data": "Call audio in transit, session ids", "founder_to_fill": "LiveKit Cloud or self-hosted" },
+    { "id": "llm_provider", "purpose": "Horoscope prose drafts; AI assistant answers when enabled", "data": "Computed chart placements and the question (no name, phone or birth details)", "founder_to_fill": "Google (Gemini) and/or Anthropic (Claude), paid no-training tier" }
+  ],
+  "retention": {
+    "founder_to_fill": true,
+    "proposed": {
+      "ledger_and_invoices": "Kept as required by tax law even after account deletion (identity removed)",
+      "chat_messages": "Deleted with the account",
+      "kyc_documents": "To be set with the lawyer",
+      "remedy_leads": "Deleted with the account",
+      "report_files": "Deleted with the account"
+    }
+  }
+}

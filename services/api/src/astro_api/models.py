@@ -369,7 +369,9 @@ from astro_api import (  # noqa: E402, F401
     models_jobs,
     models_ledger,
     models_portal,
+    models_privacy,
     models_remedies,
     models_reports,
+    models_safety,
     models_sessions,
 )

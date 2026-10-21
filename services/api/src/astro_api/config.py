@@ -6,6 +6,7 @@ from pydantic import Field, SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from astro_api.flags import flag_enabled
+from astro_api.shared_files import legal_dir
 
 # Placeholder so local development works without a .env; refused outside development/test.
 DEV_SECRET_KEY = "dev-only-insecure-secret-key-change-me"  # noqa: S105 - refused in production
@@ -64,6 +65,8 @@ class Settings(BaseSettings):
     web_internal_url: str = "http://localhost:3000"
     # The public site, for links in emails; and the astro engine the API calls for reports.
     public_site_url: str = "http://localhost:3000"
+    # The policies.json version a lawyer approved (Phase 7 launch gate); empty = none yet.
+    legal_approved_version: str = ""
     astro_url: str = "http://localhost:8001"
     chromium_path: str = ""
     otp_ttl_s: int = 300
@@ -103,6 +106,8 @@ def check_production_settings(settings: Settings) -> None:
         problems.append("DOCUMENTS_BACKEND=local keeps KYC documents on the container disk")
     if settings.email_provider == "console":
         problems.append("EMAIL_PROVIDER=console")
+    if settings.legal_approved_version != legal_version():
+        problems.append("legal texts not approved: LEGAL_APPROVED_VERSION != policies version")
     if not settings.public_site_url.startswith("https://"):
         problems.append("PUBLIC_SITE_URL must be https")
     if flag_enabled("voice_calls") and (
@@ -118,3 +123,11 @@ def check_production_settings(settings: Settings) -> None:
 @cache
 def get_settings() -> Settings:
     return Settings()
+
+
+def legal_version() -> str:
+    """Current version in data/legal/policies.json (texts change only with a new version)."""
+    import json
+
+    path = legal_dir() / "policies.json"
+    return str(json.loads(path.read_text(encoding="utf-8"))["version"])
