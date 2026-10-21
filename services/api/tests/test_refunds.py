@@ -130,6 +130,28 @@ async def setup(db: AsyncSession, minutes: int = 10) -> tuple[uuid.UUID, uuid.UU
     return uid, aid, sid
 
 
+async def test_service_unavailable_refunds_minutes_after_presence_was_lost(maker) -> None:  # type: ignore[no-untyped-def]
+    """A call ended because LiveKit could not confirm presence (our outage, not the
+    astrologer's): minutes after presence was last confirmed are refunded under their own rule."""
+    async with maker() as db:
+        uid, aid, sid = await setup(db)
+        f = facts(
+            sid,
+            uid,
+            aid,
+            end_reason="service_unavailable",
+            astrologer_last_seen_at=T0 + dt.timedelta(seconds=150),
+        )
+        out = await refunds.on_session_end(db, f, minute_seconds=60)
+        assert out == [refunds.RefundResult("service_unavailable", sid, 7000, True)]
+        await db.commit()
+        assert await refunds.on_session_end(db, f, minute_seconds=60) == [
+            refunds.RefundResult("service_unavailable", sid, 7000, False)
+        ]
+        row = (await db.execute(select(Refund))).scalar_one()
+        assert row.rule == "service_unavailable" and row.amount_paise == 7000
+
+
 async def test_astrologer_drop_refunds_minutes_after_last_activity_proportionally(maker) -> None:  # type: ignore[no-untyped-def]
     async with maker() as db:
         uid, aid, sid = await setup(db)

@@ -1,5 +1,7 @@
 """Consultation sessions: request, queue, accept/decline, cancel/end, history, messages and
-WebSocket tickets (docs/api/billing.md "Sessions"; state machine in session_service.py)."""
+WebSocket tickets (docs/api/billing.md "Sessions"; state machine in session_service.py).
+Voice calls are sessions with `kind: "call"` (docs/api/portal.md §1; LiveKit side in
+calls_api.py)."""
 
 import datetime as dt
 import uuid
@@ -19,6 +21,7 @@ from astro_api.audit import audit
 from astro_api.auth import client_ip, current_session
 from astro_api.db import get_db
 from astro_api.errors import ApiError
+from astro_api.flags import flag_enabled
 from astro_api.idempotency import Idempotency, body_hash, idempotency_key
 from astro_api.marketplace import decode_cursor, encode_cursor, is_public
 from astro_api.models import (
@@ -39,7 +42,7 @@ Status = Literal["queued", "requested", "accepted", "active", "completed", "canc
 
 class SessionIn(BaseModel):
     astrologer_id: uuid.UUID
-    kind: Literal["chat"] = "chat"
+    kind: Literal["chat", "call"] = "chat"
     free: bool = False
 
 
@@ -167,8 +170,14 @@ async def _create(
         raise ApiError(404, "not_found", "Astrologer not found.")
     bps = svc.commission_bps(a.tier)
     price = a.price_per_min_paise
-    if not (a.flags or {}).get("chat_enabled") or price is None or price <= 0 or a.tier is None:
+    priced = price is not None and price > 0 and a.tier is not None
+    if body.kind == "call":
+        # Calls need the global flag and the astrologer's own switch (portal.md §1).
+        if not (flag_enabled("voice_calls") and (a.flags or {}).get("call_enabled") and priced):
+            raise ApiError(409, "call_unavailable", "This astrologer is not taking calls.")
+    elif not (a.flags or {}).get("chat_enabled") or not priced:
         raise ApiError(409, "chat_unavailable", "This astrologer is not taking chats.")
+    assert price is not None
     if a.user_id == user.id:
         raise ApiError(409, "own_profile", "You cannot consult yourself.")
     open_session = await _open_session(db, user)

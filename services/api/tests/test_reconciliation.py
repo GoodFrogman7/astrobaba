@@ -145,6 +145,7 @@ def test_test_data_reconciles_with_zero_drift(  # type: ignore[no-untyped-def]
         "projections",
         "gateway_payments",
         "settlements",
+        "payouts",
     ]
     assert all(c["status"] == "ok" for c in run["checks"])
     assert check(run, "gateway_payments")["count"] == 3
@@ -240,3 +241,120 @@ def test_cli_reconcile(client: TestClient, login, monkeypatch, capsys) -> None: 
         assert cli.main(["expire-promo"]) == 0
     finally:
         get_settings.cache_clear()
+
+
+# ---------------------------------------------------------------- payouts (Phase 5)
+
+
+def test_payouts_check(  # type: ignore[no-untyped-def]
+    client: TestClient, make_live, login, admin_headers, drift_log
+) -> None:
+    """Every paid payout has exactly one `payout:` ledger transaction of its net amount, and
+    every payout posting belongs to a paid payout."""
+    from astro_api import earnings, payouts
+
+    _, aid, _ = make_live("+919844440100")
+    astrologer_id = uuid.UUID(aid)
+    settings = settings_of(client)
+    paid_order(client, login(USER), 200000)
+    uid = sql(client, "SELECT id FROM users WHERE phone = :p", p=USER)
+
+    async def earn_and_pay() -> str:
+        engine = create_async_engine(settings.database_url.get_secret_value())
+        try:
+            async with make_sessionmaker(engine)() as db:
+                start, _ = earnings.month_bounds("2026-08")
+                for n in range(1, 51):  # 50 minutes in August: 60000 payable
+                    tid = await wallet._insert_txn(
+                        db,
+                        key=f"session:recon:minute:{n}",
+                        payload_hash="test-backdated",
+                        kind="consultation",
+                        user_id=uid,
+                        astrologer_id=astrologer_id,
+                        occurred_at=start + dt.timedelta(days=3, minutes=n),
+                    )
+                    assert tid is not None
+                    await wallet._write(
+                        db,
+                        tid,
+                        [
+                            wallet._Posting(wallet.real_account(uid), "debit", 2000),
+                            wallet._Posting(wallet.payable_account(astrologer_id), "credit", 1200),
+                            wallet._Posting(wallet.COMMISSION, "credit", 800),
+                        ],
+                    )
+                await db.commit()
+                await payouts.generate(db, "2026-08", actor="test")
+                p = await payouts.get_payout(db, astrologer_id=astrologer_id, period="2026-08")
+                await payouts.approve(db, p.id, actor="test")
+                await payouts.mark_paid(
+                    db, p.id, reference="UTR000111222333", paid_on=ist_today(), actor="test"
+                )
+                await db.commit()
+                return str(p.id)
+        finally:
+            await engine.dispose()
+
+    pid = asyncio.run(earn_and_pay())
+    run = run_recon(client, admin_headers)
+    assert run["status"] == "ok", run
+    assert check(run, "payouts") | {"issues": []} == {
+        "name": "payouts",
+        "status": "ok",
+        "drift_paise": 0,
+        "issues": [],
+        "issue_count": 0,
+        "count": 1,
+    }
+
+    # A payout row whose amount no longer matches its posting.
+    sql(
+        client,
+        "UPDATE payouts SET gross_paise = gross_paise + 100, net_paise = net_paise + 100"
+        " WHERE id = :p",
+        p=pid,
+    )
+    # A payout posting with no paid payout behind it.
+    orphan = uuid.uuid4()
+
+    async def orphan_posting() -> None:
+        engine = create_async_engine(settings.database_url.get_secret_value())
+        try:
+            async with make_sessionmaker(engine)() as db:
+                await wallet.charge_minute(  # 1200 payable today
+                    db,
+                    session_id=uuid.uuid4(),
+                    user_id=uid,
+                    astrologer_id=astrologer_id,
+                    minute=1,
+                    price_paise=2000,
+                    commission_bps=4000,
+                )
+                await wallet.post_payout(
+                    db, payout_id=orphan, astrologer_id=astrologer_id, amount_paise=500
+                )
+                await db.commit()
+        finally:
+            await engine.dispose()
+
+    asyncio.run(orphan_posting())
+    run = run_recon(client, admin_headers)
+    assert run["status"] == "drift" and run["drift_paise"] == 600
+    issues = sorted(check(run, "payouts")["issues"], key=lambda i: i["problem"])
+    assert issues == [
+        {
+            "problem": "amount_mismatch",
+            "payout_id": pid,
+            "payout_paise": 60100,
+            "ledger_paise": 60000,
+        },
+        {
+            "problem": "posting_without_paid_payout",
+            "payout_id": str(orphan),
+            "payout_paise": 0,
+            "ledger_paise": 500,
+        },
+    ]
+    errors = [r for r in drift_log.records if r.levelno >= logging.ERROR]
+    assert errors and "payouts" in errors[-1].__dict__["failed_checks"]

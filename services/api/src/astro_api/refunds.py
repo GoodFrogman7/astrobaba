@@ -24,7 +24,7 @@ from astro_api.models import ConsultSession
 from astro_api.models_ledger import Refund
 
 SYSTEM_ACTOR = "system:refunds"
-RULES = ("failed_connect", "astrologer_drop", "low_rating", "manual")
+RULES = ("failed_connect", "astrologer_drop", "service_unavailable", "low_rating", "manual")
 
 
 @dataclass(frozen=True)
@@ -150,8 +150,10 @@ async def on_session_end(
             return [hit]
         totals = await wallet.session_totals(db, facts.session_id)
         amount = totals.charged_paise - totals.refunded_paise
-    elif facts.end_reason == "astrologer_dropped":
-        rule = "astrologer_drop"
+    elif facts.end_reason in ("astrologer_dropped", "service_unavailable"):
+        # Same maths for both; a platform outage has its own rule so it is never counted
+        # against the astrologer.
+        rule = "astrologer_drop" if facts.end_reason == "astrologer_dropped" else facts.end_reason
         if not billing_config.refund_rule(rule).get("enabled", False):
             return []
         if (hit := await _existing(rule, db, facts.session_id)) is not None:

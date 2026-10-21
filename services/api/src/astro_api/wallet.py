@@ -39,7 +39,8 @@ REFUNDS = "platform:refunds"
 GATEWAY_FEES = "platform:gateway_fees"
 CLEARING = "gateway:razorpay:clearing"
 BANK = "bank:settlement"
-DEBIT_NORMAL = frozenset({PROMO_EXPENSE, REFUNDS, GATEWAY_FEES, CLEARING, BANK})
+BANK_PAYOUTS = "bank:payouts"  # asset: the account astrologer payouts are sent from (Phase 5)
+DEBIT_NORMAL = frozenset({PROMO_EXPENSE, REFUNDS, GATEWAY_FEES, CLEARING, BANK, BANK_PAYOUTS})
 
 FREE_SESSION_LOT_TTL = dt.timedelta(days=1)  # safety net; the lot is closed when the session ends
 
@@ -78,6 +79,14 @@ class InsufficientFunds(Exception):
 
 class IdempotencyConflict(Exception):
     """The key was used before with a different payload. Nothing was written; alert."""
+
+
+class PayoutExceedsPayable(Exception):
+    """A payout is larger than the astrologer's payable balance. Nothing was written."""
+
+    def __init__(self, payable_paise: int) -> None:
+        super().__init__(f"payable: {payable_paise}")
+        self.payable_paise = payable_paise
 
 
 class RefundTooLarge(Exception):
@@ -970,6 +979,67 @@ async def post_refund(
         lot_id=lot_id,
         created=True,
     )
+
+
+# ------------------------------------------------------------------ astrologer payouts (Phase 5)
+
+
+async def lock_payable(db: AsyncSession, astrologer_id: uuid.UUID) -> int:
+    """Create (if needed) and lock the astrologer's payable projection row; returns its balance."""
+    account = payable_account(astrologer_id)
+    await db.execute(
+        pg_insert(AccountBalance)
+        .values(account_id=account, normal_side="credit", balance_paise=0, version=0)
+        .on_conflict_do_nothing(index_elements=["account_id"])
+    )
+    balance = (
+        await db.execute(
+            select(AccountBalance.balance_paise)
+            .where(AccountBalance.account_id == account)
+            .with_for_update()
+        )
+    ).scalar_one()
+    return int(balance)
+
+
+async def post_payout(
+    db: AsyncSession, *, payout_id: uuid.UUID, astrologer_id: uuid.UUID, amount_paise: int
+) -> Posted:
+    """A bank transfer to an astrologer (portal.md §3). Key `payout:{payout_id}`: debit
+    `astrologer:{id}:payable`, credit `bank:payouts`. Locks the payable row and refuses more than
+    its balance (PayoutExceedsPayable); a repeat returns the original posting."""
+    if amount_paise <= 0:
+        raise ValueError("amount_paise must be positive")
+    key = f"payout:{payout_id}"
+    payload_hash = _hash(
+        {"payout_id": payout_id, "astrologer_id": astrologer_id, "amount": amount_paise}
+    )
+    if (tx := await _existing(db, key, payload_hash)) is not None:
+        return Posted(tx.id, False)
+    payable = await lock_payable(db, astrologer_id)
+    # A concurrent call with the same key may have committed while we waited for the lock.
+    if (tx := await _existing(db, key, payload_hash)) is not None:
+        return Posted(tx.id, False)
+    if amount_paise > payable:
+        raise PayoutExceedsPayable(payable)
+    tid = await _insert_txn(
+        db,
+        key=key,
+        payload_hash=payload_hash,
+        kind="payout",
+        astrologer_id=astrologer_id,
+        external_ref=str(payout_id),
+    )
+    assert tid is not None  # we hold the payable lock and checked the key under it
+    await _write(
+        db,
+        tid,
+        [
+            _Posting(payable_account(astrologer_id), "debit", amount_paise),
+            _Posting(BANK_PAYOUTS, "credit", amount_paise),
+        ],
+    )
+    return Posted(tid, True)
 
 
 # ------------------------------------------------------------------ history (wallet page)

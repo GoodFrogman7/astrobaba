@@ -22,7 +22,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from astro_api.config import Settings
 from astro_api.db import get_db
 from astro_api.errors import ApiError
+from astro_api.flags import flag_enabled
 from astro_api.models import PUBLIC_STATUSES, Astrologer, Review
+from astro_api.models_portal import IST_ZONE, availability_view
 from astro_api.taxonomy import ids, taxonomy
 
 router = APIRouter(prefix="/v1", tags=["marketplace"])
@@ -180,7 +182,11 @@ def card(
 
 
 def profile(
-    a: Astrologer, settings: Settings, rating: Rating, presence: tuple[str, int | None]
+    a: Astrologer,
+    settings: Settings,
+    rating: Rating,
+    presence: tuple[str, int | None],
+    availability: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     since = a.approved_at or a.created_at
     return {
@@ -191,8 +197,12 @@ def profile(
         "on_platform_since": since.strftime("%Y-%m"),
         "consult": {
             "chat_enabled": bool((a.flags or {}).get("chat_enabled")),
-            "call_enabled": bool((a.flags or {}).get("call_enabled")),
+            # Calls are offered only while the voice_calls flag is on (docs/api/portal.md §1).
+            "call_enabled": bool((a.flags or {}).get("call_enabled"))
+            and flag_enabled("voice_calls"),
         },
+        # Weekly schedule (IST, informational; docs/api/portal.md §2.1). Empty → slots: [].
+        "availability": availability or {"timezone": IST_ZONE, "slots": []},
     }
 
 
@@ -330,7 +340,7 @@ async def get_profile(
     a = await public_by_slug(db, settings, slug)
     rating = (await ratings_of(db, [a.id])).get(a.id, Rating())
     presence = (await presence_of(_redis(request), [a.id]))[a.id]
-    return profile(a, settings, rating, presence)
+    return profile(a, settings, rating, presence, await availability_view(db, a.id))
 
 
 def public_review(r: Review) -> dict[str, Any]:

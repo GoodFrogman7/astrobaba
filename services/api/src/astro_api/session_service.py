@@ -5,6 +5,7 @@ create ─┬─ astrologer free → requested
         └─ astrologer busy / pending request / queue not empty → queued
 queued    ── head of queue when the astrologer frees up ──> requested
 requested ── accept ──> accepted ── both sockets connected ──> active (minute 1 charged)
+           (a call also needs both participants in the LiveKit room)
 requested ── decline / request_timeout_s ──> cancelled
 accepted  ── join_timeout_s ──> failed (join_timeout)
 active    ── end / funds out / free minutes used / side gone > grace ──> completed
@@ -20,9 +21,12 @@ Ending is two steps. `finish()` runs inside the caller's transaction (status, en
 time, closing the session's promo lot, a system message). After that commits, `after_end()`
 restores presence, promotes the queue, tells both sockets and runs the refund rules in their own
 transaction, then stamps `settled_at`. If the process dies in between, the meter's sweep re-runs
-`after_end()` (every step is idempotent).
+`after_end()` (every step is idempotent). For a call, `after_end()` also deletes the LiveKit room
+(disconnecting both sides); if LiveKit cannot be reached the end stands, `settled_at` stays
+empty and the sweep tries the delete again.
 """
 
+import asyncio
 import datetime as dt
 import hashlib
 import hmac
@@ -38,7 +42,7 @@ from sqlalchemy import func, select, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
-from astro_api import billing_config, chat_bus, refunds, wallet
+from astro_api import billing_config, chat_bus, livekit_client, refunds, wallet
 from astro_api.audit import audit
 from astro_api.chat_crypto import MessageCipher, Sealed, aad, cipher_from_settings
 from astro_api.config import Settings
@@ -103,10 +107,17 @@ class Deps:
     redis: Redis
     settings: Settings
     cipher: MessageCipher
+    # LiveKit (voice calls); created from the settings on first use when not given.
+    calls: livekit_client.CallBackend | None = None
 
     @property
     def minute(self) -> dt.timedelta:
         return dt.timedelta(seconds=self.settings.billing_minute_seconds)
+
+    def call_backend(self) -> livekit_client.CallBackend:
+        if self.calls is None:
+            self.calls = livekit_client.backend_from_settings(self.settings)
+        return self.calls
 
     @classmethod
     def of(cls, target: "FastAPI | Deps") -> "Deps":
@@ -114,8 +125,13 @@ class Deps:
             return target
         state = target.state
         deps: Deps | None = getattr(state, "session_deps", None)
-        if deps is None or deps.sessionmaker is not state.sessionmaker:
-            deps = cls(state.sessionmaker, state.redis, state.settings, cipher_for(state))
+        calls: livekit_client.CallBackend | None = getattr(state, "calls", None)
+        if (
+            deps is None
+            or deps.sessionmaker is not state.sessionmaker
+            or (calls is not None and deps.calls is not calls)
+        ):
+            deps = cls(state.sessionmaker, state.redis, state.settings, cipher_for(state), calls)
             state.session_deps = deps
         return deps
 
@@ -463,6 +479,8 @@ async def after_end(deps: Deps, session_id: uuid.UUID, now: dt.datetime | None =
         if not still_busy:
             await clear_busy(deps.redis, s.astrologer_id)
         await publish_state(db, deps, s, "ended")
+    # No room can exist before accept (call tokens are only issued from `accepted`).
+    room_closed = s.kind != "call" or s.accepted_at is None or await close_room(deps, s.id)
     await promote(deps, s.astrologer_id, now)
 
     facts = refunds.SessionFacts(
@@ -486,13 +504,69 @@ async def after_end(deps: Deps, session_id: uuid.UUID, now: dt.datetime | None =
                 db, facts, minute_seconds=deps.settings.billing_minute_seconds
             )
             row = await lock(db, session_id)
-            if row is not None and row.settled_at is None:
+            if row is not None and row.settled_at is None and room_closed:
                 row.settled_at = now
             await db.commit()
         except Exception:
             # Retried by the meter's sweep; the id is not personal data.
             log.exception("session settle failed", extra={"session_id": str(session_id)})
             await db.rollback()
+
+
+async def close_room(deps: Deps, session_id: uuid.UUID) -> bool:
+    """Delete the call's LiveKit room, which disconnects both sides at once. Best effort: never
+    raises and never delays the end by more than the LiveKit timeout; False means "try again"
+    (after_end then leaves settled_at empty so the meter's sweep retries)."""
+    try:
+        room = livekit_client.room_name(session_id)
+        await asyncio.wait_for(
+            deps.call_backend().delete_room(room), livekit_client.LIVEKIT_TIMEOUT_S + 1
+        )
+    except Exception as exc:
+        log.warning(
+            "call room delete failed",
+            extra={"session_id": str(session_id), "error": type(exc).__name__},
+        )
+        return False
+    return True
+
+
+async def call_participant(
+    deps: Deps,
+    session_id: uuid.UUID,
+    role: str,
+    *,
+    joined: bool,
+    participant_sid: str,
+    at: dt.datetime,
+) -> bool:
+    """Record that `role` joined or left the call's LiveKit room at `at` (from a webhook, or
+    from the meter's room listing with an empty participant sid); tell both sockets; activate
+    when ready. False when it changed nothing (duplicate, out of order, replaced connection)."""
+    changed = await chat_bus.call_mark(
+        deps.redis,
+        session_id,
+        role,
+        joined=joined,
+        participant_sid=participant_sid,
+        at=at,
+        grace_s=rules().heartbeat_grace_s,
+    )
+    if not changed:
+        return False
+    state = await chat_bus.call_state(deps.redis, session_id)
+    await chat_bus.publish_event(
+        deps.redis, session_id, {"type": "call", "joined": chat_bus.joined_view(state)}
+    )
+    ready = joined and all(side.joined for side in state.values())
+    if ready and await chat_bus.both_connected(deps.redis, session_id):
+        await activate(deps, session_id)
+    return True
+
+
+async def call_ready(deps: Deps, s: ConsultSession) -> bool:
+    """A call becomes active only once both participants are in the LiveKit room too."""
+    return s.kind != "call" or await chat_bus.both_joined(deps.redis, s.id)
 
 
 async def promote(deps: Deps, astrologer_id: uuid.UUID, now: dt.datetime) -> uuid.UUID | None:
@@ -548,13 +622,14 @@ async def promote(deps: Deps, astrologer_id: uuid.UUID, now: dt.datetime) -> uui
 
 
 async def activate(deps: Deps, session_id: uuid.UUID, now: dt.datetime | None = None) -> bool:
-    """accepted → active once both sockets are connected: minute 1 is charged first. If the
-    wallet no longer covers it, the session is cancelled (insufficient_funds)."""
+    """accepted → active once both sockets are connected (and, for a call, both participants
+    are in the LiveKit room): minute 1 is charged first. If the wallet no longer covers it, the
+    session is cancelled (insufficient_funds)."""
     now = now or utcnow()
     ended = False
     async with deps.sessionmaker() as db:
         s = await lock(db, session_id)
-        if s is None or s.status != "accepted":
+        if s is None or s.status != "accepted" or not await call_ready(deps, s):
             return False
         try:
             charge = await wallet.charge_minute(

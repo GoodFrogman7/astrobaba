@@ -10,15 +10,25 @@ even if they did.
 Each tick:
 1. requested past request_timeout_s → cancelled (request_timeout);
    accepted past join_timeout_s → failed (join_timeout);
-   accepted with both sockets connected → active (fallback for a cross-process race).
-2. active sessions: if a side has not been seen for heartbeat_grace_s (or was gone for longer
+   accepted with both sockets connected (calls: and both in the audio room) → active
+   (fallback for a cross-process race).
+2. active calls with a minute due: LiveKit is asked who is in the room (at most once per call
+   per minute boundary, retried once a minute while it fails, all calls concurrently with a
+   short timeout). A role missing from the listing is marked as having left now, the same as a
+   `participant_left` webhook. A call minute is charged only when a successful listing covers
+   it; while LiveKit cannot answer nothing is charged, and if it stays unanswerable for longer
+   than heartbeat_grace_s the call ends at the time the checks started failing
+   (`service_unavailable`, audited as `session.call_unverified`; ADR-0008).
+3. active sessions: if a side has not been seen for heartbeat_grace_s (or was gone for longer
    than that and came back, e.g. after an API outage), end at its last-seen time
-   (`user_dropped`/`astrologer_dropped`) without charging anything that started later.
+   (`user_dropped`/`astrologer_dropped`) without charging anything that started later. On a
+   call, a side that left the LiveKit room (webhook) counts as last seen when it left, even
+   while its control socket stays open; a rejoin within the grace period keeps the call going.
    Otherwise charge every minute that is due (minute n+1 at started_at + n * minute): free
    sessions stop at free_minutes (`free_minutes_used`), an empty wallet ends at the boundary
    (`insufficient_funds`), and `low_balance` is sent when exactly one more minute is covered.
-3. ended sessions whose after-end steps did not finish (crash) are settled again.
-4. astrologers who are free with a non-empty queue get the head promoted.
+4. ended sessions whose after-end steps did not finish (crash) are settled again.
+5. astrologers who are free with a non-empty queue get the head promoted.
 
 The background loop is skipped when meter_tick_seconds <= 0, and in APP_ENV=test unless
 `app.state.meter_enabled` is set before startup: tests drive `tick(app_or_deps, now=...)`.
@@ -34,8 +44,9 @@ from dataclasses import dataclass, field
 from fastapi import FastAPI
 from sqlalchemy import ColumnElement, func, select
 
-from astro_api import chat_bus, wallet
+from astro_api import chat_bus, livekit_client, wallet
 from astro_api import session_service as svc
+from astro_api.audit import audit
 from astro_api.models import ConsultSession
 
 log = logging.getLogger("astro_api.meter")
@@ -58,6 +69,7 @@ async def tick(target: "FastAPI | svc.Deps", now: dt.datetime | None = None) -> 
     report = TickReport()
     await _timeouts(deps, now, report)
     await _activate_ready(deps, now, report)
+    await _verify_calls(deps, now)
     await _meter_active(deps, now, report)
     await _settle(deps, now)
     await _promote_free(deps, now, report)
@@ -108,6 +120,69 @@ async def _activate_ready(deps: svc.Deps, now: dt.datetime, report: TickReport) 
             report.activated.append(sid)
 
 
+# ---------------------------------------------------------------- calls: presence checks
+
+
+async def _verify_calls(deps: svc.Deps, now: dt.datetime) -> None:
+    """Ask LiveKit who is in the room of every active call whose next minute is due and not yet
+    covered by a successful listing. Checks run concurrently, each with a short timeout."""
+    minute = deps.minute
+    async with deps.sessionmaker() as db:
+        rows = (
+            await db.execute(
+                select(
+                    ConsultSession.id, ConsultSession.started_at, ConsultSession.billed_minutes
+                ).where(ConsultSession.status == "active", ConsultSession.kind == "call")
+            )
+        ).all()
+    checks = []
+    claim_ttl = int(livekit_client.VERIFY_TIMEOUT_S) + 3
+    for sid, started_at, billed in rows:
+        if started_at is None:
+            continue
+        boundary = started_at + minute * billed  # start of minute billed + 1
+        if boundary > now:
+            continue
+        state = await chat_bus.verify_state(deps.redis, sid)
+        if state.ok_upto > billed:
+            continue  # already covered
+        # One check per boundary; while checks fail, one retry per minute (times are stored to
+        # the millisecond, hence the small tolerance).
+        retry_after = minute - dt.timedelta(milliseconds=5)
+        last = state.last_try
+        if last is not None and last >= boundary and now - last < retry_after:
+            continue
+        if await chat_bus.verify_claim(deps.redis, sid, now, claim_ttl):
+            checks.append(_verify_one(deps, sid, started_at, now))
+    if checks:
+        await asyncio.gather(*checks)
+
+
+async def _verify_one(
+    deps: svc.Deps, sid: uuid.UUID, started_at: dt.datetime, now: dt.datetime
+) -> None:
+    try:
+        backend = deps.call_backend()
+        present = await asyncio.wait_for(
+            backend.list_participants(livekit_client.room_name(sid)),
+            livekit_client.VERIFY_TIMEOUT_S,
+        )
+    except Exception as exc:
+        log.warning(
+            "call presence check failed",
+            extra={"session_id": str(sid), "error": type(exc).__name__},
+        )
+        await chat_bus.verify_failed(deps.redis, sid, now)
+        return
+    # Covers every minute that has started by now.
+    covered = int((now - started_at) / deps.minute) + 1
+    await chat_bus.verify_ok(deps.redis, sid, covered)
+    for role in svc.ROLES:
+        if role not in present:
+            # Same path as a participant_left webhook: dropped after the grace period.
+            await svc.call_participant(deps, sid, role, joined=False, participant_sid="", at=now)
+
+
 # ---------------------------------------------------------------- metering
 
 
@@ -115,28 +190,52 @@ async def _activate_ready(deps: svc.Deps, now: dt.datetime, report: TickReport) 
 class Drop:
     role: str
     at: dt.datetime
+    unverified: bool = False  # a call whose presence LiveKit could not confirm
 
 
-async def _drop(deps: svc.Deps, s: ConsultSession, now: dt.datetime) -> Drop | None:
+async def _drop(
+    deps: svc.Deps,
+    s: ConsultSession,
+    now: dt.datetime,
+    verify: chat_bus.VerifyState | None = None,
+) -> Drop | None:
     """The earliest side gone for longer than the grace period, with its last-seen time. Also
     copies the heartbeats into the row (they survive a Redis loss and feed the refund rules)."""
     assert s.started_at is not None
     grace = dt.timedelta(seconds=svc.rules().heartbeat_grace_s)
     seen = await chat_bus.last_seen(deps.redis, s.id)
+    call = await chat_bus.call_state(deps.redis, s.id) if s.kind == "call" else None
     drops: list[Drop] = []
     for role in svc.ROLES:
         redis_seen, gap = seen[role]
         stored: dt.datetime | None = getattr(s, f"{role}_last_seen_at")
         candidates = [t for t in (redis_seen, stored) if t is not None]
         last = min(max(candidates), now) if candidates else s.started_at
+        left_at = call[role].left_at if call is not None else None
+        if left_at is not None:
+            # Out of the audio room since left_at: the open control socket does not count.
+            last = max(min(last, left_at), s.started_at)
         if gap is not None and gap >= s.started_at:
             # Silent for longer than the grace period at some point, even if back now.
             drops.append(Drop(role, gap))
             last = min(last, gap)
         elif now - last > grace:
             drops.append(Drop(role, max(last, s.started_at)))
-        if stored is None or last > stored or (gap is not None and gap >= s.started_at):
+        if (
+            stored is None
+            or last > stored
+            or (gap is not None and gap >= s.started_at)
+            or left_at is not None
+        ):
             setattr(s, f"{role}_last_seen_at", last)
+    failed = verify.fail_since if verify is not None else None
+    if failed is not None and now - failed > grace:
+        # LiveKit could not confirm anyone was in the room since `failed`: nothing after that
+        # is billable. Ended as an astrologer-side drop so the user-protective refund rule
+        # applies; the audit log records the real cause.
+        at = max(failed, s.started_at)
+        s.astrologer_last_seen_at = min(s.astrologer_last_seen_at or at, at)
+        drops.append(Drop("astrologer", at, unverified=True))
     return min(drops, key=lambda d: d.at) if drops else None
 
 
@@ -153,7 +252,8 @@ async def _meter_one(deps: svc.Deps, sid: uuid.UUID, now: dt.datetime, report: T
         s = await svc.lock(db, sid, skip_locked=True)
         if s is None or s.status != "active" or s.started_at is None:
             return  # another process holds it, or it changed meanwhile
-        drop = await _drop(deps, s, now)
+        verify = await chat_bus.verify_state(deps.redis, sid) if s.kind == "call" else None
+        drop = await _drop(deps, s, now, verify)
         # Minutes starting before the cut-off are owed; with nobody gone that is "now".
         horizon = drop.at if drop else now
         charged_any = False
@@ -163,6 +263,8 @@ async def _meter_one(deps: svc.Deps, sid: uuid.UUID, now: dt.datetime, report: T
             if not due:
                 break
             n = s.billed_minutes + 1
+            if verify is not None and n > verify.ok_upto:
+                break  # a call minute needs LiveKit to have confirmed both are in the room
             if s.is_free and s.free_minutes is not None and n > s.free_minutes:
                 await svc.finish(db, deps, s, "completed", "free_minutes_used", boundary)
                 report.ended.append((sid, "free_minutes_used"))
@@ -188,7 +290,16 @@ async def _meter_one(deps: svc.Deps, sid: uuid.UUID, now: dt.datetime, report: T
             report.charged.append((sid, n))
             charged_any = True
         if drop is not None and not ended:
-            reason = f"{drop.role}_dropped"
+            reason = "service_unavailable" if drop.unverified else f"{drop.role}_dropped"
+            if drop.unverified:
+                audit(
+                    db,
+                    "system",
+                    "session.call_unverified",
+                    "consult_session",
+                    str(s.id),
+                    since=drop.at.isoformat(),
+                )
             await svc.finish(db, deps, s, "completed", reason, drop.at)
             report.ended.append((sid, reason))
             ended = True

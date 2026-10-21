@@ -40,6 +40,7 @@ TXN_KINDS = (
     "promo_expiry",
     "settlement",
     "adjustment",
+    "payout",
 )
 ORDER_STATUSES = ("created", "paid", "failed")
 OVERRIDE_ACTIONS = ("allow", "block")

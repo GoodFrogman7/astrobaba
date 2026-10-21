@@ -175,3 +175,40 @@ migration `0004`. Tests were written first (`tests/test_ledger*.py`, `test_walle
 - **Reconciliation** matches gateway payments to recharge credits by payment id
   (`ledger_transactions.external_ref`) and by the gateway's payment time (`occurred_at`), so a
   webhook arriving after midnight still reconciles to the payment's day.
+
+## Implementation notes (Phase 5 payouts, 2026-10-21)
+
+Code: `services/api/src/astro_api/{earnings,payouts,payouts_api,portal_api}.py`,
+`wallet.post_payout`, the `payouts` reconciliation check; table `payouts` in `models_portal.py`,
+migration `0006`. Tests were written first (`tests/test_earnings.py`, `test_payouts.py`, the
+payouts check in `test_reconciliation.py`).
+
+- **Account added:** `bank:payouts` (asset, normal side debit): the account astrologer transfers
+  leave from. Not projected (summed from entries when read).
+- **Payout posting** (`kind = payout`, key `payout:{payout_id}`, `external_ref` = payout id,
+  `astrologer_id` set): debit `astrologer:{id}:payable`, credit `bank:payouts`, both the
+  payout's net. `wallet.post_payout` locks the astrologer's payable projection row
+  (`SELECT … FOR UPDATE`), checks the key again under the lock, and refuses an amount above the
+  projected payable balance (`PayoutExceedsPayable`, API `409 exceeds_payable`). The payout row
+  is locked too, so concurrent or repeated mark-paid calls post once; the same reference and
+  date again returns the paid payout. Migration 0006 adds `payout` to the transaction kinds;
+  `models_ledger.TXN_KINDS` should list it too (wallet-owned file).
+- **Earnings are read from the ledger only** (`earnings.py`): per transaction of kind
+  `consultation`/`refund` that touches the astrologer's payable, by `occurred_at` on IST
+  boundaries: gross = payable credit + commission credit of consultation transactions,
+  commission = that commission credit, refunds = payable debit of refund transactions,
+  net = gross − commission − refunds, minutes = consultation transactions, sessions = distinct
+  sessions charged. A refund counts in the month it is posted (it can hit last month's session).
+- **Carry-forward.** A payout's `carried_in_paise` = everything earned net of refunds before
+  its period − the net of the astrologer's earlier payouts that are not void. A void payout
+  (net below `payouts.min_payout_paise`, or voided by an admin) therefore flows into the next
+  generation without any extra bookkeeping, earnings from before the first statement are
+  included, and a debt (refunds after a payout) is recovered from the next one. The table
+  enforces `net = gross − commission − refunds + carried_in` with a CHECK. To keep this exact,
+  only ended months are generated, generation runs under an advisory lock, and an astrologer
+  who already has a payout for a later period is skipped. Re-running regenerates drafts only.
+- **Reconciliation** check 5 (`payouts`): every paid payout has exactly one `payout:{id}`
+  transaction debiting its astrologer's payable and crediting `bank:payouts` by its net, and
+  every payout posting belongs to a paid payout.
+- **Tax.** TDS and GST are not modelled; statements and the payout view carry a `tax_note`
+  saying so until a CA confirms treatment (PLAN.md §7).

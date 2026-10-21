@@ -4,6 +4,10 @@
 older (4009). Frames from the client refresh the heartbeat the meter relies on. Events reach the
 socket through the Redis channel of the session, so the two sides may be served by different
 API processes. Message text is never logged.
+
+On a call (`kind: "call"`) the same socket is the control channel and the meter's heartbeat:
+text `message` frames are refused (`call_has_no_text`), and after `hello` the socket gets a
+`call` event with who is in the LiveKit room (sent again whenever that changes).
 """
 
 import asyncio
@@ -58,8 +62,11 @@ async def _role_of(deps: svc.Deps, ticket: ws_tickets.Ticket) -> ConsultSession 
 
 
 class Connection:
-    def __init__(self, ws: WebSocket, deps: svc.Deps, session_id: uuid.UUID, role: str) -> None:
+    def __init__(
+        self, ws: WebSocket, deps: svc.Deps, session_id: uuid.UUID, role: str, kind: str = "chat"
+    ) -> None:
         self.ws = ws
+        self.kind = kind
         self.deps = deps
         self.redis: Redis = deps.redis
         self.session_id = session_id
@@ -111,6 +118,9 @@ class Connection:
                 await self.error("bad_frame", "Unknown frame.")
 
     async def on_message(self, frame: dict[str, Any]) -> None:
+        if self.kind == "call":
+            await self.error("call_has_no_text", "This is a voice call; text is not sent here.")
+            return
         client_id, text = frame.get("client_id"), frame.get("text")
         if not isinstance(client_id, str) or not 1 <= len(client_id) <= MAX_CLIENT_ID:
             await self.error("bad_frame", "client_id is required (1-64 characters).")
@@ -175,11 +185,12 @@ async def chat_socket(websocket: WebSocket, session_id: uuid.UUID) -> None:
     if ticket is None or ticket.session_id != session_id:
         await websocket.close(code=CLOSE_BAD_TICKET)
         return
-    if await _role_of(deps, ticket) is None:
+    found = await _role_of(deps, ticket)
+    if found is None:
         await websocket.close(code=CLOSE_FORBIDDEN)
         return
 
-    conn = Connection(websocket, deps, session_id, ticket.role)
+    conn = Connection(websocket, deps, session_id, ticket.role, found.kind)
     pubsub = deps.redis.pubsub()
     await pubsub.subscribe(chat_bus.channel(session_id))
     try:
@@ -198,6 +209,9 @@ async def chat_socket(websocket: WebSocket, session_id: uuid.UUID) -> None:
             await conn.send({"type": "ended", "session": session})
             await websocket.close(code=CLOSE_ENDED)
             return
+        if conn.kind == "call":
+            joined = chat_bus.joined_view(await chat_bus.call_state(deps.redis, session_id))
+            await conn.send({"type": "call", "joined": joined})
         if status == "accepted" and await chat_bus.both_connected(deps.redis, session_id):
             await svc.activate(deps, session_id)
 

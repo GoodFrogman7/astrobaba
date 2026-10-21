@@ -1,6 +1,7 @@
 """Operator commands. `python -m astro_api.cli grant-role <phone> admin` / `revoke-role`;
 `reconcile [--date YYYY-MM-DD]` (default: yesterday IST; exit 1 on drift or error);
-`expire-promo` (expire promo lots past their expiry)."""
+`expire-promo` (expire promo lots past their expiry); `payouts generate [--period YYYY-MM]`
+(default: the previous IST month; run from cron on the 1st)."""
 
 import argparse
 import asyncio
@@ -10,7 +11,7 @@ import sys
 from redis.asyncio import Redis
 from sqlalchemy import select
 
-from astro_api import payments, reconciliation, wallet
+from astro_api import earnings, payments, payouts, reconciliation, wallet
 from astro_api.config import get_settings
 from astro_api.db import make_engine, make_sessionmaker
 from astro_api.errors import ApiError
@@ -68,6 +69,17 @@ async def expire_promo() -> int:
         await engine.dispose()
 
 
+async def generate_payouts(period: str) -> payouts.GenerateResult:
+    engine = make_engine(get_settings().database_url.get_secret_value())
+    try:
+        async with make_sessionmaker(engine)() as db:
+            result = await payouts.generate(db, period, actor=payouts.SYSTEM_ACTOR)
+            await db.commit()
+            return result
+    finally:
+        await engine.dispose()
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(prog="python -m astro_api.cli")
     sub = ap.add_subparsers(dest="command", required=True)
@@ -78,7 +90,24 @@ def main(argv: list[str] | None = None) -> int:
     rec = sub.add_parser("reconcile", help="ledger vs gateway for one IST day")
     rec.add_argument("--date", type=dt.date.fromisoformat, default=None)
     sub.add_parser("expire-promo", help="expire promo lots past their expiry")
+    pay = sub.add_parser("payouts", help="monthly astrologer payouts")
+    pay_sub = pay.add_subparsers(dest="payouts_command", required=True)
+    gen = pay_sub.add_parser("generate", help="generate payouts for an ended IST month")
+    gen.add_argument("--period", default=None, help="YYYY-MM (default: previous IST month)")
     args = ap.parse_args(argv)
+    if args.command == "payouts":
+        period = args.period or earnings.previous_period()
+        try:
+            result = asyncio.run(generate_payouts(period))
+        except payouts.PayoutError as exc:
+            print(f"{exc.code}: {exc.message}", file=sys.stderr)
+            return 2
+        print(
+            f"payouts period={result.period} generated={result.generated}"
+            f" updated={result.updated} skipped={result.skipped}"
+            f" carried_forward={result.carried_forward}"
+        )
+        return 0
     if args.command == "reconcile":
         day = args.date or reconciliation.default_day()
         status, drift = asyncio.run(reconcile(day))

@@ -8,6 +8,9 @@ Checks, each reported with issues (ids and amounts only):
    credit of the same amount, and each recharge credit of the day has a gateway payment.
 4. settlements: each gateway settlement of the day has one clearing → bank posting with the same
    net amount and fees, and vice versa.
+5. payouts (Phase 5): every `paid` payout has exactly one `payout:{id}` ledger transaction that
+   debits that astrologer's payable and credits `bank:payouts` by its net amount, and every
+   payout posting belongs to a paid payout. Not limited to the day: payouts are few.
 
 Any issue → status `drift` and an error-level `reconciliation_drift` log line for alerting.
 """
@@ -260,6 +263,64 @@ async def _settlements(
     return _result("settlements", issues, drift, count=len(reported))
 
 
+async def _payouts(db: AsyncSession) -> Issue:
+    paid = {
+        str(pid): (f"astrologer:{aid}:payable", int(net))
+        for pid, aid, net in (
+            await db.execute(
+                text("SELECT id, astrologer_id, net_paise FROM payouts WHERE status = 'paid'")
+            )
+        ).all()
+    }
+    rows = (
+        await db.execute(
+            text(
+                "SELECT t.idempotency_key, t.external_ref,"
+                " coalesce(sum(e.amount_paise) FILTER (WHERE e.account_id LIKE 'astrologer:%'"
+                " AND e.direction = 'debit'), 0),"
+                " coalesce(sum(e.amount_paise) FILTER (WHERE e.account_id = :bank"
+                " AND e.direction = 'credit'), 0),"
+                " min(e.account_id) FILTER (WHERE e.account_id LIKE 'astrologer:%')"
+                " FROM ledger_transactions t JOIN ledger_entries e ON e.transaction_id = t.id"
+                " WHERE t.kind = 'payout' OR t.idempotency_key LIKE 'payout:%'"
+                " GROUP BY t.id, t.idempotency_key, t.external_ref"
+            ),
+            {"bank": wallet.BANK_PAYOUTS},
+        )
+    ).all()
+    # payout id -> [(payable debit, bank credit, payable account)] of its postings
+    posted: dict[str, list[tuple[int, int, str | None]]] = {}
+    for key, ref, debit, credit, account in rows:
+        pid = key.removeprefix("payout:") if key.startswith("payout:") else str(ref)
+        posted.setdefault(pid, []).append((int(debit), int(credit), account))
+    issues: list[Issue] = []
+    for pid, (account, net) in paid.items():
+        found = posted.pop(pid, [])
+        ledger = sum(debit for debit, _, _ in found)
+        if not found:
+            problem = "missing_posting"
+        elif len(found) > 1:
+            problem = "duplicate_posting"
+        elif found[0] != (net, net, account):
+            problem = "amount_mismatch"
+        else:
+            continue
+        issues.append(
+            {"problem": problem, "payout_id": pid, "payout_paise": net, "ledger_paise": ledger}
+        )
+    for pid, found in posted.items():
+        issues.append(
+            {
+                "problem": "posting_without_paid_payout",
+                "payout_id": pid,
+                "payout_paise": 0,
+                "ledger_paise": sum(debit for debit, _, _ in found),
+            }
+        )
+    drift = sum(abs(i["payout_paise"] - i["ledger_paise"]) for i in issues)
+    return _result("payouts", issues, drift, count=len(paid))
+
+
 async def run(
     db: AsyncSession, gateway: RazorpayGateway | FakeGateway, day: dt.date, *, trigger: str
 ) -> ReconciliationRun:
@@ -281,6 +342,7 @@ async def run(
             await _projections(db),
             await _gateway_payments(db, gateway, start, end),
             await _settlements(db, gateway, start, end),
+            await _payouts(db),
         ]
     except Exception as exc:
         log.error(

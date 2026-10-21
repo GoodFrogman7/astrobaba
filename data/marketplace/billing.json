@@ -91,6 +91,11 @@
       "cap_paise": 20000,
       "max_per_user_per_30_days": 1
     },
+    "service_unavailable": {
+      "enabled": true,
+      "description": "A call ended because the voice service could not confirm both sides were present (our outage). Minutes after presence was last confirmed are refunded; never counted against the astrologer.",
+      "refund": "minutes_after_presence_lost"
+    },
     "decided": "founder, 2026-10-21: rules as configured; no goodwill refunds above what was charged; free sessions never refunded; refunded promo credit expires after promo_expiry_days"
   },
   "reconciliation": {

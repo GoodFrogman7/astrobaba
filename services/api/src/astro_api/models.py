@@ -68,6 +68,8 @@ END_REASONS = (
     "join_timeout",
     "user_dropped",
     "astrologer_dropped",
+    # A call ended because LiveKit could not confirm presence: our outage, not either side's.
+    "service_unavailable",
     "admin",
 )
 REVIEW_STATUSES = ("published", "flagged", "hidden")
@@ -365,4 +367,4 @@ class Review(Base):
 
 
 # Phase 4 tables live in their own modules; importing them here registers them on Base.metadata.
-from astro_api import models_ledger, models_sessions  # noqa: E402, F401
+from astro_api import models_ledger, models_portal, models_sessions  # noqa: E402, F401

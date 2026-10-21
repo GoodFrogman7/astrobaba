@@ -41,6 +41,7 @@ from astro_api import session_service as svc
 from astro_api.chat_crypto import cipher_from_settings
 from astro_api.config import Settings
 from astro_api.db import make_engine, make_sessionmaker
+from astro_api.livekit_client import CallBackend
 from astro_api.models import ConsultSession
 
 
@@ -388,14 +389,17 @@ PRICE = 2000  # make_live default (tier rising: 4000 bps)
 
 
 @asynccontextmanager
-async def deps_for(settings: Settings, **overrides: Any) -> AsyncIterator[svc.Deps]:
+async def deps_for(
+    settings: Settings, calls: CallBackend | None = None, **overrides: Any
+) -> AsyncIterator[svc.Deps]:
     """A Deps (one "API process": its own engine and Redis pool) for driving the state machine
-    and the meter directly, e.g. with billing_minute_seconds=1 and an injected clock."""
+    and the meter directly, e.g. with billing_minute_seconds=1 and an injected clock. `calls` is
+    the LiveKit backend for voice-call tests (default: built from the settings on first use)."""
     s = settings.model_copy(update=overrides)
     engine = make_engine(s.database_url.get_secret_value())
     redis = Redis.from_url(s.redis_url.get_secret_value())
     try:
-        yield svc.Deps(make_sessionmaker(engine), redis, s, cipher_from_settings(s))
+        yield svc.Deps(make_sessionmaker(engine), redis, s, cipher_from_settings(s), calls)
     finally:
         await redis.aclose()
         await engine.dispose()
@@ -427,10 +431,11 @@ class World:
         *,
         free: bool = False,
         astrologer_id: str | None = None,
+        kind: str = "chat",
     ) -> Any:
         return self.client.post(
             "/v1/sessions",
-            json={"astrologer_id": astrologer_id or self.aid, "kind": "chat", "free": free},
+            json={"astrologer_id": astrologer_id or self.aid, "kind": kind, "free": free},
             headers={**headers, "Idempotency-Key": key or uuid.uuid4().hex},
         )
 
@@ -438,10 +443,15 @@ class World:
         return self.client.post(f"/v1/sessions/{sid}/{action}", headers=headers)
 
     def accepted(
-        self, phone: str = USER_PHONE, fund: int = 100_000, *, free: bool = False
+        self,
+        phone: str = USER_PHONE,
+        fund: int = 100_000,
+        *,
+        free: bool = False,
+        kind: str = "chat",
     ) -> tuple[dict[str, str], uuid.UUID, str]:
         headers, uid = self.user(phone, fund)
-        r = self.create(headers, free=free)
+        r = self.create(headers, free=free, kind=kind)
         assert r.status_code == 201, r.text
         sid = r.json()["id"]
         r = self.post(sid, "accept", self.astro)
