@@ -56,6 +56,13 @@ class Settings(BaseSettings):
     livekit_public_url: str = "ws://localhost:7880"
     livekit_api_key: str = ""
     livekit_api_secret: SecretStr = SecretStr("")
+    # Reports and partner leads (Phase 6). "console" logs instead of sending (dev/test only).
+    email_provider: Literal["console", "smtp"] = "console"
+    email_from: str = "AstroPlatform <no-reply@localhost>"
+    smtp_url: SecretStr = SecretStr("")  # smtp(s)://user:password@host:port
+    # How the worker reaches the web app's private print pages, and its Chromium binary.
+    web_internal_url: str = "http://localhost:3000"
+    chromium_path: str = ""
     otp_ttl_s: int = 300
     otp_max_attempts: int = 5
     otp_resend_after_s: int = 30
@@ -91,6 +98,8 @@ def check_production_settings(settings: Settings) -> None:
         problems.append("BILLING_MINUTE_SECONDS must be 60")
     if settings.documents_backend == "local":
         problems.append("DOCUMENTS_BACKEND=local keeps KYC documents on the container disk")
+    if settings.email_provider == "console":
+        problems.append("EMAIL_PROVIDER=console")
     if flag_enabled("voice_calls") and (
         not settings.livekit_api_key
         or len(settings.livekit_api_secret.get_secret_value()) < 32

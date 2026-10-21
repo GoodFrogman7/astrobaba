@@ -69,6 +69,13 @@ and the user is refunded automatically (ledger `refund:report:{id}`, back to the
   stores the PDF with the documents storage (random key), records pages and size, marks the
   report `ready`, and enqueues email if an address was given (dev: console email provider).
 
+### 2.3a Admin
+
+`GET /v1/admin/reports?status=&cursor=` → reports with owner id, sku, status, attempts and last
+error code (never birth details). `POST /v1/admin/reports/{id}/retry` re-queues a `failed`
+render (new job key `report:{id}:render:{n}`); a refunded report is re-rendered for free only if
+the admin says so (`{charge_again: false}` is the only option in v1). Audited.
+
 ### 2.4 Content (15–20 A4 pages)
 
 Every number and placement comes from the snapshot (engine) or `data/astro` tables. No
