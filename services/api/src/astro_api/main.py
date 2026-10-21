@@ -16,11 +16,14 @@ from astro_api import (
     applicant,
     auth,
     billing_meter,
+    calls_api,
     chat_ws,
     horoscopes,
     kundlis,
     marketplace,
     payments_webhooks,
+    payouts_api,
+    portal_api,
     reviews,
     sessions_api,
     wallet_api,
@@ -84,6 +87,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         admin_money.router,
         sessions_api.router,
         chat_ws.router,
+        calls_api.router,
+        portal_api.router,
+        payouts_api.router,
     ):
         app.include_router(router)
     app.add_middleware(
