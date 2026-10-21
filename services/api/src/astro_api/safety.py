@@ -453,6 +453,8 @@ _NEG_BEFORE = re.compile(
     r"no ?one can|nobody can)\b(\s+[\w']+){0,3}\s*"
     r"|\bno\s+|\bno(\s+\w+){1,2}\s+(can|will|could)\s+)$"
 )
+# cure_claim only: "ask your doctor before you stop ..." defers to the doctor.
+_DEFER_BEFORE = re.compile(r"\b(before|unless|until)\b(\s+[\w']+){0,3}\s*$")
 _NEG_AFTER = re.compile(r"^\s*(\S+\s+){0,2}?(नहीं|नही|मत|\bnahi\b|\bnahin\b|\bnhi\b|\bmat\b)")
 
 _CURRENCY = r"(?:₹|\brs\.?|\binr\b|\brupees?\b|\brupaye\b|रुपये|रुपए|रु\.)"
@@ -599,10 +601,12 @@ _RULES: tuple[_Rule, ...] = (
         # Telling a client to drop medicine or doctors: the claim that astrology replaces care.
         "cure_claim",
         (
-            r"\bstop (taking )?(your |the )?(medicines?|medication|treatment|tablets|pills|"
-            r"insulin|chemo|therapy)\b",
-            r"\b(no need|don'?t need|do not need) (to (see|visit|go to|consult) )?(a |the |any )?"
-            r"(doctors?|medicines?|medication|treatment|hospital|surgery|therapy)\b",
+            # Up to three words may name the illness or kind ("stop your blood pressure medicine").
+            r"\bstop (taking )?(your |the )?([a-z]+ ){0,3}(medicines?|medication|treatment|tablets|"
+            r"pills|insulin|chemo|therapy)\b",
+            r"\b(no need|don'?t need|do not need) (for |of |to (see|visit|go to|consult) )?"
+            r"(a |the |any )?([a-z]+ ){0,2}(doctors?|medicines?|medication|treatment|hospital|"
+            r"surgery|therapy)\b",
             r"\binstead of (a |the |your )?(doctors?|medicines?|medication|treatment|chemo|"
             r"surgery|hospital|therapy)\b",
             r"\b(don'?t|do not|never) (go to|see|visit|consult|trust) (a |the |any )?(doctors?|"
@@ -623,10 +627,12 @@ _COMPILED_RULES: tuple[tuple[_Rule, list[re.Pattern[str]]], ...] = tuple(
 )
 
 
-def _negated(t: str, m: re.Match[str], inside: bool) -> bool:
+def _negated(t: str, m: re.Match[str], rule: _Rule) -> bool:
     before = t[max(0, m.start() - 40) : m.start()]
     after = t[m.end() : m.end() + 25]
-    if inside and _NEG_INSIDE.search(m.group(0)):
+    if rule.inside and _NEG_INSIDE.search(m.group(0)):
+        return True
+    if rule.reason == "cure_claim" and _DEFER_BEFORE.search(before):
         return True
     return bool(_NEG_BEFORE.search(before) or _NEG_AFTER.search(after))
 
@@ -634,7 +640,7 @@ def _negated(t: str, m: re.Match[str], inside: bool) -> bool:
 def _hit(t: str, rule: _Rule, patterns: list[re.Pattern[str]]) -> bool:
     for p in patterns:
         for m in p.finditer(t):
-            if not rule.negatable or not _negated(t, m, rule.inside):
+            if not rule.negatable or not _negated(t, m, rule):
                 return True
     return False
 

@@ -68,6 +68,12 @@ def test_self_harm_words_from_the_astrologer_are_not_refused() -> None:
         ("आपके परिवार पर श्राप है", "fear_selling"),
         ("Stop taking your medicines, the stars will heal you", "cure_claim"),
         ("दवा बंद कर दो", "cure_claim"),
+        ("stop your blood pressure medicine, wear a ruby", "cure_claim"),
+        ("Stop the diabetes tablets and chant this mantra", "cure_claim"),
+        ("no need for a heart doctor, do this puja", "cure_claim"),
+        ("sugar ki dawa band kar do", "cure_claim"),
+        ("बीपी की दवा बंद कर दो", "cure_claim"),
+        ("before we start pay me on upi", "off_platform_payment"),
     ],
 )
 def test_astrologer_rules(text: str, reason: str) -> None:
@@ -83,6 +89,9 @@ def test_astrologer_rules(text: str, reason: str) -> None:
         "No remedy can cure an illness. Please see a doctor.",
         "मैं कोई गारंटी नहीं देता।",
         "Don't stop your medicines without your doctor.",
+        "Never stop your blood pressure medicine on your own.",
+        "Keep taking your diabetes tablets and see your heart doctor.",
+        "Ask your doctor before you stop any blood pressure medicine.",
         "दवा बंद मत करो, डॉक्टर से पूछो।",
         "Please don't pay anyone outside the app.",
         "Remedies are optional and you don't need to buy any gemstone.",
