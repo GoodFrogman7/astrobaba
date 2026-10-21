@@ -1,5 +1,7 @@
-"""LLM providers for horoscope prose. Providers only turn computed facts into wording; every
-output is validated (astro_api.horoscope_rules) and then queued for human review.
+"""LLM providers for horoscope prose (`generate`) and AI assistant answers (`answer`, ADR-0010).
+Providers only turn computed facts into wording; every output is validated
+(astro_api.horoscope_rules; AI answers also astro_api.ai_safety and ai_facts) before it is stored.
+Horoscopes then wait for human review.
 
 Use paid, no-training API tiers only (PLAN.md §6). Keys are SecretStr and never logged.
 """
@@ -20,6 +22,15 @@ SECTIONS_SCHEMA: dict[str, Any] = {
     "type": "object",
     "properties": {a: {"type": "string"} for a in AREAS},
     "required": list(AREAS),
+    "additionalProperties": False,
+}
+
+
+# AI assistant answers (ADR-0010): one plain-text answer.
+ANSWER_SCHEMA: dict[str, Any] = {
+    "type": "object",
+    "properties": {"answer": {"type": "string"}},
+    "required": ["answer"],
     "additionalProperties": False,
 }
 
@@ -59,6 +70,14 @@ class LlmProvider(Protocol):
     async def generate(self, req: LlmRequest) -> LlmResult: ...
 
 
+class QaProvider(Protocol):
+    """AI assistant answers: `LlmResult.text` is a JSON object {"answer": str}."""
+
+    name: str
+
+    async def answer(self, req: LlmRequest) -> LlmResult: ...
+
+
 class AnthropicProvider:
     """Claude via the official SDK, with JSON structured output and server-side refusal fallback."""
 
@@ -81,6 +100,12 @@ class AnthropicProvider:
         self.effort = settings.anthropic_effort
 
     async def generate(self, req: LlmRequest) -> LlmResult:
+        return await self._json(req, SECTIONS_SCHEMA)
+
+    async def answer(self, req: LlmRequest) -> LlmResult:
+        return await self._json(req, ANSWER_SCHEMA)
+
+    async def _json(self, req: LlmRequest, schema: dict[str, Any]) -> LlmResult:
         try:
             response = await self.client.beta.messages.create(
                 model=self.model,
@@ -89,7 +114,7 @@ class AnthropicProvider:
                 messages=[{"role": "user", "content": req.user}],
                 output_config={
                     "effort": self.effort,
-                    "format": {"type": "json_schema", "schema": SECTIONS_SCHEMA},
+                    "format": {"type": "json_schema", "schema": schema},
                 },
                 betas=["server-side-fallback-2026-07-01"],
                 fallbacks="default",
@@ -124,6 +149,12 @@ class GeminiProvider:
         self.http = http or httpx.AsyncClient(timeout=settings.llm_timeout_s)
 
     async def generate(self, req: LlmRequest) -> LlmResult:
+        return await self._json(req, {a: {"type": "STRING"} for a in AREAS})
+
+    async def answer(self, req: LlmRequest) -> LlmResult:
+        return await self._json(req, {"answer": {"type": "STRING"}})
+
+    async def _json(self, req: LlmRequest, properties: dict[str, Any]) -> LlmResult:
         body = {
             "systemInstruction": {"parts": [{"text": req.system}]},
             "contents": [{"role": "user", "parts": [{"text": req.user}]}],
@@ -131,8 +162,8 @@ class GeminiProvider:
                 "responseMimeType": "application/json",
                 "responseSchema": {
                     "type": "OBJECT",
-                    "properties": {a: {"type": "STRING"} for a in AREAS},
-                    "required": list(AREAS),
+                    "properties": properties,
+                    "required": list(properties),
                 },
             },
         }
@@ -191,6 +222,48 @@ class FakeProvider:
     async def generate(self, req: LlmRequest) -> LlmResult:
         sections = {a: self._line(req.facts, a, req.locale) for a in AREAS}
         return LlmResult(text=json.dumps(sections, ensure_ascii=False), model="fake")
+
+    async def answer(self, req: LlmRequest) -> LlmResult:
+        """A plain, grounded AI-assistant answer from the chart facts (ai_facts shape)."""
+        facts = req.facts
+        moon = next(p for p in facts["planets"] if p["graha"] == "moon")
+        dasha = facts.get("dasha")
+        g, s = self.grahas, self.signs
+        if req.locale == "hi":
+            parts = [f"आपकी कुंडली में {g['moon']['hi']} {s[moon['sign']]['hi']} राशि में है।"]
+            if dasha:
+                parts.append(f"अभी आपकी {g[dasha['mahadasha']]['hi']} की महादशा चल रही है।")
+            parts.append(
+                "इन ग्रह-स्थितियों को कई बातों में से एक मानें: सोच-समझकर क़दम उठाएँ, जुड़े हुए "
+                "लोगों से खुलकर बात करें और बड़े फ़ैसलों को समय दें। यह गणना की गई कुंडली की "
+                "सामान्य व्याख्या है, किसी ख़ास घटना की भविष्यवाणी नहीं।"
+            )
+        else:
+            where = ""
+            if moon.get("house"):
+                h = moon["house"]
+                suffix = {1: "st", 2: "nd", 3: "rd"}.get(h, "th")  # houses are 1-12
+                where = f", in your {h}{suffix} house"
+            parts = [f"Your Moon is in {s[moon['sign']]['en']}{where}."]
+            if dasha:
+                parts.append(f"You are now in the {g[dasha['mahadasha']]['en']} mahadasha.")
+            parts.append(
+                "Read these placements as one input among many: take practical, steady steps, "
+                "talk openly with the people involved and give big decisions the time they "
+                "need. This is a general reading of the computed chart, not a forecast of any "
+                "specific event."
+            )
+        answer = " ".join(parts)
+        return LlmResult(text=json.dumps({"answer": answer}, ensure_ascii=False), model="fake")
+
+
+def make_qa_provider(settings: WorkerSettings) -> QaProvider:
+    """Same providers and settings as horoscopes (LLM_PROVIDER); paid no-training tiers only."""
+    if settings.llm_provider == "anthropic":
+        return AnthropicProvider(settings)
+    if settings.llm_provider == "gemini":
+        return GeminiProvider(settings)
+    return FakeProvider(settings)
 
 
 def make_provider(settings: WorkerSettings) -> LlmProvider:
