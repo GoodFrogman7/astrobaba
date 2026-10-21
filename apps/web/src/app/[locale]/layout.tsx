@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { hasLocale, NextIntlClientProvider } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
-import { Noto_Sans, Noto_Sans_Devanagari } from "next/font/google";
+import { Noto_Sans } from "next/font/google";
 import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
 import { JsonLd } from "@/components/JsonLd";
@@ -13,14 +13,12 @@ import { SITE_URL } from "@/site";
 import "../globals.css";
 
 const latin = Noto_Sans({ subsets: ["latin"], variable: "--font-latin", display: "swap" });
-// Not preloaded, and used only when already available: the Devanagari font is ~120 KB, and
-// Android ships Noto Devanagari as a system font, so text never waits for it (Lighthouse LCP).
-const devanagari = Noto_Sans_Devanagari({
-  subsets: ["devanagari"],
-  variable: "--font-devanagari",
-  display: "optional",
-  preload: false,
-});
+
+// Devanagari uses the system font on every platform (Noto Sans Devanagari on Android, Nirmala UI
+// on Windows, Kohinoor Devanagari on Apple). A ~120 KB web font swapping in caused layout shift
+// on Hindi pages (Lighthouse CLS 0.25), and these system fonts are good.
+const DEVANAGARI_STACK =
+  '"Noto Sans Devanagari", "Nirmala UI", "Kohinoor Devanagari", "Mangal", "Lohit Devanagari"';
 
 export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }));
@@ -41,10 +39,17 @@ export default async function LocaleLayout({
   const t = await getTranslations({ locale, namespace: "nav" });
 
   return (
-    <html lang={locale} className={`${latin.variable} ${devanagari.variable}`}>
+    <html lang={locale} className={latin.variable}>
       <body
         className="min-h-dvh font-sans antialiased"
-        style={{ ["--font-body" as string]: "var(--font-latin), var(--font-devanagari)" }}
+        style={{
+          ["--font-body" as string]:
+            // Hindi pages lead with the system Devanagari fonts (they include Latin letters), so
+            // text never waits for the Latin web font; English pages lead with the web font.
+            locale === "hi"
+              ? `${DEVANAGARI_STACK}, var(--font-latin)`
+              : `var(--font-latin), ${DEVANAGARI_STACK}`,
+        }}
       >
         <NextIntlClientProvider>
           <a
