@@ -14,6 +14,10 @@ dependencies = [
   "redis>=5.2",
   # multipart/form-data for KYC document uploads
   "python-multipart>=0.0.18",
+  # Razorpay REST calls (orders, payments, settlements)
+  "httpx>=0.28",
+  # AES-256-GCM for chat messages at rest
+  "cryptography>=44",
 ]
 
 [build-system]

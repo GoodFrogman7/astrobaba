@@ -30,9 +30,10 @@ def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item
 
 
 def _test_redis_url() -> str:
-    """Integration tests use Redis database 15 so they never touch development data."""
+    """Integration tests use Redis database 15 (or TEST_REDIS_DB) so they never touch development
+    data."""
     base = os.environ["REDIS_URL"].rsplit("/", 1)[0]
-    return f"{base}/15"
+    return f"{base}/{os.environ.get('TEST_REDIS_DB', '15')}"
 
 
 @pytest.fixture(scope="session")
