@@ -33,7 +33,7 @@ chars, `[A-Za-z0-9_-]`). Same key + same body from the same user → the origina
 campaign}], free_session: {enabled, eligible, minutes, reason}}`.
 
 `WalletTxn`: `{id, kind, amount_paise, real_paise, promo_paise, created_at, session_id,
-astrologer: {slug, display_name} | null}`; `amount_paise` is signed from the user's view
+astrologer: {slug, display_name} | null, product: "report" | "ai_question" | null}`; `amount_paise` is signed from the user's view
 (credit positive). `kind ∈ recharge | recharge_bonus | consultation | purchase | refund | free_session_grant
 | promo_expiry | adjustment`. Per-minute charges of one session are grouped into one
 `consultation` row (sum), so a 30-minute chat is one line.

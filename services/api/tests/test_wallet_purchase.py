@@ -142,3 +142,72 @@ async def test_full_refund_reverses_buckets_once(maker) -> None:  # type: ignore
             await wallet.refund_purchase(
                 db, user_id=uid, key="refund:report:nope", original_key="report:nope:paid"
             )
+
+
+async def test_refunded_promo_keeps_its_expiry_so_refunds_never_extend_promo(maker) -> None:  # type: ignore[no-untyped-def]
+    """Buy-and-refund must not turn soon-expiring promo into fresh 30-day credit: the refunded
+    lot expires when the spent lots did, but never sooner than a day from now."""
+    async with maker() as db:
+        uid = await funded(db, real=0, promo=5000)  # lot expires in 5 days
+        lot = (await db.execute(select(PromoLot).where(PromoLot.user_id == uid))).scalar_one()
+        await wallet.charge_purchase(db, **buy(uid, "r5", amount=3000))  # type: ignore[arg-type]
+        await db.commit()
+        await wallet.refund_purchase(
+            db, user_id=uid, key="refund:report:r5", original_key="report:r5:paid"
+        )
+        await db.commit()
+        back = (
+            await db.execute(select(PromoLot).where(PromoLot.campaign == "refund"))
+        ).scalar_one()
+        assert back.expires_at == lot.expires_at
+
+        # A lot that has (almost) expired comes back with one day to use it.
+        soon = await funded(db, real=0)
+        await wallet.grant_promo(
+            db,
+            user_id=soon,
+            amount_paise=2000,
+            campaign="test",
+            key=f"promo:test:{uuid.uuid4()}",
+            expires_at=dt.datetime.now(dt.UTC) + dt.timedelta(minutes=5),
+        )
+        await wallet.charge_purchase(db, **buy(soon, "r6", amount=2000))  # type: ignore[arg-type]
+        await db.commit()
+        await wallet.refund_purchase(
+            db, user_id=soon, key="refund:report:r6", original_key="report:r6:paid"
+        )
+        await db.commit()
+        lot2 = (
+            await db.execute(
+                select(PromoLot).where(PromoLot.user_id == soon, PromoLot.campaign == "refund")
+            )
+        ).scalar_one()
+        left = lot2.expires_at - dt.datetime.now(dt.UTC)
+        assert dt.timedelta(hours=23) < left <= dt.timedelta(days=1)
+
+
+async def test_history_names_the_product_of_purchases_and_refunds(maker) -> None:  # type: ignore[no-untyped-def]
+    async with maker() as db:
+        uid = await funded(db, real=50000)
+        await wallet.charge_purchase(db, **buy(uid, "r7", amount=1000))  # type: ignore[arg-type]
+        await wallet.charge_purchase(
+            db,
+            user_id=uid,
+            key="ai:q1:charge",
+            product="ai_question",
+            ref_id="q1",
+            amount_paise=1000,
+        )
+        await db.commit()
+        await wallet.refund_purchase(
+            db, user_id=uid, key="refund:report:r7", original_key="report:r7:paid"
+        )
+        await db.commit()
+        items, _ = await wallet.history(db, uid, before=None, limit=10)
+        got = [(i["kind"], i["product"], i["amount_paise"]) for i in items]
+        assert got[:3] == [
+            ("refund", "report", 1000),
+            ("purchase", "ai_question", -1000),
+            ("purchase", "report", -1000),
+        ]
+        assert got[3] == ("recharge", None, 50000)

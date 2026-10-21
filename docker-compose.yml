@@ -49,6 +49,7 @@ services:
       LIVEKIT_PUBLIC_URL: ${LIVEKIT_PUBLIC_URL:-ws://localhost:7880}
       LIVEKIT_API_KEY: ${LIVEKIT_API_KEY:-devkey}
       LIVEKIT_API_SECRET: ${LIVEKIT_API_SECRET:-dev-only-livekit-secret-change-me-0000}
+      PUBLIC_SITE_URL: http://localhost:3000
       SECRET_KEY: ${SECRET_KEY:-dev-only-change-me}
       SMS_PROVIDER: ${SMS_PROVIDER:-console}
       DOCUMENTS_BACKEND: local
@@ -163,6 +164,30 @@ services:
       retries: 20
     depends_on:
       api: { condition: service_healthy }
+
+  # Background jobs (ADR-0009): report PDFs via Chromium, report emails, AI answers, partner
+  # leads. Shares the documents volume with the API, which serves the stored PDFs.
+  worker:
+    build: { context: ., dockerfile: services/worker/Dockerfile }
+    environment:
+      APP_ENV: development
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-astro}:${POSTGRES_PASSWORD:-astro-dev-only}@postgres:5432/${POSTGRES_DB:-astro}
+      REDIS_URL: redis://redis:6379/0
+      SECRET_KEY: ${SECRET_KEY:-dev-only-change-me}
+      MESSAGES_KEY: ${MESSAGES_KEY:-}
+      ASTRO_URL: http://astro:8001
+      WEB_INTERNAL_URL: http://web:3000
+      PUBLIC_SITE_URL: http://localhost:3000
+      EMAIL_PROVIDER: console
+      DOCUMENTS_BACKEND: local
+      DOCUMENTS_DIR: /app/uploads
+      PAYMENTS_PROVIDER: ${PAYMENTS_PROVIDER:-fake}
+      LLM_PROVIDER: ${LLM_PROVIDER:-fake}
+    volumes: [kycdocs:/app/uploads]
+    depends_on:
+      api: { condition: service_healthy }
+      web: { condition: service_healthy }
 
 volumes:
   pgdata:

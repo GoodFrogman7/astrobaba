@@ -1066,7 +1066,7 @@ async def refund_purchase(
     db: AsyncSession, *, user_id: uuid.UUID, key: str, original_key: str
 ) -> Purchase:
     """Refund a purchase in full, back to the buckets it came from: real as real, promo as a new
-    general promo lot (promo_expiry_days). LookupError if there is no such purchase."""
+    general promo lot with the spent lots' expiry. LookupError if there is no such purchase."""
     original = (
         await db.execute(
             select(LedgerTransaction).where(LedgerTransaction.idempotency_key == original_key)
@@ -1095,13 +1095,30 @@ async def refund_purchase(
     assert tid is not None
     lot_id: uuid.UUID | None = None
     if paid["promo"] > 0:
+        # Returned promo keeps the expiry of the lots it was spent from (latest of them), never
+        # a fresh period, so buy-and-refund cannot extend promo credit; at least a day to use it.
+        spent = (
+            (
+                await db.execute(
+                    select(PromoLot.expires_at)
+                    .join(LedgerEntry, LedgerEntry.promo_lot_id == PromoLot.id)
+                    .where(LedgerEntry.transaction_id == original.id)
+                )
+            )
+            .scalars()
+            .all()
+        )
+        dated = [e for e in spent if e is not None]
+        expires_at = (
+            None if len(dated) < len(spent) else max([*dated, _now() + dt.timedelta(days=1)])
+        )
         lot = PromoLot(
             id=uuid.uuid4(),
             user_id=user_id,
             campaign="refund",
             amount_paise=paid["promo"],
             remaining_paise=paid["promo"],
-            expires_at=_now() + dt.timedelta(days=billing_config.promo_expiry_days()),
+            expires_at=expires_at,
             session_id=None,
             source_transaction_id=tid,
         )
@@ -1197,6 +1214,15 @@ API_KINDS = {
 }
 
 
+def _product(kind: str, external_ref: str | None) -> str | None:
+    """`report` or `ai_question` for purchases and their refunds (external_ref is
+    "{product}:{id}")."""
+    if kind not in ("purchase", "purchase_refund") or not external_ref:
+        return None
+    product = external_ref.split(":", 1)[0]
+    return product if product in PURCHASE_REVENUE else None
+
+
 async def history(
     db: AsyncSession, user_id: uuid.UUID, *, before: int | None, limit: int
 ) -> tuple[list[dict[str, Any]], int | None]:
@@ -1210,6 +1236,7 @@ async def history(
                 f"""
                 WITH per_txn AS (
                   SELECT t.id, t.seq, t.kind, t.session_id, t.astrologer_id, t.created_at,
+                    t.external_ref,
                     sum(CASE WHEN e.account_id = :real THEN
                       CASE WHEN e.direction = 'credit' THEN e.amount_paise
                       ELSE -e.amount_paise END ELSE 0 END) AS real_paise,
@@ -1226,13 +1253,14 @@ async def history(
                     sum(real_paise) AS real_paise, sum(promo_paise) AS promo_paise,
                     (array_agg(id ORDER BY seq))[1] AS id,
                     (array_agg(session_id ORDER BY seq))[1] AS session_id,
+                    (array_agg(external_ref ORDER BY seq))[1] AS external_ref,
                     (array_agg(astrologer_id ORDER BY seq))[1] AS astrologer_id
                   FROM per_txn
                   GROUP BY CASE WHEN kind = 'consultation' THEN 'c:' || session_id::text
                     ELSE 't:' || id::text END
                 )
                 SELECT g.id, g.kind, g.seq, g.created_at, g.real_paise, g.promo_paise,
-                  g.session_id, a.slug, a.display_name
+                  g.session_id, g.external_ref, a.slug, a.display_name
                 FROM grouped g LEFT JOIN astrologers a ON a.id = g.astrologer_id
                 {where_before}
                 ORDER BY g.seq DESC
@@ -1258,6 +1286,7 @@ async def history(
             "created_at": r.created_at,
             "session_id": str(r.session_id) if r.session_id else None,
             "astrologer": {"slug": r.slug, "display_name": r.display_name} if r.slug else None,
+            "product": _product(r.kind, r.external_ref),
         }
         for r in rows[:limit]
     ]

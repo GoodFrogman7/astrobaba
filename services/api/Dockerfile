@@ -17,6 +17,8 @@ COPY packages/shared/analytics packages/shared/analytics
 COPY data/astro data/astro
 # Marketplace taxonomy (skills, languages, tiers and price bounds).
 COPY data/marketplace data/marketplace
+# City coordinates for the free sample report.
+COPY data/seo data/seo
 COPY services/api services/api
 RUN uv sync --frozen --no-dev --package astro-api
 

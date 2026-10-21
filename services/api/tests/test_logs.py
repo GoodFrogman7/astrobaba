@@ -51,3 +51,15 @@ def test_formatter_redacts_message_args_and_extra_fields() -> None:
     assert "9876543210" not in text
     assert out["phone"] == "[REDACTED]"
     assert out["meta"] == {"token": "[REDACTED]", "path": "/x"}
+
+
+def test_http_client_request_lines_are_not_logged() -> None:
+    """httpx/httpcore log full URLs at INFO; engine query strings can carry birth details."""
+    import logging
+
+    from astro_api.logs import configure_logging
+
+    configure_logging("DEBUG")
+    assert not logging.getLogger("httpx").isEnabledFor(logging.INFO)
+    assert not logging.getLogger("httpcore").isEnabledFor(logging.INFO)
+    assert logging.getLogger("astro_api").isEnabledFor(logging.DEBUG)

@@ -34,4 +34,5 @@ COPY services/astro/LICENSE LICENSE
 RUN useradd --uid 10001 --no-create-home app
 USER app
 EXPOSE 8001
-CMD ["uvicorn", "astro_engine.main:app", "--host", "0.0.0.0", "--port", "8001"]
+# No access log: GET query strings (panchang for a birth date and place) are personal data.
+CMD ["uvicorn", "astro_engine.main:app", "--host", "0.0.0.0", "--port", "8001", "--no-access-log"]

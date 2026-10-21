@@ -143,7 +143,7 @@ jobs:
           uv run python -m astro_api.seed demo-astrologers
           # Straight from the venv, not `uv run`: a long-lived uv process holds the uv cache lock
           # and makes setup-uv's post-job cache prune time out.
-          nohup .venv/bin/uvicorn astro_engine.main:app --port 8001 > astro.log 2>&1 &
+          nohup .venv/bin/uvicorn astro_engine.main:app --port 8001 --no-access-log > astro.log 2>&1 &
           nohup .venv/bin/uvicorn astro_api.main:app --port 8000 > api.log 2>&1 &
           (cd apps/web && nohup node_modules/.bin/next start --port 3000 > ../../web.log 2>&1 &)
           for url in http://localhost:8001/healthz http://localhost:8000/readyz http://localhost:3000/; do

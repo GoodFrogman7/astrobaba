@@ -62,6 +62,9 @@ class Settings(BaseSettings):
     smtp_url: SecretStr = SecretStr("")  # smtp(s)://user:password@host:port
     # How the worker reaches the web app's private print pages, and its Chromium binary.
     web_internal_url: str = "http://localhost:3000"
+    # The public site, for links in emails; and the astro engine the API calls for reports.
+    public_site_url: str = "http://localhost:3000"
+    astro_url: str = "http://localhost:8001"
     chromium_path: str = ""
     otp_ttl_s: int = 300
     otp_max_attempts: int = 5
@@ -100,6 +103,8 @@ def check_production_settings(settings: Settings) -> None:
         problems.append("DOCUMENTS_BACKEND=local keeps KYC documents on the container disk")
     if settings.email_provider == "console":
         problems.append("EMAIL_PROVIDER=console")
+    if not settings.public_site_url.startswith("https://"):
+        problems.append("PUBLIC_SITE_URL must be https")
     if flag_enabled("voice_calls") and (
         not settings.livekit_api_key
         or len(settings.livekit_api_secret.get_secret_value()) < 32

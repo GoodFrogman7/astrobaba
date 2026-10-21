@@ -24,6 +24,7 @@ from redis.asyncio import Redis
 from astro_api.config import get_settings
 from astro_api.db import make_engine, make_sessionmaker
 from astro_api.horoscopes import SIGNS
+from astro_api.logs import configure_logging
 from astro_worker import horoscopes, jobs
 from astro_worker.config import get_worker_settings
 from astro_worker.llm import ProviderError, make_provider
@@ -77,6 +78,7 @@ async def _jobs(args: argparse.Namespace) -> int:
     import astro_worker.handlers  # noqa: F401 - registers the handlers
 
     settings = get_settings()
+    configure_logging(settings.log_level)
     engine = make_engine(settings.database_url.get_secret_value())
     redis = Redis.from_url(settings.redis_url.get_secret_value())
     try:

@@ -175,6 +175,41 @@ payouts:   cli payouts generate (1st of month, previous IST month) ──> draft
 - Development runs LiveKit in docker-compose (`livekit`, dev keys, rooms created only by the
   API); production needs its own LiveKit (cloud or self-hosted), keys and a `wss://` URL.
 
+## Reports, AI and remedies in the web app (Phase 6)
+
+Contract: [docs/api/revenue.md](api/revenue.md). Code: `apps/web/src/{app/[locale]/{reports,
+account/reports,ai,remedies},app/api/{reports,ai,remedies},components/revenue,lib/revenue}`.
+
+```
+/reports (static, ISR 10 min, indexable, sitemap): prices from GET /v1/reports/products at
+         build/revalidate (none shown if unreachable), section list, sample via
+         /api/reports/sample (server fetches the API link, streams the PDF), Product+Offer
+         JSON-LD only with an API price. "Buy" opens a client dialog: saved kundli(s) (1 or 2
+         per sku, data/marketplace/products.json `kundlis`), language, optional email,
+         wallet (402 → /wallet?amount=shortfall) or Razorpay (Checkout or dev simulate, then
+         poll GET /api/reports/orders/{id}); one Idempotency-Key per intent.
+/account/reports (private): polls GET /api/reports while queued/rendering (3→15 s, 15 min);
+         download = /api/reports/{id}/file: fresh signed link from the API each click, path
+         pinned to API_URL/v1/reports/{id}/file, streamed with `private, no-store`.
+/ai      (private, dynamic): 404 unless flag ai_assistant; AI_LABEL on the page and on every
+         answer, text badge (no avatar), hand-off to /astrologers, price per question from
+         products.json `ai_question` (no endpoint exposes it), polls while queued.
+/remedies (static, ISR, noindex, not in the sitemap): only what GET /v1/remedies returns;
+         partner request dialog, consent unticked and required (route handler rejects
+         anything but `consent: true`).
+```
+
+- Every write route handler requires an `Idempotency-Key` (400 otherwise) and forwards only
+  contract fields through the existing BFF forwarder; `/api/ai/*` answer 404 while the flag is
+  off. PDFs never come from another origin: download links are reduced to a `/v1/reports/…`
+  path on `API_URL` before fetching.
+- `/remedies` stays noindex until the catalogue passes editorial review and the Phase 7 legal
+  review of remedy advertising (`REMEDIES_INDEXABLE` in `lib/revenue/config.ts` also adds it to
+  the sitemap). Links to `/ai` (footer, /reports) are evaluated when those static pages render,
+  the page itself per request, so flip the flag together with a rebuild/revalidation.
+- Wallet history labels `purchase` rows "Report"/"AI question" when the row carries
+  `product`, else "Purchase".
+
 ## Cross-cutting rules in code
 
 | Rule (PLAN.md) | Where it lives |
