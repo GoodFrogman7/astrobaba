@@ -65,6 +65,20 @@ try {
       console.error(
         `FAIL ${page}: ${low.map(([c, s]) => `${c} ${s}`).join(", ")}; check: ${audits.join("; ")}`,
       );
+      // Name the elements behind layout shift and LCP, so CI failures are diagnosable.
+      for (const id of ["layout-shifts", "largest-contentful-paint-element"]) {
+        for (const item of report.audits[id]?.details?.items ?? []) {
+          const rows = item.type === "table" ? item.items : [item];
+          for (const r of rows) {
+            if (!r.node) continue;
+            const causes = (r.subItems?.items ?? []).map((c) => c.cause ?? JSON.stringify(c));
+            console.error(
+              `  ${id}: ${r.score ?? ""} ${r.node.selector} ${r.node.snippet?.slice(0, 120)}` +
+                (causes.length ? ` causes: ${causes.join(", ")}` : ""),
+            );
+          }
+        }
+      }
     }
   }
 } finally {
