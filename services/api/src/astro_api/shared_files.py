@@ -49,6 +49,12 @@ def safety_dir() -> Path:
     return _locate("SAFETY_DIR", "data", "safety")
 
 
+@cache
+def growth_dir() -> Path:
+    """data/growth (launch targets and supply goals)."""
+    return _locate("GROWTH_DIR", "data", "growth")
+
+
 def repo_data_dir() -> Path | None:
     """<repo>/data when running from a checkout (for dev-only defaults such as uploads)."""
     for parent in Path(__file__).resolve().parents:

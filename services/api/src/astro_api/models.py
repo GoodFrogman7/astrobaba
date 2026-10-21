@@ -222,6 +222,10 @@ class Astrologer(Base):
     approved_at: Mapped[dt.datetime | None] = mapped_column(DateTime(timezone=True))
     suspended_reason: Mapped[str | None] = mapped_column(Text)
     rejected_reason: Mapped[str | None] = mapped_column(Text)
+    # The admin invite used to apply (migration 0015, docs/api/growth.md §2.1); one per invite.
+    invite_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("astrologer_invites.id", ondelete="SET NULL", use_alter=True), unique=True
+    )
 
 
 class AstrologerVerification(Base):

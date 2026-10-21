@@ -13,9 +13,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from astro_api.audit import audit
 from astro_api.auth import CurrentUser
+from astro_api.config import Settings
 from astro_api.consent import RequireAstrologerConsent
 from astro_api.db import Db, redis_of, settings_of
 from astro_api.errors import ApiError
+from astro_api.growth_api import lock_open_invite, mark_invite_used, require_invite_if_flagged
 from astro_api.marketplace import (
     PRESENCE_TTL_S,
     _s,
@@ -51,6 +53,8 @@ class ApplicationIn(BaseModel):
     experience_years: int = Field(ge=0, le=80)
     requested_price_per_min_paise: int = Field(gt=0)
     accepts_terms: bool
+    # Admin invite (docs/api/growth.md §2.1); required while flag astrologer_invite_only is on.
+    invite_code: str | None = Field(default=None, max_length=64)
 
 
 class ApplicationPatch(BaseModel):
@@ -187,8 +191,13 @@ async def me_view(db: AsyncSession, a: Astrologer) -> dict[str, Any]:
     }
 
 
-@router.post("/application", status_code=201)
-async def apply(body: ApplicationIn, user: CurrentUser, db: Db) -> dict[str, Any]:
+async def create_application(
+    db: AsyncSession, settings: Settings, user: User, body: ApplicationIn
+) -> Astrologer:
+    """Create the application and commit. An invite code is claimed (row locked, marked used)
+    in the same transaction, so one code can never admit two applicants."""
+    code = (body.invite_code or "").strip() or None
+    require_invite_if_flagged(code)
     if not body.accepts_terms:
         raise ApiError(422, "terms_required", "Please accept the terms to apply.")
     _check_choices(body.skills, body.languages)
@@ -198,6 +207,7 @@ async def apply(body: ApplicationIn, user: CurrentUser, db: Db) -> dict[str, Any
     ).scalar_one_or_none()
     if existing is not None:
         raise ApiError(409, "already_applied", "You have already applied.")
+    invite = await lock_open_invite(db, settings, code) if code else None
     a = Astrologer(
         user_id=user.id,
         display_name=body.display_name.strip(),
@@ -212,13 +222,22 @@ async def apply(body: ApplicationIn, user: CurrentUser, db: Db) -> dict[str, Any
         status="applied",
         flags=dict(DEFAULT_FLAGS),
         accepts_terms_at=dt.datetime.now(dt.UTC),
+        invite_id=invite.id if invite else None,
     )
     db.add(a)
     await db.flush()
+    if invite is not None:
+        mark_invite_used(invite, a.id)
     for step in VERIFICATION_STEPS:
         db.add(AstrologerVerification(astrologer_id=a.id, step=step, status="pending"))
-    audit(db, actor(user), "astrologer.apply", "astrologer", str(a.id))
+    audit(db, actor(user), "astrologer.apply", "astrologer", str(a.id), invited=invite is not None)
     await db.commit()
+    return a
+
+
+@router.post("/application", status_code=201)
+async def apply(body: ApplicationIn, user: CurrentUser, db: Db, request: Request) -> dict[str, Any]:
+    a = await create_application(db, settings_of(request), user, body)
     return await me_view(db, a)
 
 

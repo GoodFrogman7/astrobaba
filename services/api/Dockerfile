@@ -18,6 +18,7 @@ COPY data/astro data/astro
 # Marketplace taxonomy (skills, languages, tiers and price bounds).
 COPY data/marketplace data/marketplace
 COPY data/legal data/legal
+COPY data/growth data/growth
 COPY data/safety data/safety
 # City coordinates for the free sample report.
 COPY data/seo data/seo
