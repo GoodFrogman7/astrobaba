@@ -1,6 +1,8 @@
 // Lighthouse mobile audit (PLAN.md §5 Phase 2 acceptance: Lighthouse >= 90 on mobile).
 // Usage: BASE_URL=http://localhost:3000 CHROME_PATH=/path/to/chrome node scripts/lighthouse.mjs
 // Pages that 404 (not built yet) are skipped with a warning; anything else below 90 fails.
+// Each page is audited RUNS times (default 3) and scored by its median-performance run, as
+// Lighthouse recommends: single runs on shared CI machines swing by 5-10 points.
 import { execFileSync } from "node:child_process";
 import { mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -10,6 +12,7 @@ const LIGHTHOUSE = "lighthouse@12.8.2";
 const BASE = (process.env.BASE_URL ?? "http://localhost:3000").replace(/\/$/, "");
 const MIN = Number(process.env.LIGHTHOUSE_MIN ?? 90);
 const CATEGORIES = ["performance", "accessibility", "best-practices", "seo"];
+const RUNS = Math.max(1, Number(process.env.LIGHTHOUSE_RUNS ?? 3));
 const PAGES = (
   process.env.LIGHTHOUSE_PAGES ??
   "/,/hi,/kundli,/tools/nakshatra,/kundli-matching,/panchang/new-delhi,/horoscope/daily/aries,/hi/horoscope/daily/aries"
@@ -24,7 +27,21 @@ const rows = [];
 try {
   for (const page of PAGES) {
     const url = BASE + page;
-    const status = (await fetch(url, { redirect: "manual" }).catch(() => ({ status: 0 }))).status;
+    // Lighthouse runs synchronously and blocks the event loop, so a pooled keep-alive socket can
+    // be closed by the server unnoticed; the first request afterwards may land on it. Retry once.
+    const probe = async () => {
+      for (let attempt = 0; attempt < 2; attempt++) {
+        try {
+          const res = await fetch(url, { redirect: "manual" });
+          await res.arrayBuffer();
+          return res.status;
+        } catch {
+          /* stale socket; retry */
+        }
+      }
+      return 0;
+    };
+    const status = await probe();
     if (status === 404) {
       console.warn(`SKIP ${page} (404, not built yet)`);
       continue;
@@ -34,23 +51,31 @@ try {
       failed = true;
       continue;
     }
-    const file = path.join(out, `${page.replace(/\W+/g, "_") || "home"}.json`);
-    execFileSync(
-      "npx",
-      [
-        "--yes",
-        LIGHTHOUSE,
-        url,
-        "--quiet",
-        "--output=json",
-        `--output-path=${file}`,
-        `--only-categories=${CATEGORIES.join(",")}`,
-        "--form-factor=mobile",
-        "--chrome-flags=--headless=new --no-sandbox --disable-gpu",
-      ],
-      { stdio: ["ignore", "ignore", "inherit"], env: process.env },
+    await probe(); // warm the server so run 1 is not a cold start
+    const reports = [];
+    for (let run = 1; run <= RUNS; run++) {
+      const file = path.join(out, `${page.replace(/\W+/g, "_") || "home"}-${run}.json`);
+      execFileSync(
+        "npx",
+        [
+          "--yes",
+          LIGHTHOUSE,
+          url,
+          "--quiet",
+          "--output=json",
+          `--output-path=${file}`,
+          `--only-categories=${CATEGORIES.join(",")}`,
+          "--form-factor=mobile",
+          "--chrome-flags=--headless=new --no-sandbox --disable-gpu",
+        ],
+        { stdio: ["ignore", "ignore", "inherit"], env: process.env },
+      );
+      reports.push(JSON.parse(readFileSync(file, "utf8")));
+    }
+    reports.sort(
+      (a, b) => (a.categories.performance?.score ?? 0) - (b.categories.performance?.score ?? 0),
     );
-    const report = JSON.parse(readFileSync(file, "utf8"));
+    const report = reports[Math.floor(reports.length / 2)];
     const scores = Object.fromEntries(
       CATEGORIES.map((c) => [c, Math.round((report.categories[c]?.score ?? 0) * 100)]),
     );
