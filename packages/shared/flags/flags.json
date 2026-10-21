@@ -13,10 +13,14 @@
   },
   "ai_assistant": {
     "default": false,
-    "description": "Clearly labelled AI assistant tier (Phase 6). Off until decided (PLAN.md \u00a79.4)."
+    "description": "Clearly labelled AI assistant tier (Phase 6). Off until decided (PLAN.md §9.4)."
   },
   "voice_calls": {
     "default": false,
     "description": "In-app voice calls through LiveKit (Phase 5). Needs LIVEKIT_* settings."
+  },
+  "astrologer_invite_only": {
+    "default": false,
+    "description": "Astrologer applications need an admin invite code (Phase 8 supply seeding)."
   }
 }

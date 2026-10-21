@@ -14,11 +14,13 @@ from astro_api import (
     admin_marketplace,
     admin_money,
     ai_api,
+    analytics_api,
     applicant,
     auth,
     billing_meter,
     calls_api,
     chat_ws,
+    growth_api,
     horoscopes,
     kundlis,
     marketplace,
@@ -100,6 +102,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         remedies_api.router,
         privacy_api.router,
         moderation_api.router,
+        analytics_api.router,
+        growth_api.router,
     ):
         app.include_router(router)
     app.add_middleware(

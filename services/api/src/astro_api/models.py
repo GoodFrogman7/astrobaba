@@ -370,6 +370,8 @@ class Review(Base):
 # The other tables live in their own modules; importing them here registers them on Base.metadata.
 from astro_api import (  # noqa: E402, F401
     models_ai,
+    models_analytics,
+    models_growth,
     models_jobs,
     models_ledger,
     models_portal,

@@ -16,6 +16,7 @@ describe("feature flags", () => {
   it("lists every flag", () => {
     expect(Object.keys(allFlags({})).sort()).toEqual([
       "ai_assistant",
+      "astrologer_invite_only",
       "first_free_session",
       "hindi_locale",
       "recharge_bonus_tiers",

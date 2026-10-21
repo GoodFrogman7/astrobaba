@@ -5,20 +5,41 @@
     "anonymous_id": "anon_12345678",
     "user_id": null,
     "locale": "en",
-    "schema_version": 1
+    "schema_version": 2
   },
   "cases": [
     {
       "name": "valid page view",
       "valid": true,
-      "event": { "event": "page_view", "properties": { "path": "/hi/panchang" } }
+      "event": {
+        "event": "page_view",
+        "properties": {
+          "path": "/hi/panchang"
+        }
+      }
+    },
+    {
+      "name": "valid first page view with source",
+      "valid": true,
+      "event": {
+        "event": "page_view",
+        "properties": {
+          "path": "/kundli",
+          "source": "campaign",
+          "utm_source": "whatsapp",
+          "utm_campaign": "diwali-2026"
+        }
+      }
     },
     {
       "name": "valid tool completion",
       "valid": true,
       "event": {
         "event": "tool_completed",
-        "properties": { "tool": "kundli", "unknown_birth_time": true }
+        "properties": {
+          "tool": "kundli",
+          "unknown_birth_time": true
+        }
       }
     },
     {
@@ -38,7 +59,10 @@
     {
       "name": "unknown event",
       "valid": false,
-      "event": { "event": "chat_message", "properties": {} }
+      "event": {
+        "event": "chat_message",
+        "properties": {}
+      }
     },
     {
       "name": "chat text smuggled as property",
@@ -57,19 +81,33 @@
     {
       "name": "query string in path",
       "valid": false,
-      "event": { "event": "page_view", "properties": { "path": "/kundli?name=asha" } }
+      "event": {
+        "event": "page_view",
+        "properties": {
+          "path": "/kundli?name=asha"
+        }
+      }
     },
     {
       "name": "phone as user id",
       "valid": false,
-      "event": { "event": "page_view", "user_id": "+919876543210", "properties": { "path": "/" } }
+      "event": {
+        "event": "page_view",
+        "user_id": "+919876543210",
+        "properties": {
+          "path": "/"
+        }
+      }
     },
     {
       "name": "fractional paise",
       "valid": false,
       "event": {
         "event": "recharge_succeeded",
-        "properties": { "amount_paise": 199.5, "is_first_recharge": true }
+        "properties": {
+          "amount_paise": 199.5,
+          "is_first_recharge": true
+        }
       }
     },
     {
@@ -77,20 +115,29 @@
       "valid": false,
       "event": {
         "event": "recharge_succeeded",
-        "properties": { "amount_paise": true, "is_first_recharge": true }
+        "properties": {
+          "amount_paise": true,
+          "is_first_recharge": true
+        }
       }
     },
     {
       "name": "missing required property",
       "valid": false,
-      "event": { "event": "otp_verified", "properties": {} }
+      "event": {
+        "event": "otp_verified",
+        "properties": {}
+      }
     },
     {
       "name": "enum outside list",
       "valid": false,
       "event": {
         "event": "session_requested",
-        "properties": { "session_type": "video", "is_free_trial": false }
+        "properties": {
+          "session_type": "video",
+          "is_free_trial": false
+        }
       }
     },
     {
@@ -99,13 +146,43 @@
       "event": {
         "event": "page_view",
         "ts": "2026-10-20T15:30:00+05:30",
-        "properties": { "path": "/" }
+        "properties": {
+          "path": "/"
+        }
       }
     },
     {
       "name": "unsupported locale",
       "valid": false,
-      "event": { "event": "page_view", "locale": "ta", "properties": { "path": "/" } }
+      "event": {
+        "event": "page_view",
+        "locale": "ta",
+        "properties": {
+          "path": "/"
+        }
+      }
+    },
+    {
+      "name": "page view source outside the enum",
+      "valid": false,
+      "event": {
+        "event": "page_view",
+        "properties": {
+          "path": "/",
+          "source": "google.com"
+        }
+      }
+    },
+    {
+      "name": "utm value that is not a slug",
+      "valid": false,
+      "event": {
+        "event": "page_view",
+        "properties": {
+          "path": "/",
+          "utm_source": "Google Ads"
+        }
+      }
     }
   ]
 }

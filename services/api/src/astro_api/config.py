@@ -65,6 +65,10 @@ class Settings(BaseSettings):
     web_internal_url: str = "http://localhost:3000"
     # The public site, for links in emails; and the astro engine the API calls for reports.
     public_site_url: str = "http://localhost:3000"
+    # Astrologer portal origin, for invite links (docs/api/growth.md §2.1).
+    astrologer_portal_url: str = "http://localhost:3002"
+    # Raw analytics events older than this are deleted by `cli analytics-purge`.
+    analytics_retention_days: int = Field(default=400, ge=30, le=1100)
     # The policies.json version a lawyer approved (Phase 7 launch gate); empty = none yet.
     legal_approved_version: str = ""
     astro_url: str = "http://localhost:8001"
