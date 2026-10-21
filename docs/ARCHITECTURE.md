@@ -1,6 +1,6 @@
 # Architecture
 
-Living document. Updated at the end of every phase (PLAN.md §0.6). Current state: **Phase 5**.
+Living document. Updated at the end of every phase (PLAN.md §0.6). Current state: **Phase 6**.
 
 ## Repo
 
@@ -175,7 +175,33 @@ payouts:   cli payouts generate (1st of month, previous IST month) ──> draft
 - Development runs LiveKit in docker-compose (`livekit`, dev keys, rooms created only by the
   API); production needs its own LiveKit (cloud or self-hosted), keys and a `wss://` URL.
 
-## Reports, AI and remedies in the web app (Phase 6)
+## Reports, AI assistant and remedies (Phase 6)
+
+Contract: [docs/api/revenue.md](api/revenue.md). Decisions: [ADR-0009](adr/0009-reports-and-jobs.md)
+(reports, job queue), [ADR-0010](adr/0010-ai-assistant.md) (AI assistant). Prices:
+`data/marketplace/products.json`; catalogue: `data/marketplace/remedies.json`.
+
+```
+buy:      /reports ── order (wallet: charge_purchase | card: Razorpay webhook) ── engine snapshot
+          (taken at order time) ── report row + job report_render, one transaction
+render:   worker claims job (SKIP LOCKED) ── Chromium prints web /print/reports/{id}?sig= (A4,
+          en/hi, engine data only) ── PDF to documents storage ── ready ── report_email job
+          final failure ── refund once (wallet buckets; card → wallet credit)
+download: /account/reports ── signed 10-minute link ── API streams the PDF (no-store)
+ai:       /ai (flag ai_assistant) ── safety check (self-harm/medical/legal/financial → blocked,
+          free) ── charge ── job ai_answer: facts from the engine ── LLM ── validator ──
+          answered | blocked + refund; encrypted at rest; labelled AI
+remedies: /remedies ── consented lead (note encrypted, phone masked) ── job ── partner email
+```
+
+- Jobs: `astro_api.jobs` + `python -m astro_worker jobs run` (compose service `worker`); payloads
+  hold ids only; handlers are idempotent; `on_failed` runs once after the last attempt.
+- Reconciliation matches every gateway payment to its clearing posting (recharges and card-paid
+  reports).
+- HTTP client request lines are never logged and the engine runs without an access log (birth
+  details travel in engine query strings).
+
+### Web app
 
 Contract: [docs/api/revenue.md](api/revenue.md). Code: `apps/web/src/{app/[locale]/{reports,
 account/reports,ai,remedies},app/api/{reports,ai,remedies},components/revenue,lib/revenue}`.

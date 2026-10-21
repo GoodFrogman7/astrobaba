@@ -13,5 +13,7 @@ accepts it, then Accepted (or Superseded by NNNN).
 | [0006](0006-marketplace-trust.md) | Marketplace visibility rule, KYC document handling, role-based admin | Accepted | Phase 3 |
 | [0007](0007-sessions-and-metering.md) | Consultation sessions, prepaid per-minute metering, chat transport | Proposed | Phase 4 |
 | [0008](0008-voice-calls.md) | Voice calls: in-app VoIP with LiveKit (not masked PSTN), billing and presence checks | Proposed | §2 ADR-4, Phase 5 |
+| [0009](0009-reports-and-jobs.md) | Paid reports: engine snapshot, Chromium print of a web page, Postgres job queue, refunds | Proposed | Phase 6 |
+| [0010](0010-ai-assistant.md) | AI assistant: pre-LLM safety block, grounded answers, validator, per-question billing | Proposed | §9.4, Phase 6 |
 
 All ADRs listed in PLAN.md §2 are written.
