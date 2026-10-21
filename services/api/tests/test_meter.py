@@ -231,3 +231,99 @@ def test_background_loop_only_when_enabled(clean: Any) -> None:
     off.state.meter_enabled = True
     with TestClient(off):
         assert getattr(off.state, "meter_task", None) is None
+
+
+async def end_at(deps: svc.Deps, sid: uuid.UUID, when: dt.datetime) -> list[int]:
+    """What POST /end does, at an injected time: charge started minutes, then finish."""
+    async with deps.sessionmaker() as db:
+        s = await svc.lock(db, sid)
+        assert s is not None and s.status == "active"
+        charged = await billing_meter.charge_started(db, deps, s, when)
+        await svc.finish(db, deps, s, "completed", "user_ended", when)
+        await db.commit()
+    await svc.after_end(deps, sid, when)
+    return charged
+
+
+def test_ending_between_ticks_charges_the_minute_already_started(world: World, money: Any) -> None:
+    # billing.md: a partial last minute is billed as a whole minute, even when the end comes
+    # before the meter's next tick has charged it.
+    _, _, raw = world.accepted()
+    sid = uuid.UUID(raw)
+
+    async def run() -> None:
+        async with fast(world) as deps:
+            t0 = svc.utcnow()
+            await start(deps, sid, t0)
+            await alive(deps, sid, at(t0, 0.9))
+            assert (await billing_meter.tick(deps, at(t0, 1.0))).charged == [(sid, 2)]
+            assert await end_at(deps, sid, at(t0, 2.3)) == [3]
+
+    asyncio.run(run())
+    row = world.row(sid)
+    assert row.status == "completed" and row.billed_minutes == 3
+    assert money.charged_minutes(sid) == [1, 2, 3]
+    assert row.billed_paise == 3 * PRICE == money.spent(sid)
+
+
+def test_ending_exactly_on_a_boundary_does_not_start_a_new_minute(world: World, money: Any) -> None:
+    _, _, raw = world.accepted()
+    sid = uuid.UUID(raw)
+
+    async def run() -> None:
+        async with fast(world) as deps:
+            t0 = svc.utcnow()
+            await start(deps, sid, t0)
+            assert await end_at(deps, sid, at(t0, 1.0)) == []
+
+    asyncio.run(run())
+    assert money.charged_minutes(sid) == [1]
+
+
+def test_ending_never_charges_past_the_free_minutes_or_the_wallet(
+    world: World, fake_money: FakeMoney
+) -> None:
+    _, _, free_raw = world.accepted(fund=100_000, free=True)
+    free_sid = uuid.UUID(free_raw)
+
+    async def run() -> None:
+        async with fast(world) as deps:
+            t0 = svc.utcnow()
+            await start(deps, free_sid, t0)
+            assert await end_at(deps, free_sid, at(t0, 7.5)) == [2, 3, 4, 5]
+
+    asyncio.run(run())
+    assert fake_money.charged_minutes(free_sid) == [1, 2, 3, 4, 5]
+
+
+def test_ending_stops_charging_when_the_wallet_runs_out(world: World, money: Any) -> None:
+    _, uid, raw = world.accepted(fund=2 * PRICE)
+    sid = uuid.UUID(raw)
+
+    async def run() -> None:
+        async with fast(world) as deps:
+            t0 = svc.utcnow()
+            await start(deps, sid, t0)
+            assert await end_at(deps, sid, at(t0, 3.5)) == [2]
+
+    asyncio.run(run())
+    row = world.row(sid)
+    assert row.status == "completed" and row.end_reason == "user_ended"
+    assert money.charged_minutes(sid) == [1, 2] and money.balance(uid) == 0
+
+
+def test_end_endpoint_charges_the_started_minute(world: World, money: Any) -> None:
+    headers, _, raw = world.accepted()
+    sid = uuid.UUID(raw)
+
+    async def begin() -> None:
+        async with deps_for(world.settings) as deps:
+            # Started 61 s ago with the real 60 s minute; the meter has not ticked since.
+            t0 = svc.utcnow() - dt.timedelta(seconds=61)
+            await start(deps, sid, t0)
+
+    asyncio.run(begin())
+    r = world.post(raw, "end", headers)
+    assert r.status_code == 200, r.text
+    assert money.charged_minutes(sid) == [1, 2]
+    assert world.row(sid).billed_minutes == 2

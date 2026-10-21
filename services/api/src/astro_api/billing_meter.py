@@ -45,6 +45,7 @@ from dataclasses import dataclass, field
 
 from fastapi import FastAPI
 from sqlalchemy import ColumnElement, func, select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from astro_api import chat_bus, livekit_client, wallet
 from astro_api import session_service as svc
@@ -236,6 +237,41 @@ async def _drop(
         s.astrologer_last_seen_at = min(s.astrologer_last_seen_at or at, at)
         drops.append(Drop("astrologer", at, unverified=True))
     return min(drops, key=lambda d: d.at) if drops else None
+
+
+async def charge_started(
+    db: AsyncSession, deps: svc.Deps, s: ConsultSession, at: dt.datetime
+) -> list[int]:
+    """Charge the minutes that started before `at` and are not charged yet, for a participant
+    ending between ticks (billing.md: a partial last minute is billed as a whole minute). Stops
+    at the free-minute cap, an empty wallet or a call minute LiveKit has not confirmed. The
+    caller holds the row lock and ends the session in the same transaction."""
+    if s.status != "active" or s.started_at is None:
+        return []
+    verify = await chat_bus.verify_state(deps.redis, s.id) if s.kind == "call" else None
+    charged: list[int] = []
+    while s.started_at + deps.minute * s.billed_minutes < at:
+        n = s.billed_minutes + 1
+        if verify is not None and n > verify.ok_upto:
+            break
+        if s.is_free and s.free_minutes is not None and n > s.free_minutes:
+            break
+        try:
+            charge = await wallet.charge_minute(
+                db,
+                session_id=s.id,
+                user_id=s.user_id,
+                astrologer_id=s.astrologer_id,
+                minute=n,
+                price_paise=s.price_per_min_paise,
+                commission_bps=s.commission_bps,
+            )
+        except wallet.InsufficientFunds:
+            break
+        s.billed_minutes = n
+        s.billed_paise += charge.promo_paise + charge.real_paise
+        charged.append(n)
+    return charged
 
 
 async def _meter_active(deps: svc.Deps, now: dt.datetime, report: TickReport) -> None:

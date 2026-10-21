@@ -14,7 +14,7 @@ from sqlalchemy import Select, case, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from astro_api import billing_config, free_session, wallet
+from astro_api import billing_config, billing_meter, free_session, wallet
 from astro_api import session_service as svc
 from astro_api.audit import audit
 from astro_api.auth import CurrentSession, client_ip
@@ -483,6 +483,7 @@ async def end(
     if s.status != "active":
         raise ApiError(409, "session_not_active", "Only an active session can be ended.")
     now = svc.utcnow()
+    await billing_meter.charge_started(db, deps, s, now)
     await svc.finish(db, deps, s, "completed", f"{role}_ended", now, actor(user))
     await db.commit()
     return await _done(db, deps, s, role, now)
