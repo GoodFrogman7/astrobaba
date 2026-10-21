@@ -95,7 +95,7 @@
   },
   "payouts": {
     "min_payout_paise": 50000,
-    "founder_decision": true,
-    "note": "Net below this is carried forward to the next month. Bank transfers are manual in v1; TDS/GST not modelled until a CA confirms."
+    "note": "Net below this is carried forward to the next month. Bank transfers are manual in v1; TDS/GST not modelled until a CA confirms.",
+    "decided": "founder, 2026-10-21: ₹500 minimum payout"
   }
 }
