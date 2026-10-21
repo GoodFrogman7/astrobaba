@@ -17,5 +17,6 @@ accepts it, then Accepted (or Superseded by NNNN).
 | [0010](0010-ai-assistant.md) | AI assistant: pre-LLM safety block, grounded answers, validator, per-question billing | Proposed | §9.4, Phase 6 |
 | [0011](0011-privacy-export-deletion.md) | Consent records, DPDP export and deletion (anonymise, keep the ledger) | Proposed | Phase 7 |
 | [0012](0012-chat-safety-and-moderation.md) | Chat safety (crisis flag, no upsell), astrologer message rules, moderation queue | Proposed | Phase 7 |
+| [0013](0013-first-party-analytics-and-funnel.md) | First-party analytics (closed schema, HttpOnly pseudonymous id) and the growth funnel | Proposed | Phase 8 |
 
 All ADRs listed in PLAN.md §2 are written.
