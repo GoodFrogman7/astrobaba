@@ -1,6 +1,6 @@
 # ADR-0002: Wallet ledger design
 
-- Status: **Proposed**. Implementation is Phase 4, test-first (PLAN.md §0.3).
+- Status: **Accepted** (2026-10-21). Implemented in Phase 4, test-first (PLAN.md §0.3).
 - Date: 2026-10-20
 
 ## Context
@@ -86,7 +86,10 @@ The warning at "1 minute left" fires when remaining funds cover exactly one more
   campaign) so expiry is exact. The lot table is a projection too; ledger entries remain the record.
 - Default spend order: **promo first, earliest-expiring lot first**, then real. That uses
   short-lived credit before it lapses and keeps the user's real money intact longer.
-  Open founder decision (PLAN.md §9.3); the order is one config value.
+  Decided by the founder on 2026-10-21 (PLAN.md §9.3). The order is one config value
+  (`spend_order` in `data/marketplace/billing.json`) and is stated on the wallet page.
+- A promo lot can be **restricted to one session** (the first free session). It is spent first in
+  that session and is invisible to every other session; what is left expires when it ends.
 - Promo postings:
   - grant: debit `platform:promo_expense`, credit `user:promo`
   - spend (per minute): debit `user:promo`, credit `astrologer:payable` and `platform:commission`

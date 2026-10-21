@@ -13,18 +13,6 @@ from pydantic import SecretStr
 os.environ.setdefault("APP_ENV", "test")
 
 API_DIR = Path(__file__).resolve().parents[1]
-TABLES = (
-    "audit_log",
-    "horoscope_entries",
-    "saved_kundlis",
-    "reviews",
-    "consult_sessions",
-    "kyc_documents",
-    "astrologer_verifications",
-    "astrologers",
-    "auth_sessions",
-    "users",
-)
 ADMIN_PHONE = "+919000000001"
 
 
@@ -80,7 +68,16 @@ async def _truncate(url: str) -> None:
 
     engine = create_async_engine(url)
     async with engine.begin() as conn:
-        await conn.execute(text(f"TRUNCATE {', '.join(TABLES)} RESTART IDENTITY CASCADE"))
+        # Every application table, so new phases never need to edit this list.
+        tables = (
+            await conn.execute(
+                text(
+                    "SELECT quote_ident(tablename) FROM pg_tables WHERE schemaname = 'public' "
+                    "AND tablename <> 'alembic_version'"
+                )
+            )
+        ).scalars()
+        await conn.execute(text(f"TRUNCATE {', '.join(tables)} RESTART IDENTITY CASCADE"))
     await engine.dispose()
 
 

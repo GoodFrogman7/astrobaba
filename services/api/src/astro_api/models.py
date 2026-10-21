@@ -291,3 +291,7 @@ class Review(Base):
     created_at: Mapped[dt.datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )
+
+
+# Phase 4 tables live in their own modules; importing them here registers them on Base.metadata.
+from astro_api import models_ledger, models_sessions  # noqa: E402, F401

@@ -12,12 +12,18 @@ from redis.asyncio import Redis
 from astro_api import (
     __version__,
     admin_marketplace,
+    admin_money,
     applicant,
     auth,
+    billing_meter,
+    chat_ws,
     horoscopes,
     kundlis,
     marketplace,
+    payments_webhooks,
     reviews,
+    sessions_api,
+    wallet_api,
 )
 from astro_api.config import Settings, check_production_settings, get_settings
 from astro_api.db import make_engine, make_sessionmaker
@@ -48,9 +54,11 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         app.state.otp = OtpService(app.state.redis, settings, sms)
         app.state.storage = storage
         log.info("api started", extra={"env": settings.app_env, "version": __version__})
+        await billing_meter.start(app)
         try:
             yield
         finally:
+            await billing_meter.stop(app)
             await app.state.redis.aclose()
             await app.state.engine.dispose()
 
@@ -71,6 +79,11 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         applicant.router,
         reviews.router,
         admin_marketplace.router,
+        wallet_api.router,
+        payments_webhooks.router,
+        admin_money.router,
+        sessions_api.router,
+        chat_ws.router,
     ):
         app.include_router(router)
     app.add_middleware(

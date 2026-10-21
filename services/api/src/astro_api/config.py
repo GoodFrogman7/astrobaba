@@ -37,6 +37,17 @@ class Settings(BaseSettings):
     # Header carrying the client IP when the API sits behind a trusted proxy (e.g. X-Forwarded-For).
     client_ip_header: str | None = None
 
+    # Payments (Phase 4). "fake" simulates Razorpay for development/test only.
+    payments_provider: Literal["razorpay", "fake"] = "fake"
+    razorpay_key_id: str = ""
+    razorpay_key_secret: SecretStr = SecretStr("")
+    razorpay_webhook_secret: SecretStr = SecretStr("")
+    # Chat messages are encrypted at rest with AES-256-GCM (base64 32-byte key, id for rotation).
+    messages_key: SecretStr = SecretStr("")
+    messages_key_id: str = "k1"
+    # Length of a billed minute. 60 in every real environment; tests shorten it.
+    billing_minute_seconds: float = 60.0
+    meter_tick_seconds: float = 5.0
     otp_ttl_s: int = 300
     otp_max_attempts: int = 5
     otp_resend_after_s: int = 30
@@ -58,6 +69,18 @@ def check_production_settings(settings: Settings) -> None:
         problems.append("SECRET_KEY must be at least 32 characters")
     if settings.sms_provider == "console":
         problems.append("SMS_PROVIDER=console only logs codes; configure a real provider")
+    if settings.payments_provider == "fake":
+        problems.append("PAYMENTS_PROVIDER=fake")
+    if settings.payments_provider == "razorpay" and not (
+        settings.razorpay_key_id
+        and settings.razorpay_key_secret.get_secret_value()
+        and settings.razorpay_webhook_secret.get_secret_value()
+    ):
+        problems.append("Razorpay keys missing")
+    if not settings.messages_key.get_secret_value():
+        problems.append("MESSAGES_KEY missing")
+    if settings.billing_minute_seconds != 60:
+        problems.append("BILLING_MINUTE_SECONDS must be 60")
     if settings.documents_backend == "local":
         problems.append("DOCUMENTS_BACKEND=local keeps KYC documents on the container disk")
     if problems:

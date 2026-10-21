@@ -1,0 +1,96 @@
+{
+  "$comment": "Phase 4 money settings. Integer paise everywhere. Values marked founder_decision are defaults to confirm (PLAN.md §9.3). Changing them never reprices posted ledger entries.",
+  "currency": "INR",
+  "spend_order": {
+    "value": [
+      "promo",
+      "real"
+    ],
+    "promo_order": "earliest_expiry_first",
+    "decided": "founder, 2026-10-21 (ADR-0002)"
+  },
+  "commission_bps_by_tier": {
+    "rising": 4000,
+    "top_choice": 3500,
+    "celebrity": 3000,
+    "founder_decision": true,
+    "note": "Platform share of each billed minute, in basis points. The astrologer gets the remainder: commission = floor(charge * bps / 10000)."
+  },
+  "recharge": {
+    "min_paise": 10000,
+    "max_paise": 5000000,
+    "packs_paise": [
+      10000,
+      20000,
+      50000,
+      100000,
+      200000,
+      500000
+    ]
+  },
+  "recharge_bonus_tiers": {
+    "flag": "recharge_bonus_tiers",
+    "promo_expiry_days": 30,
+    "founder_decision": true,
+    "tiers": [
+      {
+        "min_paise": 50000,
+        "bonus_bps": 500
+      },
+      {
+        "min_paise": 100000,
+        "bonus_bps": 1000
+      },
+      {
+        "min_paise": 200000,
+        "bonus_bps": 1500
+      }
+    ]
+  },
+  "real_credit_expiry_days": 365,
+  "real_credit_expiry_note": "Long expiry per PLAN.md; the exact period and its legality need the Phase 7 policy/lawyer review.",
+  "free_session": {
+    "flag": "first_free_session",
+    "minutes": 5,
+    "promo_expiry_minutes_after_end": 0,
+    "abuse": {
+      "max_users_per_device": 1,
+      "max_free_sessions_per_ip_per_day": 3,
+      "score_threshold": 2
+    },
+    "note": "Once per user. Funded as a promo lot sized to the astrologer's price x minutes; unused minutes expire when the session ends."
+  },
+  "sessions": {
+    "request_timeout_s": 180,
+    "join_timeout_s": 90,
+    "heartbeat_grace_s": 90,
+    "average_session_minutes": 10,
+    "min_start_minutes": 2,
+    "min_start_minutes_note": "founder_decision: minimum minutes the wallet must cover to start a paid chat",
+    "low_balance_warning_minutes": 1
+  },
+  "refund_rules": {
+    "failed_connect": {
+      "enabled": true,
+      "description": "Astrologer accepted but never joined within join_timeout_s, or the session never became active.",
+      "refund": "all_billed"
+    },
+    "astrologer_drop": {
+      "enabled": true,
+      "description": "Astrologer disconnected and did not return within heartbeat_grace_s.",
+      "refund": "minutes_after_last_astrologer_activity"
+    },
+    "low_rating": {
+      "enabled": true,
+      "description": "Client rates 1 or 2 stars within the window.",
+      "window_hours": 24,
+      "max_rating": 2,
+      "refund_bps": 5000,
+      "cap_paise": 20000,
+      "max_per_user_per_30_days": 1
+    }
+  },
+  "reconciliation": {
+    "tolerance_paise": 0
+  }
+}
