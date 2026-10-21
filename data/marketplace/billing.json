@@ -13,8 +13,8 @@
     "rising": 4000,
     "top_choice": 3500,
     "celebrity": 3000,
-    "founder_decision": true,
-    "note": "Platform share of each billed minute, in basis points. The astrologer gets the remainder: commission = floor(charge * bps / 10000)."
+    "note": "Platform share of each billed minute, in basis points. The astrologer gets the remainder: commission = floor(charge * bps / 10000).",
+    "decided": "founder, 2026-10-21: rising 40%, top_choice 35%, celebrity 30%"
   },
   "recharge": {
     "min_paise": 10000,
