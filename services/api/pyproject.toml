@@ -18,6 +18,8 @@ dependencies = [
   "httpx>=0.28",
   # AES-256-GCM for chat messages at rest
   "cryptography>=44",
+  # LiveKit server API: access tokens, webhook verification, room service (voice calls)
+  "livekit-api==1.2.1",
 ]
 
 [build-system]

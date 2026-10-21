@@ -38,9 +38,11 @@ export type EndReason = (typeof END_REASONS)[number];
 
 export type ParticipantRole = "user" | "astrologer";
 
+export type SessionKind = "chat" | "call";
+
 export interface SessionView {
   id: string;
-  kind: "chat";
+  kind: SessionKind;
   status: SessionStatus;
   end_reason: EndReason | null;
   role: ParticipantRole;
@@ -78,6 +80,8 @@ export type ServerEvent =
   | { type: "message"; message: ChatMessage }
   | { type: "typing"; sender: ParticipantRole }
   | { type: "low_balance"; minutes_left: number }
+  /** Calls only: who is in the audio room (docs/api/portal.md §1). */
+  | { type: "call"; joined: Record<ParticipantRole, boolean> }
   | { type: "ended"; session: SessionView }
   | { type: "error"; code: string; message: string }
   | { type: "pong" };
@@ -90,6 +94,15 @@ export type ClientEvent =
  * `low_balance`, or `session_ended:<EndReason>`.
  */
 export const SYSTEM_MESSAGE_CODES = ["session_started", "low_balance", "session_ended"] as const;
+
+/** `POST /v1/sessions/{id}/call-token`: join the LiveKit room for a call. */
+export interface CallToken {
+  url: string;
+  token: string;
+  room: string;
+  identity: ParticipantRole;
+  expires_in: number;
+}
 
 /** Limits mirrored by the server. */
 export const CHAT_LIMITS = {

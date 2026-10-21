@@ -43,6 +43,12 @@ services:
       # Seconds per billed minute: 60 everywhere real; shorten only to try billing by hand.
       BILLING_MINUTE_SECONDS: ${BILLING_MINUTE_SECONDS:-60}
       METER_TICK_SECONDS: ${METER_TICK_SECONDS:-5}
+      # Voice calls (Phase 5): development LiveKit server below.
+      FLAG_VOICE_CALLS: ${FLAG_VOICE_CALLS:-true}
+      LIVEKIT_URL: http://livekit:7880
+      LIVEKIT_PUBLIC_URL: ${LIVEKIT_PUBLIC_URL:-ws://localhost:7880}
+      LIVEKIT_API_KEY: ${LIVEKIT_API_KEY:-devkey}
+      LIVEKIT_API_SECRET: ${LIVEKIT_API_SECRET:-dev-only-livekit-secret-change-me-0000}
       SECRET_KEY: ${SECRET_KEY:-dev-only-change-me}
       SMS_PROVIDER: ${SMS_PROVIDER:-console}
       DOCUMENTS_BACKEND: local
@@ -61,6 +67,36 @@ services:
           "-c",
           "import urllib.request;urllib.request.urlopen('http://127.0.0.1:8000/readyz')",
         ]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  # Development LiveKit SFU for in-app voice calls (ADR-0008). Audio goes browser <-> LiveKit;
+  # webhooks (participant joined/left) go to the API. Production uses a managed or separately
+  # deployed LiveKit with its own keys and a wss:// URL.
+  livekit:
+    image: livekit/livekit-server:v1.9.1
+    environment:
+      LIVEKIT_KEYS: "${LIVEKIT_API_KEY:-devkey}: ${LIVEKIT_API_SECRET:-dev-only-livekit-secret-change-me-0000}"
+      LIVEKIT_CONFIG: |
+        port: 7880
+        rtc:
+          tcp_port: 7881
+          port_range_start: 50000
+          port_range_end: 50020
+          use_external_ip: false
+          node_ip: 127.0.0.1
+        webhook:
+          api_key: ${LIVEKIT_API_KEY:-devkey}
+          urls: ["http://api:8000/v1/calls/livekit/webhook"]
+        room:
+          empty_timeout: 60
+    ports:
+      - "127.0.0.1:7880:7880"
+      - "127.0.0.1:7881:7881"
+      - "127.0.0.1:50000-50020:50000-50020/udp"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:7880/"]
       interval: 5s
       timeout: 3s
       retries: 20

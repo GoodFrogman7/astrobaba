@@ -19,6 +19,7 @@ describe("feature flags", () => {
       "first_free_session",
       "hindi_locale",
       "recharge_bonus_tiers",
+      "voice_calls",
     ]);
   });
 });

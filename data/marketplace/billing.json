@@ -92,5 +92,10 @@
   },
   "reconciliation": {
     "tolerance_paise": 0
+  },
+  "payouts": {
+    "min_payout_paise": 50000,
+    "founder_decision": true,
+    "note": "Net below this is carried forward to the next month. Bank transfers are manual in v1; TDS/GST not modelled until a CA confirms."
   }
 }

@@ -5,6 +5,8 @@ from typing import Literal
 from pydantic import Field, SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+from astro_api.flags import flag_enabled
+
 # Placeholder so local development works without a .env; refused outside development/test.
 DEV_SECRET_KEY = "dev-only-insecure-secret-key-change-me"  # noqa: S105 - refused in production
 
@@ -48,6 +50,12 @@ class Settings(BaseSettings):
     # Length of a billed minute. 60 in every real environment; tests shorten it.
     billing_minute_seconds: float = 60.0
     meter_tick_seconds: float = 5.0
+    # Voice calls (Phase 5, flag voice_calls). LIVEKIT_URL is how the API reaches LiveKit's server
+    # API; LIVEKIT_PUBLIC_URL is the wss:// URL browsers join.
+    livekit_url: str = "http://localhost:7880"
+    livekit_public_url: str = "ws://localhost:7880"
+    livekit_api_key: str = ""
+    livekit_api_secret: SecretStr = SecretStr("")
     otp_ttl_s: int = 300
     otp_max_attempts: int = 5
     otp_resend_after_s: int = 30
@@ -83,6 +91,12 @@ def check_production_settings(settings: Settings) -> None:
         problems.append("BILLING_MINUTE_SECONDS must be 60")
     if settings.documents_backend == "local":
         problems.append("DOCUMENTS_BACKEND=local keeps KYC documents on the container disk")
+    if flag_enabled("voice_calls") and (
+        not settings.livekit_api_key
+        or len(settings.livekit_api_secret.get_secret_value()) < 32
+        or not settings.livekit_public_url.startswith("wss://")
+    ):
+        problems.append("voice_calls on without LiveKit keys (secret >= 32 chars) and a wss:// URL")
     if problems:
         raise RuntimeError("unsafe production settings: " + "; ".join(problems))
 
