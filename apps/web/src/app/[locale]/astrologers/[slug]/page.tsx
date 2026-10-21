@@ -9,6 +9,7 @@ import { ConsultCard, MobileConsultBar } from "@/components/marketplace/ConsultC
 import { ProfileBio, ProfileHeader } from "@/components/marketplace/ProfileHeader";
 import { ReviewList } from "@/components/marketplace/ReviewList";
 import { PageShell } from "@/components/PageShell";
+import { ReportAstrologer } from "@/components/trust/ReportAstrologer";
 import { routing } from "@/i18n/routing";
 import { fillContent, getContent } from "@/lib/content";
 import { getProfile, getReviews } from "@/lib/marketplace/data";
@@ -83,6 +84,7 @@ export default async function ProfilePage({ params, searchParams }: Props) {
                 nextCursor={reviews.data.next_cursor}
               />
             ) : null}
+            <ReportAstrologer astrologerId={a.id} name={a.display_name} />
           </div>
           <div className="hidden lg:block">
             <ConsultCard p={a} />

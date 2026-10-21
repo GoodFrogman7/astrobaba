@@ -36,6 +36,11 @@ export interface ChatState {
   announce: ChatMessage | null;
   /** Calls only: who is in the audio room, from the last `call` event; null until one arrives. */
   callJoined: Record<ParticipantRole, boolean> | null;
+  /**
+   * Self-harm language was detected (`safety` event, docs/api/trust.md §3): the crisis panel
+   * shows and recharge/upsell prompts stay hidden for the rest of the session. Never unset.
+   */
+  safety: boolean;
 }
 
 export const initialChatState: ChatState = {
@@ -49,6 +54,7 @@ export const initialChatState: ChatState = {
   lastError: null,
   announce: null,
   callJoined: null,
+  safety: false,
 };
 
 export type ChatAction =
@@ -168,12 +174,25 @@ function onServer(state: ChatState, event: ServerEvent, now: number): ChatState 
         ...state,
         callJoined: { user: !!event.joined?.user, astrologer: !!event.joined?.astrologer },
       };
+    case "safety":
+      return state.safety ? state : { ...state, safety: true, lowBalanceMinutes: null };
     default:
       return state;
   }
 }
 
+/**
+ * The session's `safety_flag` (set by the server when the client used self-harm language) turns
+ * the flag on as well, so a reload or a late joiner still sees the crisis panel.
+ */
 export function chatReducer(state: ChatState, action: ChatAction): ChatState {
+  const next = reduce(state, action);
+  if (!next.safety && next.session?.safety_flag)
+    return { ...next, safety: true, lowBalanceMinutes: null };
+  return next;
+}
+
+function reduce(state: ChatState, action: ChatAction): ChatState {
   switch (action.type) {
     case "server":
       return onServer(state, action.event, action.now);

@@ -11,7 +11,13 @@ export type Outcome =
   | { kind: "open"; sessionId: string | null }
   | {
       kind: "message";
-      key: "chatUnavailable" | "callUnavailable" | "ownProfile" | "freeUnavailable" | "generic";
+      key:
+        | "chatUnavailable"
+        | "callUnavailable"
+        | "ownProfile"
+        | "freeUnavailable"
+        | "consentRequired"
+        | "generic";
     };
 
 /** What to tell the user for a failed POST /api/sessions (docs/api/billing.md create checks). */
@@ -39,6 +45,9 @@ export function outcomeFor(
   if (e.code === "session_open")
     return { kind: "open", sessionId: typeof e.session_id === "string" ? e.session_id : null };
   if (e.code === "own_profile") return { kind: "message", key: "ownProfile" };
+  // The consent step was closed without accepting (docs/api/trust.md §1).
+  if (status === 403 && e.code === "consent_required")
+    return { kind: "message", key: "consentRequired" };
   if (e.code === "free_session_unavailable") return { kind: "message", key: "freeUnavailable" };
   // Calls: the voice_calls flag is off or the astrologer does not take calls (portal.md §1).
   if (e.code === "call_unavailable") return { kind: "message", key: "callUnavailable" };

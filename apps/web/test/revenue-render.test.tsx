@@ -11,10 +11,12 @@ import hiCore from "../messages/hi.json" with { type: "json" };
 import hiBilling from "../messages/hi/billing.json" with { type: "json" };
 import hiMarket from "../messages/hi/marketplace.json" with { type: "json" };
 import hiRevenue from "../messages/hi/revenue.json" with { type: "json" };
+import enTrust from "../messages/en/trust.json" with { type: "json" };
+import hiTrust from "../messages/hi/trust.json" with { type: "json" };
 
 const MESSAGES = {
-  en: { ...enCore, ...enMarket, ...enBilling, ...enRevenue },
-  hi: { ...hiCore, ...hiMarket, ...hiBilling, ...hiRevenue },
+  en: { ...enCore, ...enMarket, ...enBilling, ...enRevenue, ...enTrust },
+  hi: { ...hiCore, ...hiMarket, ...hiBilling, ...hiRevenue, ...hiTrust },
 };
 
 vi.mock("server-only", () => ({}));
@@ -164,7 +166,8 @@ describe("AI assistant page", () => {
     expect(html).toContain("₹10 refunded to your wallet.");
     expect(html).toContain(AI_LABEL.en);
     expect(html).toContain('href="/astrologers"');
-    // Blocked before charging (ADR-0010): free, no recharge prompt, still the hand-off.
+    // Blocked before charging (ADR-0010): free, no recharge prompt. Self-harm (Phase 7,
+    // docs/api/trust.md §3): the crisis panel instead of the paid hand-off.
     const free = render(
       <QuestionItem
         q={q({ status: "blocked", answer: null, blocked_reason: "self_harm", price_paise: 0 })}
@@ -175,7 +178,9 @@ describe("AI assistant page", () => {
     expect(free).toContain(hiRevenue.revenue.ai.blocked.selfHarm);
     expect(free).toContain(hiRevenue.revenue.ai.notCharged);
     expect(free).not.toContain("/wallet");
-    expect(free).toContain('href="/astrologers"');
+    expect(free).toContain('data-testid="crisis-panel"');
+    expect(free).toContain('href="tel:14416"');
+    expect(free).not.toContain('href="/astrologers"');
     const pending = render(<QuestionItem q={q({ status: "queued", answer: null })} locale="en" />);
     expect(pending).toContain(enRevenue.revenue.ai.thinking);
   });

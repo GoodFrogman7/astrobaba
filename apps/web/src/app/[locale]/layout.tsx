@@ -6,6 +6,7 @@ import type { ReactNode } from "react";
 import { JsonLd } from "@/components/JsonLd";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SiteHeader } from "@/components/SiteHeader";
+import { ConsentGate } from "@/components/trust/ConsentGate";
 import { routing } from "@/i18n/routing";
 import { organizationLd } from "@/lib/seo";
 import { SITE_URL } from "@/site";
@@ -62,6 +63,7 @@ export default async function LocaleLayout({
           <SiteHeader locale={locale} />
           {children}
           <SiteFooter locale={locale} />
+          <ConsentGate />
         </NextIntlClientProvider>
       </body>
     </html>

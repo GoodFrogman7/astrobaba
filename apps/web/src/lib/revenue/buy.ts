@@ -66,7 +66,10 @@ export type BuyOutcome =
   | { kind: "signin" }
   | { kind: "insufficient"; required: number; available: number; suggest: number }
   | { kind: "invalid"; errors: OrderError[] }
-  | { kind: "message"; key: "kundliNotFound" | "conflict" | "network" | "generic" };
+  | {
+      kind: "message";
+      key: "kundliNotFound" | "conflict" | "network" | "consentRequired" | "generic";
+    };
 
 /** What a failed POST means for the user. */
 export function orderErrorOutcome(
@@ -87,6 +90,8 @@ export function orderErrorOutcome(
     return { kind: "insufficient", required, available, suggest };
   }
   if (status === 0) return { kind: "message", key: "network" };
+  if (status === 403 && e.code === "consent_required")
+    return { kind: "message", key: "consentRequired" };
   if (status === 409 && e.code === "idempotency_conflict")
     return { kind: "message", key: "conflict" };
   if (status === 404 || e.code === "kundli_not_found")
@@ -134,7 +139,10 @@ export type BuyState =
   | { step: "creating" }
   | { step: "invalid"; errors: OrderError[] }
   | { step: "insufficient"; required: number; available: number; suggest: number }
-  | { step: "message"; key: "kundliNotFound" | "conflict" | "network" | "generic" | "script" }
+  | {
+      step: "message";
+      key: "kundliNotFound" | "conflict" | "network" | "consentRequired" | "generic" | "script";
+    }
   | { step: "signin" }
   | { step: "checkout"; order: ReportOrder }
   | { step: "dev"; order: ReportOrder }

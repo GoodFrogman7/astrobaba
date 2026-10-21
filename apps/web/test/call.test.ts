@@ -40,6 +40,7 @@ const session = (over: Partial<SessionView> = {}): SessionView => ({
   billed_paise: 0,
   minutes_left: 9,
   can_review: false,
+  safety_flag: false,
   ...over,
 });
 

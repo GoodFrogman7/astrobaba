@@ -2,6 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import { useRef, useState } from "react";
+import { requestConsent } from "@/lib/trust/consent";
 import { postJson } from "@/components/marketplace/SignIn";
 import type { BirthInput } from "@/lib/tools/types";
 
@@ -50,8 +51,11 @@ export function SaveKundli({ birth }: { birth: BirthInput }) {
         } else setError(errorText(String(r.body.code ?? "")));
       } else if (step === "code") {
         const r = await postJson("/api/auth/otp/verify", { challenge_id: challenge, code });
-        if (r.status === 200) await save();
-        else setError(errorText(String(r.body.code ?? "")));
+        if (r.status === 200) {
+          await save();
+          // Saving a kundli needs no consent; a new sign-in still gets the consent step.
+          void requestConsent();
+        } else setError(errorText(String(r.body.code ?? "")));
       }
     } catch {
       setError(t("errors.generic"));

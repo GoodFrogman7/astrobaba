@@ -108,6 +108,7 @@
       "simulateSuccess": "Simulate payment (development)",
       "simulateFailure": "Simulate failed payment (development)",
       "errors": {
+        "consentRequired": "To continue, please confirm that you are 18 or older and agree to the Terms of use and the Privacy notice.",
         "generic": "Something went wrong. Please try again.",
         "noPrice": "We could not load the current price. Please try again in a minute.",
         "kundlis": "We could not load your saved kundlis. Please try again.",
@@ -189,6 +190,7 @@
         "unsafe": "The AI assistant could not give a safe answer to this question, so it did not answer."
       },
       "errors": {
+        "consentRequired": "To continue, please confirm that you are 18 or older and agree to the Terms of use and the Privacy notice.",
         "generic": "Something went wrong. Please try again.",
         "kundlis": "We could not load your saved kundlis. Please try again.",
         "start": "Could not start. Please try again.",
@@ -221,6 +223,7 @@
         "consultation_followup": "Follow-up consultation"
       },
       "errors": {
+        "consentRequired": "To continue, please confirm that you are 18 or older and agree to the Terms of use and the Privacy notice.",
         "generic": "Something went wrong. Please try again.",
         "date": "Please choose today or a later date, or leave it empty.",
         "consent": "Please tick the box to agree before sending.",

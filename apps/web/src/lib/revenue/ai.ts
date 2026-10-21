@@ -40,7 +40,7 @@ export type AskOutcome =
   | { kind: "invalid"; error: QuestionError }
   | { kind: "signin" }
   | { kind: "insufficient"; required: number; available: number; suggest: number }
-  | { kind: "message"; key: "unavailable" | "network" | "generic" };
+  | { kind: "message"; key: "unavailable" | "network" | "consentRequired" | "generic" };
 
 /**
  * POST /api/ai/conversations/{id}/questions with an Idempotency-Key per question text, so a
@@ -83,5 +83,7 @@ export async function askQuestion(
     return { kind: "insufficient", required, available, suggest };
   }
   if (r.status === 404) return { kind: "message", key: "unavailable" };
+  if (r.status === 403 && r.error.code === "consent_required")
+    return { kind: "message", key: "consentRequired" };
   return { kind: "message", key: "generic" };
 }

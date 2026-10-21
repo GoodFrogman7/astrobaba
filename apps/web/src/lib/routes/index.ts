@@ -1,6 +1,7 @@
 import { toolRoutes } from "./tools";
 import { almanacRoutes } from "./almanac";
 import { astrologerRoutes } from "./astrologers";
+import { legalRoutes } from "./legal";
 import { revenueRoutes } from "./revenue";
 import { REMEDIES_INDEXABLE } from "@/lib/revenue/config";
 
@@ -24,5 +25,6 @@ export function siteRoutes(): SiteRoute[] {
     ...almanacRoutes(),
     ...astrologerRoutes(),
     ...revenueRoutes({ remedies: REMEDIES_INDEXABLE }),
+    ...legalRoutes(),
   ];
 }

@@ -1,0 +1,60 @@
+{
+  "title": "Refund policy",
+  "description": "When {brand} refunds a consultation, a report or an AI question, how refunds reach your wallet, and what is never charged in the first place.",
+  "h1": "Refund policy",
+  "intro": "Most refunds on {brand} happen automatically, by fixed rules that run after every consultation and purchase. This page lists those rules as they are configured today. Nothing here depends on asking nicely, and we do not refund more than was charged.",
+  "sections": [
+    {
+      "id": "billing",
+      "heading": "How consultations are charged",
+      "body": [
+        "Chats and calls are charged per minute at the price shown before you start. Each minute is charged when it begins, and a started minute counts as a whole minute. You can end at any time and are charged only up to the current minute. A free first consultation costs nothing, so there is nothing to refund on it."
+      ]
+    },
+    {
+      "id": "rules",
+      "heading": "Automatic refunds for consultations",
+      "body": [
+        "The rules below are applied by the system after each paid consultation ends. Each one can apply only once per consultation, and refunds never exceed what is left of the amount charged for it."
+      ],
+      "slot": "rules"
+    },
+    {
+      "id": "where",
+      "heading": "Where a consultation refund goes",
+      "body": [
+        "A refund goes back to your wallet in the same mix it was paid with: the part paid from your recharged balance returns to your recharged balance, and the part paid with promo credit returns as new promo credit that expires {promoDays} days later. You can see every refund in your wallet history."
+      ]
+    },
+    {
+      "id": "reports",
+      "heading": "Reports",
+      "body": [
+        "If a report you paid for cannot be generated after several attempts, the full price is refunded automatically, once. A report paid from the wallet is refunded to the same balances; a report paid by card or UPI is refunded as recharged wallet balance. There is no automatic refund for a report that was generated successfully; its content is fixed when you buy it."
+      ],
+      "lawyer": "Whether card-paid report refunds must also be offered back to the original payment method."
+    },
+    {
+      "id": "ai",
+      "heading": "AI assistant questions",
+      "body": [
+        "A question the assistant does not answer for safety reasons (for example medical, legal or financial questions, or self-harm) is not charged at all. If a charged question cannot be answered safely, or answering fails, the price is refunded automatically to the same balances, once."
+      ]
+    },
+    {
+      "id": "payments",
+      "heading": "Recharges and payment problems",
+      "body": [
+        "Money is added to your wallet only after Razorpay confirms the payment to us. If the same order is paid twice, the second payment is not added to your wallet; our support team refunds it to the card or account it came from. Pujas requested through a partner are not paid to us; the partner's own terms apply."
+      ],
+      "lawyer": "Refund timelines for duplicate payments, and whether unused recharged balance can be refunded (and how) when an account is closed."
+    },
+    {
+      "id": "help",
+      "heading": "If something went wrong",
+      "body": [
+        "If you think a rule should have applied and did not, contact our grievance officer with the date and time of the consultation or purchase. Our team can review it; a manual refund is limited to what was charged for that consultation."
+      ]
+    }
+  ]
+}

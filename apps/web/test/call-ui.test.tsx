@@ -29,6 +29,8 @@ import enMarket from "../messages/en/marketplace.json" with { type: "json" };
 import hiCore from "../messages/hi.json" with { type: "json" };
 import hiBilling from "../messages/hi/billing.json" with { type: "json" };
 import hiMarket from "../messages/hi/marketplace.json" with { type: "json" };
+import enTrust from "../messages/en/trust.json" with { type: "json" };
+import hiTrust from "../messages/hi/trust.json" with { type: "json" };
 import nextConfig from "../next.config";
 import { CallRoom } from "../src/components/call/CallRoom";
 import type { useChat } from "../src/components/chat/useChat";
@@ -47,8 +49,8 @@ import {
 function render(node: ReactNode, locale: "en" | "hi" = "en") {
   const messages =
     locale === "en"
-      ? { ...enCore, ...enMarket, ...enBilling }
-      : { ...hiCore, ...hiMarket, ...hiBilling };
+      ? { ...enCore, ...enMarket, ...enBilling, ...enTrust }
+      : { ...hiCore, ...hiMarket, ...hiBilling, ...hiTrust };
   return renderToStaticMarkup(
     <NextIntlClientProvider locale={locale} messages={messages} timeZone="Asia/Kolkata">
       {node}
@@ -252,6 +254,7 @@ describe("call page (before joining)", () => {
     billed_paise: 0,
     minutes_left: 9,
     can_review: false,
+    safety_flag: false,
   };
   const chat = (s: SessionView) =>
     ({
@@ -298,6 +301,7 @@ describe("call page (before joining)", () => {
       billed_minutes: 4,
       billed_paise: 5000,
       can_review: true,
+      safety_flag: false,
     };
     const html = render(<CallRoom chat={chat(ended)} session={ended} tapRef={{ current: null }} />);
     expect(html).toContain("Call ended");

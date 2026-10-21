@@ -2,6 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import { useState } from "react";
+import { requestConsent } from "@/lib/trust/consent";
 
 /** POST JSON to one of our route handlers; the body is {} when the answer is not JSON. */
 export async function postJson(url: string, body: unknown) {
@@ -16,7 +17,8 @@ export async function postJson(url: string, body: unknown) {
 
 /**
  * Phone OTP sign-in (same /api/auth routes as "Save my kundli"). The token lands in an
- * httpOnly cookie set by the route handler; this component never sees it.
+ * httpOnly cookie set by the route handler; this component never sees it. After a successful
+ * sign-in the consent step (ConsentGate) opens if the user's consents are not current.
  */
 export function SignIn({ onSignedIn }: { onSignedIn: () => void }) {
   const t = useTranslations("market.signin");
@@ -39,8 +41,12 @@ export function SignIn({ onSignedIn }: { onSignedIn: () => void }) {
         else setError(err(r.body.code));
       } else {
         const r = await postJson("/api/auth/otp/verify", { challenge_id: challenge, code });
-        if (r.status === 200) onSignedIn();
-        else setError(err(r.body.code));
+        if (r.status === 200) {
+          // The age gate and consent step comes right after sign-in (docs/api/trust.md §1).
+          // Closing it is allowed; a paid action then asks again before it goes ahead.
+          await requestConsent();
+          onSignedIn();
+        } else setError(err(r.body.code));
       }
     } catch {
       setError(t("errors.generic"));

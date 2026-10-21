@@ -25,7 +25,7 @@ export function clientIp(headers: Headers): string | undefined {
 }
 
 export interface ForwardOptions {
-  method: "GET" | "POST";
+  method: "GET" | "POST" | "DELETE";
   /** API path including any query string. */
   path: string;
   body?: unknown;

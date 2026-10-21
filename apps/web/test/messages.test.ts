@@ -5,18 +5,36 @@ import enAlmanac from "../messages/en/almanac.json" with { type: "json" };
 import enMarket from "../messages/en/marketplace.json" with { type: "json" };
 import enBilling from "../messages/en/billing.json" with { type: "json" };
 import enRevenue from "../messages/en/revenue.json" with { type: "json" };
+import enTrust from "../messages/en/trust.json" with { type: "json" };
 import hiCore from "../messages/hi.json" with { type: "json" };
 import hiTools from "../messages/hi/tools.json" with { type: "json" };
 import hiAlmanac from "../messages/hi/almanac.json" with { type: "json" };
 import hiMarket from "../messages/hi/marketplace.json" with { type: "json" };
 import hiBilling from "../messages/hi/billing.json" with { type: "json" };
 import hiRevenue from "../messages/hi/revenue.json" with { type: "json" };
+import hiTrust from "../messages/hi/trust.json" with { type: "json" };
 
-const en = { ...enCore, ...enTools, ...enAlmanac, ...enMarket, ...enBilling, ...enRevenue };
-const hi = { ...hiCore, ...hiTools, ...hiAlmanac, ...hiMarket, ...hiBilling, ...hiRevenue };
+const en = {
+  ...enCore,
+  ...enTools,
+  ...enAlmanac,
+  ...enMarket,
+  ...enBilling,
+  ...enRevenue,
+  ...enTrust,
+};
+const hi = {
+  ...hiCore,
+  ...hiTools,
+  ...hiAlmanac,
+  ...hiMarket,
+  ...hiBilling,
+  ...hiRevenue,
+  ...hiTrust,
+};
 
 it("area files never redefine a top-level namespace", () => {
-  const all = [enCore, enTools, enAlmanac, enMarket, enBilling, enRevenue].flatMap((m) =>
+  const all = [enCore, enTools, enAlmanac, enMarket, enBilling, enRevenue, enTrust].flatMap((m) =>
     Object.keys(m),
   );
   expect(new Set(all).size).toBe(all.length);

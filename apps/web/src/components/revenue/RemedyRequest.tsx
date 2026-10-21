@@ -60,7 +60,7 @@ type Send =
   | { step: "sending" }
   | { step: "sent" }
   | { step: "invalid"; errors: LeadError[] }
-  | { step: "error"; key: "network" | "generic" | "signin" };
+  | { step: "error"; key: "network" | "generic" | "signin" | "consentRequired" };
 
 /** The partner request form. Consent is a required checkbox that starts unticked. */
 export function LeadForm({ remedyId }: { remedyId: string }) {
@@ -92,6 +92,10 @@ export function LeadForm({ remedyId }: { remedyId: string }) {
     }
     if (r.status !== 0) keys.current.done();
     if (r.status === 401) return setSend({ step: "error", key: "signin" });
+    // 403: the age/terms consent step was closed (docs/api/trust.md §1); 422: the partner
+    // consent box (docs/api/revenue.md §4).
+    if (r.status === 403 && r.error.code === "consent_required")
+      return setSend({ step: "error", key: "consentRequired" });
     if (r.error.code === "consent_required")
       return setSend({ step: "invalid", errors: ["consent"] });
     setSend({ step: "error", key: r.status === 0 ? "network" : "generic" });

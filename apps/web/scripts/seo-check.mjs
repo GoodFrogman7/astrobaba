@@ -158,6 +158,8 @@ async function main() {
     "/hi/wallet",
     "/chat/example",
     "/hi/chat/example",
+    "/account",
+    "/hi/account",
     "/account/reports",
     "/hi/account/reports",
   ]) {

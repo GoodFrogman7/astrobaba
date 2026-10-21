@@ -47,6 +47,7 @@
       "simulateFailure": "Simulate failed payment (development)",
       "secure": "Payments are processed by Razorpay. We never see your card or UPI details.",
       "errors": {
+        "consentRequired": "To continue, please confirm that you are 18 or older and agree to the Terms of use and the Privacy notice.",
         "amount_out_of_range": "Please enter an amount within the limits.",
         "script": "The payment window could not load. Check your connection and try again.",
         "generic": "Something went wrong. Please try again."
@@ -75,6 +76,7 @@
       "viewReports": "View my reports"
     },
     "start": {
+      "consentRequired": "To continue, please confirm that you are 18 or older and agree to the Terms of use and the Privacy notice.",
       "chat": "Chat",
       "call": "Call",
       "freeCall": "Free call · {minutes} min",

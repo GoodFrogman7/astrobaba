@@ -1,0 +1,47 @@
+{
+  "title": "Wallet credit policy",
+  "description": "How the {brand} wallet works: recharged balance and promo credit, which is spent first, when credit expires and what promo credit cannot be used for.",
+  "h1": "Wallet credit policy",
+  "intro": "Your {brand} wallet can hold two kinds of credit: money you add yourself, and promo credit we give you. This page explains how each is spent and when it expires, using the settings the service actually runs on.",
+  "sections": [
+    {
+      "id": "facts",
+      "heading": "At a glance",
+      "body": [
+        "These values come from the same settings the wallet uses to charge you, so they change here when they change there."
+      ],
+      "slot": "facts"
+    },
+    {
+      "id": "kinds",
+      "heading": "Recharged balance and promo credit",
+      "body": [
+        "Recharged balance is money you added through Razorpay. Promo credit comes from us: a recharge bonus when one is offered, the promo part of a refund, or the minutes of a free first consultation. Promo credit has no cash value, cannot be withdrawn or moved to another account, and is shown in your wallet with its own expiry date.",
+        "The credit can only be spent on this platform: consultations, reports and AI questions. It cannot be used to pay astrologers or partners directly."
+      ]
+    },
+    {
+      "id": "order",
+      "heading": "Which credit is spent first",
+      "body": [
+        "Whenever you are charged, promo credit is used first, starting with the credit that expires soonest, and then your recharged balance. This way promo credit is less likely to expire unused. Credit from a free first consultation can only be used for that consultation; minutes you do not use expire when it ends."
+      ]
+    },
+    {
+      "id": "expiry",
+      "heading": "When credit expires",
+      "body": [
+        "Promo credit expires {promoDays} days after it is given unless a different date is shown on it; expired promo credit is removed and shown as a line in your wallet history. The expiry period for recharged balance will be fixed before launch and published here."
+      ],
+      "lawyer": "Whether recharged balance may expire at all, the period, notice before expiry, and what happens to balance on account closure."
+    },
+    {
+      "id": "history",
+      "heading": "Seeing your balance",
+      "body": [
+        "The wallet page shows your recharged balance and promo credit separately, each promo credit with its expiry date, and a history in which every consultation, purchase, refund, bonus and expiry has its own line."
+      ],
+      "lawyer": "Regulatory status of the wallet (RBI prepaid payment instruments) and GST treatment, confirmed with a lawyer and a chartered accountant."
+    }
+  ]
+}

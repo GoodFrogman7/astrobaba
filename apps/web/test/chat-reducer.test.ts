@@ -32,6 +32,7 @@ const session = (over: Partial<SessionView> = {}): SessionView => ({
   billed_paise: 1250,
   minutes_left: 9,
   can_review: false,
+  safety_flag: false,
   ...over,
 });
 
@@ -132,6 +133,7 @@ describe("chat reducer", () => {
       billed_minutes: 10,
       billed_paise: 12500,
       can_review: true,
+      safety_flag: false,
     });
     const s = run(
       [

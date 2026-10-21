@@ -10,6 +10,8 @@ import {
   EndDialog,
   Ended,
   LowBalance,
+  SessionReport,
+  SessionSafety,
   useNow,
   Waiting,
 } from "@/components/chat/ChatRoom";
@@ -63,6 +65,7 @@ export function CallRoom({
       <p role="status" aria-live="polite" aria-atomic="true" className="sr-only">
         {statusText(t, screen, media.state, joined, name)}
       </p>
+      <SessionSafety chat={chat} session={s} />
       {screen === "waiting" ? (
         <Waiting session={s} onCancel={() => chat.act("cancel")} conn={chat.conn} />
       ) : screen === "ended" ? (
@@ -72,6 +75,7 @@ export function CallRoom({
       ) : (
         <CallPanel chat={chat} session={s} media={media} screen={screen} joined={joined} />
       )}
+      <SessionReport session={s} />
     </div>
   );
 }

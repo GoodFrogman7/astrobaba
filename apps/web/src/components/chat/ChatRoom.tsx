@@ -6,6 +6,8 @@ import { useEffect, useRef, useState } from "react";
 import { Dialog } from "@/components/billing/Dialog";
 import { CallRoom } from "@/components/call/CallRoom";
 import { SignIn } from "@/components/marketplace/SignIn";
+import { CrisisPanel } from "@/components/trust/CrisisPanel";
+import { ReportAstrologer } from "@/components/trust/ReportAstrologer";
 import { Link } from "@/i18n/navigation";
 import { BILLING } from "@/lib/billing/config";
 import type { ConnStatus } from "@/lib/chat/connection";
@@ -66,6 +68,7 @@ export function ChatRoom({ sessionId }: { sessionId: string }) {
       <p className="text-sm text-muted">
         {t("human", { name: s.astrologer.display_name })} {DISCLAIMER[locale]}
       </p>
+      <SessionSafety chat={chat} session={s} />
       {s.status === "active" ? (
         <ActiveChat chat={chat} session={s} />
       ) : isTerminal(s.status) ? (
@@ -73,7 +76,40 @@ export function ChatRoom({ sessionId }: { sessionId: string }) {
       ) : (
         <Waiting session={s} onCancel={() => chat.act("cancel")} conn={chat.conn} />
       )}
+      <SessionReport session={s} />
     </div>
+  );
+}
+
+/**
+ * The crisis panel after a `safety` event (docs/api/trust.md §3), for chats and calls alike:
+ * helplines, the not-a-helpline text and "End consultation" (cancel while still waiting).
+ */
+export function SessionSafety({
+  chat,
+  session: s,
+}: {
+  chat: Pick<ReturnType<typeof useChat>, "state" | "act">;
+  session: SessionView;
+}) {
+  if (!chat.state.safety) return null;
+  const end = isTerminal(s.status)
+    ? undefined
+    : () => chat.act(s.status === "active" ? "end" : "cancel");
+  return <CrisisPanel onEnd={end} upsellPaused={!s.is_free} />;
+}
+
+/** Report the astrologer once the consultation has been accepted (during or after it). */
+export function SessionReport({ session: s }: { session: SessionView }) {
+  if (s.role !== "user" || s.status === "queued" || s.status === "requested") return null;
+  return (
+    <p className="text-right">
+      <ReportAstrologer
+        astrologerId={s.astrologer.id}
+        sessionId={s.id}
+        name={s.astrologer.display_name}
+      />
+    </p>
   );
 }
 
@@ -160,11 +196,15 @@ export function CancelButton({
   );
 }
 
-/** Paid sessions: minutes the balance still covers, and whether to warn about it. */
+/**
+ * Paid sessions: minutes the balance still covers, and whether to warn about it. After a
+ * `safety` event there is no recharge prompt for the rest of the session (docs/api/trust.md §3).
+ */
 export function balanceWarning(s: SessionView, state: ChatState) {
   const minutesLeft = s.minutes_left ?? state.lowBalanceMinutes;
   const low =
     !s.is_free &&
+    !state.safety &&
     (state.lowBalanceMinutes !== null ||
       (minutesLeft !== null && minutesLeft <= BILLING.lowBalanceWarningMinutes));
   return { minutesLeft, low };
@@ -221,7 +261,7 @@ export function EndDialog({
   );
 }
 
-function ActiveChat({
+export function ActiveChat({
   chat,
   session: s,
 }: {
@@ -383,9 +423,12 @@ export function Ended({
           <Link href="/wallet" className="text-accent underline">
             {t("ended.wallet")}
           </Link>
-          <Link href={`/astrologers/${s.astrologer.slug}`} className="text-accent underline">
-            {t("ended.again", { name: s.astrologer.display_name })}
-          </Link>
+          {/* No "consult again" prompt after a safety event (no upsell, trust.md §3). */}
+          {!state.safety && (
+            <Link href={`/astrologers/${s.astrologer.slug}`} className="text-accent underline">
+              {t("ended.again", { name: s.astrologer.display_name })}
+            </Link>
+          )}
         </p>
       </section>
       {s.can_review && (

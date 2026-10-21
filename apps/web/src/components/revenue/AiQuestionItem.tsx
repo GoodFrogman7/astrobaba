@@ -6,11 +6,17 @@ import { Link } from "@/i18n/navigation";
 import { dateTimeIst, formatPaise } from "@/lib/marketplace/format";
 import { blockedKey } from "@/lib/revenue/ai";
 import type { AiQuestion } from "@/lib/revenue/types";
+import { CrisisPanel } from "@/components/trust/CrisisPanel";
 import { AiLabel } from "./AiLabel";
 
-/** One question and its answer, always labelled AI, always with the human hand-off. */
+/**
+ * One question and its answer, always labelled AI, with the human hand-off. A question blocked
+ * for self-harm shows the crisis resources instead of the hand-off: no consultation offer at
+ * that moment (docs/api/trust.md §3).
+ */
 export function QuestionItem({ q, locale }: { q: AiQuestion; locale: Locale }) {
   const t = useTranslations("revenue.ai");
+  const selfHarm = q.status === "blocked" && blockedKey(q.blocked_reason) === "selfHarm";
   return (
     <article className="space-y-3 rounded-md border border-border p-4" data-status={q.status}>
       <div>
@@ -30,6 +36,7 @@ export function QuestionItem({ q, locale }: { q: AiQuestion; locale: Locale }) {
             {t(`blocked.${blockedKey(q.blocked_reason)}`)}
           </p>
         )}
+        {selfHarm && <CrisisPanel focus={false} />}
         {q.status === "failed" && <p role="note">{t("failed")}</p>}
         {(q.status === "blocked" || q.status === "failed") &&
           !q.refunded &&
@@ -40,12 +47,14 @@ export function QuestionItem({ q, locale }: { q: AiQuestion; locale: Locale }) {
           </p>
         )}
         <p className="text-sm text-muted">{t("aiNote")}</p>
-        <Link
-          href="/astrologers"
-          className="inline-block text-sm font-medium text-accent underline"
-        >
-          {t("handoff")}
-        </Link>
+        {!selfHarm && (
+          <Link
+            href="/astrologers"
+            className="inline-block text-sm font-medium text-accent underline"
+          >
+            {t("handoff")}
+          </Link>
+        )}
       </div>
     </article>
   );

@@ -22,7 +22,7 @@ type Pay =
   | { step: "paid"; order: RechargeOrder }
   | { step: "failed" }
   | { step: "dismissed" }
-  | { step: "error"; key: "amount_out_of_range" | "script" | "generic" };
+  | { step: "error"; key: "amount_out_of_range" | "script" | "consentRequired" | "generic" };
 
 /**
  * Recharge: packs or a custom amount, nothing pre-selected unless the user arrived with an
@@ -145,7 +145,12 @@ export function RechargePanel({
       if (r.status !== 0) keys.done();
       return setPay({
         step: "error",
-        key: r.error.code === "amount_out_of_range" ? "amount_out_of_range" : "generic",
+        key:
+          r.error.code === "amount_out_of_range"
+            ? "amount_out_of_range"
+            : r.status === 403 && r.error.code === "consent_required"
+              ? "consentRequired"
+              : "generic",
       });
     }
     const order = r.data;
