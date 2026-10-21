@@ -2,7 +2,7 @@
 SHELL := /bin/bash
 COMPOSE := docker compose
 
-.PHONY: help setup env data dev down logs ps seed admin-role lint typecheck test test-integration build smoke ci fmt migrate clean
+.PHONY: help setup env data dev down logs ps seed admin-role reconcile expire-promo lint typecheck test test-integration build smoke ci fmt migrate clean
 
 help: ## List targets
 	@grep -hE '^[a-z-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-18s %s\n", $$1, $$2}'
@@ -30,6 +30,7 @@ dev: env ## Boot Postgres, Redis, API, astro engine and web in Docker, wait unti
 	@echo "  api    http://localhost:8000/docs   readiness: /readyz"
 	@echo "  astro  http://localhost:8001/docs"
 	@echo "  admin  http://localhost:3001   (make admin-role PHONE=98xxxxxxxx; make seed for demo data)"
+	@echo "  astrologer console  http://localhost:3002   (sign in with a live astrologer's phone)"
 	@echo ""
 	@echo "  logs: make logs    stop: make down"
 
@@ -47,6 +48,12 @@ seed: ## Demo astrologers, reviews and a demo client (development only; refused 
 
 admin-role: ## Grant the admin role: make admin-role PHONE=9876543210
 	$(COMPOSE) exec api /app/.venv/bin/python -m astro_api.cli grant-role $(PHONE) admin
+
+reconcile: ## Daily money reconciliation (production: cron daily): make reconcile [DATE=YYYY-MM-DD]
+	$(COMPOSE) exec api /app/.venv/bin/python -m astro_api.cli reconcile $(if $(DATE),--date $(DATE),)
+
+expire-promo: ## Expire lapsed promo credit (production: cron hourly)
+	$(COMPOSE) exec api /app/.venv/bin/python -m astro_api.cli expire-promo
 
 lint: ## Lint JS/TS and Python
 	pnpm lint

@@ -27,7 +27,7 @@ chars, `[A-Za-z0-9_-]`). Same key + same body from the same user → the origina
 | POST | `/v1/wallet/recharge-orders` | Idempotency-Key; `{amount_paise}` → 201 `RechargeOrder` |
 | GET | `/v1/wallet/recharge-orders/{id}` | `RechargeOrder` (own orders only, else 404) |
 | POST | `/v1/wallet/recharge-orders/{id}/checkout-result` | `{provider_payment_id, provider_signature}` → `RechargeOrder`. Verifies the Checkout signature and records it; **does not credit**. Credit comes only from the webhook. |
-| POST | `/v1/dev/payments/{order_id}/simulate` | Fake provider only, never in production (404). `{outcome: "captured"\|"failed"}` → sends a correctly signed webhook through the real webhook code path. |
+| POST | `/v1/dev/payments/{order_id}/simulate` | Fake provider only, never in production (404). `{outcome: "captured"\|"failed"}` → sends a correctly signed webhook through the real webhook code path. `409 order_already_paid` once paid. |
 
 `Wallet`: `{real_paise, promo_paise, total_paise, promo_lots: [{id, remaining_paise, expires_at,
 campaign}], free_session: {enabled, eligible, minutes, reason}}`.
@@ -55,6 +55,9 @@ Bounds: `min_paise ≤ amount ≤ max_paise`, else `422 amount_out_of_range`.
    currency must equal the order's, else store as `mismatch`, alert, do not credit. Credit with
    key `razorpay:payment:{payment_id}:captured` (debit `gateway:razorpay:clearing`, credit
    `user:real`), then the bonus lot with key `recharge_bonus:{order_id}`. Order → `paid`.
+   A **second, different payment on an already-paid order** (the customer paid twice) is stored
+   as `duplicate_payment`, logged at error level and never credited; support refunds it to the
+   card, and reconciliation shows it as a captured payment without a credit until then.
 4. `payment.failed`: order → `failed` (unless already paid). Unknown events → stored, 200.
 
 Always 200 after a valid signature (Razorpay retries on non-2xx). The fake provider uses the
@@ -139,7 +142,8 @@ AAD = `{session_id}:{seq}`, key id stored per row for rotation), then fanned out
 pub/sub channel `chat:{session_id}` so any API process can serve either side. A resent
 `client_id` from the same sender returns the stored message (no duplicate). On reconnect a
 client loads `GET …/messages?after_seq=` and resumes. System messages (`sender: "system"`)
-mark start, low balance and end; they carry codes, not personal data.
+mark start, low balance and end; their text is a code, never personal data: `session_started`,
+`low_balance`, `session_ended:<end_reason>`.
 
 ## Admin (role `admin`)
 

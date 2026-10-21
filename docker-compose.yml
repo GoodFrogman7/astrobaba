@@ -34,7 +34,15 @@ services:
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
       DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-astro}:${POSTGRES_PASSWORD:-astro-dev-only}@postgres:5432/${POSTGRES_DB:-astro}
       REDIS_URL: redis://redis:6379/0
-      CORS_ORIGINS: '["http://localhost:3000"]'
+      CORS_ORIGINS: '["http://localhost:3000", "http://localhost:3002"]'
+      # Development only: Razorpay is simulated (POST /v1/dev/payments/{order}/simulate) and chat
+      # messages are encrypted with a key derived from SECRET_KEY. Production refuses both.
+      PAYMENTS_PROVIDER: ${PAYMENTS_PROVIDER:-fake}
+      MESSAGES_KEY: ${MESSAGES_KEY:-}
+      CLIENT_IP_HEADER: X-Forwarded-For
+      # Seconds per billed minute: 60 everywhere real; shorten only to try billing by hand.
+      BILLING_MINUTE_SECONDS: ${BILLING_MINUTE_SECONDS:-60}
+      METER_TICK_SECONDS: ${METER_TICK_SECONDS:-5}
       SECRET_KEY: ${SECRET_KEY:-dev-only-change-me}
       SMS_PROVIDER: ${SMS_PROVIDER:-console}
       DOCUMENTS_BACKEND: local
@@ -78,6 +86,8 @@ services:
       NEXT_PUBLIC_SITE_URL: http://localhost:3000
       ASTRO_URL: http://astro:8001
       API_URL: http://api:8000
+      # The browser's chat socket goes straight to the API (read at request time).
+      API_WS_URL: ws://localhost:8000
     ports: ["127.0.0.1:3000:3000"]
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://127.0.0.1:3000/"]
@@ -95,6 +105,21 @@ services:
     ports: ["127.0.0.1:3001:3001"]
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://127.0.0.1:3001/login"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    depends_on:
+      api: { condition: service_healthy }
+
+  astrologer:
+    build: { context: ., dockerfile: apps/astrologer/Dockerfile }
+    environment:
+      API_URL: http://api:8000
+      API_WS_URL: ws://localhost:8000
+      PUBLIC_SITE_URL: http://localhost:3000
+    ports: ["127.0.0.1:3002:3002"]
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:3002/login"]
       interval: 5s
       timeout: 3s
       retries: 20

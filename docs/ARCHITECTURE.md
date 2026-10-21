@@ -1,22 +1,28 @@
 # Architecture
 
-Living document. Updated at the end of every phase (PLAN.md §0.6). Current state: **Phase 3**.
+Living document. Updated at the end of every phase (PLAN.md §0.6). Current state: **Phase 4**.
 
 ## Repo
 
 ```
 apps/
   web/            Next.js 16 App Router: public site + user app (SSR, en + /hi): home, kundli,
-                  kundli matching, 10 free tools, panchang (48 cities), horoscopes (36 pages)
-  astrologer/     Astrologer portal (Phase 5), placeholder
+                  kundli matching, 10 free tools, panchang (48 cities), horoscopes (36 pages),
+                  directory, wallet + recharge, chat (private pages noindex)
+  astrologer/     Astrologer console (Next.js, port 3002): online toggle, incoming requests,
+                  accept/decline, chat, history. Full portal in Phase 5
   admin/          Ops console (Next.js, port 3001): astrologer KYC review and decisions,
-                  review moderation, horoscope QA queue; admin role required
+                  review moderation, horoscope QA queue, money (refunds, free-session
+                  overrides, reconciliation, wallet lookup), sessions; admin role required
 services/
   api/            FastAPI core API: phone OTP sign-in, saved kundlis, horoscope publishing,
                   marketplace (applications, KYC documents, directory, profiles, reviews,
-                  presence), admin endpoints; wallet and sessions in Phase 4
+                  presence), wallet + ledger + Razorpay, chat sessions (REST + WebSocket,
+                  per-minute meter), refunds, reconciliation, admin endpoints
     migrations/   Alembic: 0001 baseline, 0002 users/sessions/kundlis/horoscopes/audit_log,
-                  0003 roles/astrologers/verifications/kyc_documents/consult_sessions/reviews
+                  0003 roles/astrologers/verifications/kyc_documents/consult_sessions/reviews,
+                  0004 ledger/balances/promo lots/orders/payment events/free-session claims/
+                  reconciliation, 0005 session lifecycle + encrypted chat_messages
   astro/          FastAPI astro engine (AGPL-3.0-only, ADR-0001): kundli, panchang, dasha,
                   doshas, matching, transits, city search
   worker/         CLI jobs: horoscope generation (facts → LLM → validator → review queue) and
@@ -111,6 +117,35 @@ Taxonomy (skills, languages, tiers with price bounds) is `data/marketplace/taxon
 shared by API, web and admin. Presence lives in Redis (`presence:{id}`, TTL heartbeat).
 `make seed` loads 30 labelled demo astrologers (development only).
 
+## Wallet, billing and chat (Phase 4)
+
+Contract: [docs/api/billing.md](api/billing.md). Decisions: [ADR-0002](adr/0002-ledger-design.md)
+(ledger) and [ADR-0007](adr/0007-sessions-and-metering.md) (sessions, meter, chat transport).
+Money settings: `data/marketplace/billing.json`.
+
+```
+recharge:  web /wallet ── order (Idempotency-Key) ──> API ──> Razorpay Orders
+           Razorpay ── signed webhook ──> API: event stored once ──> ledger credit (+ bonus lot)
+chat:      web profile ── POST /v1/sessions ──> queued | requested ──(console accept)──> accepted
+           both sockets (ticket, Origin check) ──> active: minute n prepaid by the meter
+           ws message ──> encrypted row (AES-GCM) ──> Redis pub/sub ──> other side
+end:       end | funds out | free minutes used | side gone > grace ──> completed
+           ──> close session promo lot, refund rules, presence, queue promotion
+nightly:   cli reconcile (ledger balanced, projections = entries, payments = credits,
+           settlements) ── drift ──> error log + admin page;  cli expire-promo hourly
+```
+
+- Double-entry ledger, integer paise, append-only (database triggers), every write keyed
+  (`session:{id}:minute:{n}`, `razorpay:payment:{id}:captured`, `refund:{rule}:{session}`).
+  Balance rows lock in a fixed order; `CHECK (balance >= 0)` makes overdraft impossible.
+- Promo credit first, earliest expiry first (founder decision, ADR-0002); the free first
+  session is a promo lot restricted to that one session.
+- The meter runs in every API process (`FOR UPDATE SKIP LOCKED`); minutes are prepaid, so a
+  crash never gives a minute away and the key makes a double charge impossible. An outage
+  longer than the heartbeat grace ends the session at last-seen with nothing charged for it.
+- Development uses the fake gateway (`PAYMENTS_PROVIDER=fake`, simulate button) and a chat
+  key derived from `SECRET_KEY`; production refuses both (`check_production_settings`).
+
 ## Cross-cutting rules in code
 
 | Rule (PLAN.md) | Where it lives |
@@ -129,6 +164,9 @@ shared by API, web and admin. Presence lives in Redis (`presence:{id}`, TTL hear
 | Seed data never in production (§5 P3) | seed refuses outside development/test; `is_seed` rows hidden in production |
 | No fake online counts or scarcity (§6) | presence and wait time only from Redis state; empty directory says so |
 | Unreviewed Jyotish tables never public | `/v1/match`, `/v1/doshas` return 503 `tables_not_reviewed` in staging/production |
+| No money movement without a ledger entry and an idempotency key (§6) | `astro_api.wallet` is the only writer; unique keys; append-only triggers; reconciliation |
+| No chat content in logs or analytics (§6) | messages stored encrypted; system messages carry codes; admin session list has no content |
+| Never a negative balance (§5 P4) | prepaid minutes + row locks + `CHECK (balance >= 0)`; 100-way concurrency test |
 | Own design system (§0.1) | `packages/shared/src/tokens.ts` + `tokens/tokens.css`, AA contrast tested |
 
 ## Checks
