@@ -11,6 +11,7 @@ export const NAV = [
   { href: "/reviews", label: "Reviews" },
   { href: "/settings", label: "Settings" },
   { href: "/history", label: "History" },
+  { href: "/conduct", label: "Conduct" },
 ] as const;
 
 export function isCurrent(href: string, pathname: string): boolean {

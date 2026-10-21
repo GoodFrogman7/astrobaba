@@ -15,6 +15,8 @@ import {
   validateSlots,
   weekdayLabel,
 } from "@/lib/availability";
+import { isConsentRequired } from "@/lib/trust";
+import { useOpenTermsGate } from "@/lib/use-terms-gate";
 
 const STARTS = timeOptions("start");
 const ENDS = timeOptions("end");
@@ -27,6 +29,7 @@ function withValue(options: string[], v: string): string[] {
 
 export function ScheduleEditor({ initial }: { initial: AvailabilitySlot[] }) {
   const router = useRouter();
+  const openTermsGate = useOpenTermsGate();
   const [saved, setSaved] = useState<AvailabilitySlot[]>(initial);
   const [slots, setSlots] = useState<AvailabilitySlot[]>(initial);
   const [serverIssue, setServerIssue] = useState<{ index: number; message: string } | null>(null);
@@ -76,6 +79,11 @@ export function ScheduleEditor({ initial }: { initial: AvailabilitySlot[] }) {
       };
       if (r.status === 401) {
         router.replace("/login");
+        return;
+      }
+      if (isConsentRequired(r.status, body)) {
+        setStatus({ ok: false, text: "Not saved: accept the astrologer terms first." });
+        openTermsGate();
         return;
       }
       if (r.ok) {

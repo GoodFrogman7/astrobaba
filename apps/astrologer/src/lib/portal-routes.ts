@@ -1,6 +1,7 @@
 import { AVAILABILITY_LIMITS } from "@astro/shared";
 import { errorBody, forward, json, NO_STORE, OPAQUE_ID, type ForwardDeps } from "./forward";
 import { REPLY_MAX_CHARS } from "./reviews";
+import { CONSENT_VERSION, TERMS_KIND } from "./trust";
 
 /**
  * Route-handler cores for the portal (docs/api/portal.md §2). Only the calls the browser needs
@@ -118,4 +119,22 @@ export function safeDisposition(value: string | null, id: string): string {
     return value;
   }
   return `attachment; filename="statement-${id.replace(/[^A-Za-z0-9_-]/g, "")}.csv"`;
+}
+
+/**
+ * `POST /v1/me/consents {version, kinds: ["astrologer_terms"]}` (trust.md §1). The portal only
+ * ever accepts the astrologer terms, so the kind is fixed here and only the version comes from
+ * the browser.
+ */
+export async function consentRoute(body: unknown, deps: ForwardDeps): Promise<Response> {
+  const version = (body as { version?: unknown } | null)?.version;
+  if (typeof version !== "string" || !CONSENT_VERSION.test(version)) {
+    return json({ code: "invalid_body" }, 400);
+  }
+  return forward("POST", "/v1/me/consents", deps, { version, kinds: [TERMS_KIND] });
+}
+
+/** `GET /v1/safety/resources` (public): crisis helplines for the safety panel in a session. */
+export function safetyResourcesRoute(deps: ForwardDeps): Promise<Response> {
+  return forward("GET", "/v1/safety/resources", deps);
 }

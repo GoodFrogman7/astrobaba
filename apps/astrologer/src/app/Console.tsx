@@ -7,6 +7,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { activeSlot } from "@/lib/availability";
 import { formatRate, formatWaiting, titleWithBadge } from "@/lib/format";
 import { createHeartbeat, newRequestIds, type Heartbeat } from "@/lib/presence";
+import { isConsentRequired } from "@/lib/trust";
+import { useOpenTermsGate } from "@/lib/use-terms-gate";
 
 const POLL_ONLINE_MS = 3000;
 const POLL_OFFLINE_MS = 30_000;
@@ -49,6 +51,7 @@ const ACTION_ERRORS: Record<string, string> = {
 
 export function Console({ slots = [] }: { slots?: AvailabilitySlot[] }) {
   const router = useRouter();
+  const openTermsGate = useOpenTermsGate();
   const [presence, setPresence] = useState<Presence>("offline");
   const [presenceError, setPresenceError] = useState<string | null>(null);
   const [beatWarning, setBeatWarning] = useState(false);
@@ -77,6 +80,8 @@ export function Console({ slots = [] }: { slots?: AvailabilitySlot[] }) {
     if (!r.ok) {
       setPresence("offline");
       remember(false);
+      // onBeat already opened the terms gate for this answer.
+      if (r.code === "consent_required") return;
       setPresenceError(
         r.status === 403 || r.status === 404 || r.status === 409
           ? "You can't go online right now: your profile is not public or chat is turned off. Contact support if this is unexpected."
@@ -106,9 +111,19 @@ export function Console({ slots = [] }: { slots?: AvailabilitySlot[] }) {
   // Resume "online" after a reload of the same tab; stop beating when the page goes away.
   useEffect(() => {
     const hb = createHeartbeat({
-      send: (status) => postJson("/api/presence", { status }),
-      onBeat: (ok, status) => {
+      send: (status) =>
+        postJson("/api/presence", { status }).then((r) => ({
+          ok: r.ok,
+          status: r.status,
+          code: r.data.code,
+        })),
+      onBeat: (ok, status, code) => {
         if (status === 401) return signedOut();
+        if (code === "consent_required") {
+          // The heartbeat stopped itself; the terms gate explains why.
+          remember(false);
+          return openTermsGate();
+        }
         setBeatWarning(!ok);
       },
     });
@@ -119,7 +134,7 @@ export function Console({ slots = [] }: { slots?: AvailabilitySlot[] }) {
       if (resume !== null) clearTimeout(resume);
       hb.dispose();
     };
-  }, [goOnline, signedOut]);
+  }, [goOnline, signedOut, openTermsGate]);
 
   const load = useCallback(async () => {
     try {
@@ -179,6 +194,7 @@ export function Console({ slots = [] }: { slots?: AvailabilitySlot[] }) {
     try {
       const r = await postJson(`/api/sessions/${encodeURIComponent(id)}/${action}`);
       if (r.status === 401) return signedOut();
+      if (isConsentRequired(r.status, r.data)) return openTermsGate();
       if (!r.ok) {
         setActionError(
           ACTION_ERRORS[r.data.code ?? ""] ?? r.data.message ?? "That did not work. Try again.",

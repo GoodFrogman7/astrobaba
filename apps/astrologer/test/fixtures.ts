@@ -22,6 +22,7 @@ export function session(over: Partial<SessionView> = {}): SessionView {
     billed_paise: 2500,
     minutes_left: null,
     can_review: false,
+    safety_flag: false,
     ...over,
   };
 }

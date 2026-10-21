@@ -24,6 +24,20 @@ only users with the `admin` role see anything.
 - `/money/reconciliation`: daily runs (ok / drift / error, drift amount, checks), "Run now"
 - `/money/wallets?user_id=`: balances, promo lots and recent transactions for a user
 
+- `/moderation?kind=report|safety|refused&status=open|closed`
+  ([trust.md §4](../../docs/api/trust.md)): client reports, safety flags and refused astrologer
+  messages with astrologer, reason codes, counts, session id and time; never chat text by
+  default. A safety item has "Reveal flagged message" behind an explicit confirm ("This is
+  logged with your name"; `GET /v1/admin/moderation/{id}/message`, kept only in the open page
+  until hidden). Open items take dismiss / warn / suspend with a required note and a confirm
+  step that spells out the effect (`suspend` is the normal astrologer suspension; `warn` records
+  a strike the astrologer sees on their Conduct page).
+- `/privacy/deletions` ([trust.md §2](../../docs/api/trust.md)): account deletion requests
+  (requested at, user id linked to the wallet view, open sessions, wallet balance) and Execute
+  with a confirm that spells out what is deleted and kept. `409 balance_outstanding` and
+  `409 session_open` are shown in plain words with what to do (settle the balance manually
+  first; wait for the session to end).
+
 Money stays integer paise in code; `formatRupees` is used only for display.
 
 Run: `API_URL=http://localhost:8000 pnpm --filter @astro/admin dev` (port 3001).

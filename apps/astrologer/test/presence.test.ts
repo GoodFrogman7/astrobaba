@@ -45,11 +45,27 @@ describe("presence heartbeat", () => {
     await hb.goOnline();
     await vi.advanceTimersByTimeAsync(HEARTBEAT_MS * 2);
     expect(onBeat.mock.calls).toEqual([
-      [true, 200],
-      [false, 503],
-      [true, 200],
+      [true, 200, undefined],
+      [false, 503, undefined],
+      [true, 200, undefined],
     ]);
     hb.dispose();
+  });
+
+  it("stops beating when the astrologer terms are needed (403 consent_required)", async () => {
+    const results = [
+      { ok: true, status: 200 },
+      { ok: false, status: 403, code: "consent_required" },
+    ];
+    const send = vi.fn(async () => results.shift() ?? { ok: true, status: 200 });
+    const onBeat = vi.fn();
+    const hb = createHeartbeat({ send, onBeat });
+    await hb.goOnline();
+    await vi.advanceTimersByTimeAsync(HEARTBEAT_MS);
+    expect(onBeat).toHaveBeenLastCalledWith(false, 403, "consent_required");
+    expect(hb.running).toBe(false);
+    await vi.advanceTimersByTimeAsync(HEARTBEAT_MS * 3);
+    expect(send).toHaveBeenCalledTimes(2);
   });
 
   it("dispose stops beating without sending offline (the TTL expires it)", async () => {

@@ -1,6 +1,6 @@
 "use client";
 
-import type { ChatMessage, SessionView } from "@astro/shared";
+import type { ChatMessage, SafetyResources, SessionView } from "@astro/shared";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useReducer, useRef, useState, type Dispatch } from "react";
@@ -13,6 +13,7 @@ import {
 } from "@/lib/chat/reducer";
 import { ChatConnection, loadAll, TicketError, type SocketLike } from "@/lib/chat/socket";
 import { endReasonText, formatElapsed, formatRate, formatRupees } from "@/lib/format";
+import { normalizeResources, safetyKey } from "@/lib/trust";
 
 /** Parts shared by the chat room and the call room: both run on the same control socket. */
 
@@ -75,6 +76,61 @@ export function useSessionSocket(initial: SessionView) {
   }, [id, initial.kind, initial.status, router]);
 
   return { state, dispatch, conn };
+}
+
+/**
+ * The `safety` flag for this session (trust.md §3) and the helplines to show with it. The flag
+ * is remembered for the tab (sessionStorage), so a reload keeps the guidance on screen even if
+ * the server does not repeat the event. Helplines come with the page; if that load failed they
+ * are fetched once when the flag is raised.
+ */
+export function useSafety(
+  id: string,
+  safety: string | null,
+  dispatch: Dispatch<ChatAction>,
+  initialResources: SafetyResources | null,
+) {
+  const [resources, setResources] = useState(initialResources);
+  const [failed, setFailed] = useState(false);
+  const fetched = useRef(false);
+
+  useEffect(() => {
+    let raised: string | null = null;
+    try {
+      raised = window.sessionStorage.getItem(safetyKey(id));
+    } catch {
+      /* storage blocked: only a live event shows the panel */
+    }
+    if (raised !== "self_harm") return;
+    // Deferred so the effect body itself never updates state.
+    const t = setTimeout(
+      () =>
+        dispatch({ type: "server", event: { type: "safety", kind: "self_harm" }, now: Date.now() }),
+      0,
+    );
+    return () => clearTimeout(t);
+  }, [id, dispatch]);
+
+  useEffect(() => {
+    if (!safety) return;
+    try {
+      window.sessionStorage.setItem(safetyKey(id), safety);
+    } catch {
+      /* storage blocked */
+    }
+    if (resources || fetched.current) return;
+    fetched.current = true;
+    void fetch("/api/safety/resources", { cache: "no-store" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((b) => {
+        const n = normalizeResources(b);
+        if (n) setResources(n);
+        else setFailed(true);
+      })
+      .catch(() => setFailed(true));
+  }, [id, safety, resources]);
+
+  return { resources, failed };
 }
 
 /** A clock that ticks every second, for the elapsed timer and typing indicator. */

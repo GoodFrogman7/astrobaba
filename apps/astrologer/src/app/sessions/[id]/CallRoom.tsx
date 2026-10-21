@@ -1,8 +1,9 @@
 "use client";
 
-import type { CallToken, SessionView } from "@astro/shared";
+import type { CallToken, SafetyResources, SessionView } from "@astro/shared";
 import Link from "next/link";
 import { useEffect, useReducer, useRef, useState } from "react";
+import { SafetyPanel } from "@/components/SafetyPanel";
 import { CallAudio, CallTokenError } from "@/lib/call/audio";
 import { createLiveKitRoom, requestMicrophone } from "@/lib/call/livekit-room";
 import {
@@ -23,6 +24,7 @@ import {
   RoomHeader,
   useEndSession,
   useNow,
+  useSafety,
   useSessionSocket,
 } from "./room";
 
@@ -33,9 +35,16 @@ const MIC_PROBLEMS: readonly string[] = ["denied", "not_found", "in_use", "error
  * `call` presence, `ended`), without a text box. Audio goes through LiveKit only; nothing is
  * recorded. The client is shown by their label only.
  */
-export function CallRoom({ initial }: { initial: SessionView }) {
+export function CallRoom({
+  initial,
+  resources: initialResources = null,
+}: {
+  initial: SessionView;
+  resources?: SafetyResources | null;
+}) {
   const id = initial.id;
   const { state, dispatch, conn } = useSessionSocket(initial);
+  const { resources, failed } = useSafety(id, state.safety, dispatch, initialResources);
   const { confirmEnd, setConfirmEnd, endError, ending, end } = useEndSession(
     id,
     dispatch,
@@ -112,6 +121,8 @@ export function CallRoom({ initial }: { initial: SessionView }) {
       {!ended && (
         <ConnectionBanner state={state} kind="call" onRetry={() => conn.current?.start()} />
       )}
+
+      {state.safety && <SafetyPanel resources={resources} failed={failed} kind="call" />}
 
       {!ended && (
         <section aria-labelledby="who-h" className="mt-4 rounded-md border border-border p-4">

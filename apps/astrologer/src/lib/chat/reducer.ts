@@ -18,7 +18,8 @@ export type CloseReason = "ended" | "replaced" | "forbidden" | null;
 export interface Pending {
   client_id: string;
   text: string;
-  status: "sending" | "failed";
+  /** `blocked`: refused by moderation (trust.md §3); never stored or delivered, so no retry. */
+  status: "sending" | "failed" | "blocked";
 }
 
 export interface ChatState {
@@ -37,6 +38,10 @@ export interface ChatState {
   serverOffsetMs: number;
   /** Calls only: who is in the audio room, from the socket's `call` event (null until known). */
   callJoined: Record<ParticipantRole, boolean> | null;
+  /** Set by the `safety` event (trust.md §3) and never cleared: the guidance stays visible. */
+  safety: string | null;
+  /** The last own message refused with `error message_blocked`, until the next send. */
+  blocked: { reason: string | null } | null;
 }
 
 export type ChatAction =
@@ -46,7 +51,10 @@ export type ChatAction =
   | { type: "send"; client_id: string; text: string }
   | { type: "retry"; client_id: string }
   | { type: "connection"; connection: Connection; closeReason?: CloseReason }
-  | { type: "dismiss_error" };
+  | { type: "dismiss_error" }
+  /** Drop a refused message from the list (e.g. to edit it in the composer). */
+  | { type: "discard"; client_id: string }
+  | { type: "dismiss_blocked" };
 
 export const TYPING_SHOW_MS = 5000;
 
@@ -72,6 +80,8 @@ export function initialChatState(
     error: null,
     serverOffsetMs: 0,
     callJoined: null,
+    safety: null,
+    blocked: null,
   };
 }
 
@@ -128,6 +138,19 @@ function failSending(pending: Pending[]): Pending[] {
     : pending;
 }
 
+/**
+ * `error message_blocked` (trust.md §3): the message was refused and not stored. The contract
+ * puts `reason` on the error frame; when it also echoes `client_id`, only that message is marked,
+ * otherwise every message still sending is (an echo arriving later clears a wrong mark).
+ */
+function blockSending(pending: Pending[], clientId: string | null): Pending[] {
+  const hit = (p: Pending) =>
+    clientId && pending.some((x) => x.client_id === clientId)
+      ? p.client_id === clientId
+      : p.status === "sending";
+  return pending.map((p) => (hit(p) ? { ...p, status: "blocked" as const } : p));
+}
+
 /** Codes after which messages still marked "sending" were refused, not merely delayed. */
 const SEND_REFUSED = new Set([
   "session_not_active",
@@ -175,12 +198,26 @@ export function chatReducer(state: ChatState, action: ChatAction): ChatState {
               astrologer: ev.joined.astrologer === true,
             },
           };
-        case "error":
+        case "safety":
+          return state.safety === ev.kind ? state : { ...state, safety: ev.kind };
+        case "error": {
+          if (ev.code === "message_blocked") {
+            const extra = ev as { reason?: unknown; client_id?: unknown };
+            return {
+              ...state,
+              blocked: { reason: typeof extra.reason === "string" ? extra.reason : null },
+              pending: blockSending(
+                state.pending,
+                typeof extra.client_id === "string" ? extra.client_id : null,
+              ),
+            };
+          }
           return {
             ...state,
             error: { code: ev.code, message: ev.message },
             pending: SEND_REFUSED.has(ev.code) ? failSending(state.pending) : state.pending,
           };
+        }
         default:
           return state;
       }
@@ -194,6 +231,7 @@ export function chatReducer(state: ChatState, action: ChatAction): ChatState {
       if (!text || state.pending.some((p) => p.client_id === action.client_id)) return state;
       return {
         ...state,
+        blocked: null,
         pending: [...state.pending, { client_id: action.client_id, text, status: "sending" }],
       };
     }
@@ -212,6 +250,10 @@ export function chatReducer(state: ChatState, action: ChatAction): ChatState {
       };
     case "dismiss_error":
       return state.error ? { ...state, error: null } : state;
+    case "discard":
+      return { ...state, pending: state.pending.filter((p) => p.client_id !== action.client_id) };
+    case "dismiss_blocked":
+      return state.blocked ? { ...state, blocked: null } : state;
   }
 }
 

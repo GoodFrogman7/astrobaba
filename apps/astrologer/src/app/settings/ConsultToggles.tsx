@@ -4,11 +4,14 @@ import type { ConsultSettings } from "@astro/shared";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { callToggle, consultErrorText } from "@/lib/consult";
+import { isConsentRequired } from "@/lib/trust";
+import { useOpenTermsGate } from "@/lib/use-terms-gate";
 
 type Key = "chat_enabled" | "call_enabled";
 
 export function ConsultToggles({ initial }: { initial: ConsultSettings }) {
   const router = useRouter();
+  const openTermsGate = useOpenTermsGate();
   const [settings, setSettings] = useState(initial);
   const [refused, setRefused] = useState(false);
   const [busy, setBusy] = useState<Key | null>(null);
@@ -31,6 +34,11 @@ export function ConsultToggles({ initial }: { initial: ConsultSettings }) {
       const body = (await r.json().catch(() => ({}))) as Partial<ConsultSettings> & {
         code?: string;
       };
+      if (isConsentRequired(r.status, body)) {
+        setStatus({ ok: false, text: "Not saved: accept the astrologer terms first." });
+        openTermsGate();
+        return;
+      }
       if (r.ok) {
         setSettings((s) => ({ ...s, ...body }));
         setStatus({ ok: true, text: "Saved." });

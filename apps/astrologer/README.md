@@ -2,7 +2,7 @@
 
 Next.js portal for live astrologers. English only, never indexed (`X-Robots-Tag`, `robots.txt`
 disallow all, `noindex` metadata), never framed. Port 3002.
-Navigation: Console, Schedule, Earnings, Payouts, Reviews, Settings, History.
+Navigation: Console, Schedule, Earnings, Payouts, Reviews, Settings, History, Conduct.
 
 - `/login`: phone OTP through the core API. The session token lives only in an httpOnly,
   SameSite=Strict cookie (`ap_astro_session`, at most 12 h). Users with no astrologer record are
@@ -37,6 +37,23 @@ Navigation: Console, Schedule, Earnings, Payouts, Reviews, Settings, History.
 - `/reviews`: all or unreplied reviews with rating, text, date and published/held status; one
   final reply per review (two-step send), existing replies shown.
 - `/history`: `GET /v1/sessions?role=astrologer` with type, billed minutes and amount.
+- Astrologer terms gate ([trust.md §1](../../docs/api/trust.md)): every console page except the
+  session room reads `GET /v1/me/consents`; without an `astrologer_terms` acceptance for the
+  current `version` it shows the terms page instead (link to the public `/terms`, the conduct
+  rules, an unticked checkbox, then `POST /api/consents` → `POST /v1/me/consents {version,
+  kinds: ["astrologer_terms"]}`). If the consent state can't be read the page stays open; any
+  `403 consent_required` from a portal write (presence, accept, schedule, consult settings) opens
+  `/terms?next=<page>`. `409 consent_version_stale` asks for a reload. The session room is never
+  gated, so a new terms version does not cut off a consultation in progress.
+- `/conduct`: the banned-topic list (a summary of trust.md §3–§4 until `data/safety/conduct.json`
+  or an endpoint for it exists) and the astrologer's strikes (`GET /v1/astrologer/me/strikes`).
+- Chat room safety ([trust.md §3](../../docs/api/trust.md)): `error message_blocked` marks the
+  message "Not sent" (edit or remove; never retried) and shows the reason in plain words next to
+  the composer; the `safety` event shows a calm, non-dismissible guidance panel (share the
+  helplines, do not sell, the client may end anytime) with the helplines from
+  `GET /v1/safety/resources`, loaded with the page and fetched again through
+  `/api/safety/resources` if needed. The flag is kept in `sessionStorage` for the tab so a
+  reload keeps the panel. The call room shows the same panel.
 
 The browser only talks to this app; route handlers under `src/app/api/` add the Bearer token
 and forward to the API (cores in `src/lib/routes.ts`, tested). Chat state is a pure reducer

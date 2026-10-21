@@ -1,7 +1,9 @@
 "use client";
 
-import { CHAT_LIMITS, type SessionView } from "@astro/shared";
+import { CHAT_LIMITS, type SafetyResources, type SessionView } from "@astro/shared";
 import { useEffect, useRef, useState } from "react";
+import { BlockedNotice } from "@/components/BlockedNotice";
+import { SafetyPanel } from "@/components/SafetyPanel";
 import { canSend, isPeerTyping, isTerminal } from "@/lib/chat/reducer";
 import {
   ConnectionBanner,
@@ -10,6 +12,7 @@ import {
   RoomHeader,
   useEndSession,
   useNow,
+  useSafety,
   useSessionSocket,
 } from "./room";
 
@@ -19,8 +22,15 @@ const SYSTEM_TEXT: Record<string, string> = {
   session_ended: "Chat ended.",
 };
 
-export function ChatRoom({ initial }: { initial: SessionView }) {
+export function ChatRoom({
+  initial,
+  resources: initialResources = null,
+}: {
+  initial: SessionView;
+  resources?: SafetyResources | null;
+}) {
   const { state, dispatch, conn } = useSessionSocket(initial);
+  const { resources, failed } = useSafety(initial.id, state.safety, dispatch, initialResources);
   const { confirmEnd, setConfirmEnd, endError, ending, end } = useEndSession(
     initial.id,
     dispatch,
@@ -87,6 +97,27 @@ export function ChatRoom({ initial }: { initial: SessionView }) {
             <span className="mt-1 block text-xs opacity-80">
               {p.status === "sending" ? (
                 "Sending…"
+              ) : p.status === "blocked" ? (
+                <>
+                  Not sent: refused by moderation.{" "}
+                  <button
+                    type="button"
+                    className="underline"
+                    onClick={() => {
+                      setDraft(p.text);
+                      dispatch({ type: "discard", client_id: p.client_id });
+                    }}
+                  >
+                    Edit
+                  </button>{" "}
+                  <button
+                    type="button"
+                    className="underline"
+                    onClick={() => dispatch({ type: "discard", client_id: p.client_id })}
+                  >
+                    Remove
+                  </button>
+                </>
               ) : (
                 <>
                   Not sent.{" "}
@@ -127,6 +158,14 @@ export function ChatRoom({ initial }: { initial: SessionView }) {
             Dismiss
           </button>
         </p>
+      )}
+
+      {state.safety && <SafetyPanel resources={resources} failed={failed} kind="chat" />}
+      {state.blocked && !ended && (
+        <BlockedNotice
+          reason={state.blocked.reason}
+          onDismiss={() => dispatch({ type: "dismiss_blocked" })}
+        />
       )}
 
       {ended ? (

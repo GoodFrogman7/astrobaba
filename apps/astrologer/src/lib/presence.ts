@@ -8,9 +8,12 @@ export const HEARTBEAT_MS = 60_000;
 
 export type PresenceStatus = "online" | "offline";
 
+/** `code` is the API error code, e.g. `consent_required` (trust.md §1). */
+export type BeatResult = { ok: boolean; status: number; code?: string };
+
 export interface HeartbeatDeps {
-  send(status: PresenceStatus): Promise<{ ok: boolean; status: number }>;
-  onBeat?(ok: boolean, status: number): void;
+  send(status: PresenceStatus): Promise<BeatResult>;
+  onBeat?(ok: boolean, status: number, code?: string): void;
   timers?: {
     setInterval(fn: () => void, ms: number): unknown;
     clearInterval(id: unknown): void;
@@ -20,9 +23,9 @@ export interface HeartbeatDeps {
 
 export interface Heartbeat {
   /** Go online now and keep beating. Resolves with the first response. */
-  goOnline(): Promise<{ ok: boolean; status: number }>;
+  goOnline(): Promise<BeatResult>;
   /** Stop beating and tell the server we are offline. */
-  goOffline(): Promise<{ ok: boolean; status: number }>;
+  goOffline(): Promise<BeatResult>;
   /** Stop beating without telling the server (unmount; the TTL expires the key). */
   dispose(): void;
   readonly running: boolean;
@@ -41,10 +44,11 @@ export function createHeartbeat(deps: HeartbeatDeps): Heartbeat {
     timer = null;
   };
 
-  const beat = async () => {
+  const beat = async (): Promise<BeatResult> => {
     try {
       const r = await deps.send("online");
-      deps.onBeat?.(r.ok, r.status);
+      deps.onBeat?.(r.ok, r.status, r.code);
+      if (!r.ok && r.code === "consent_required") stop();
       return r;
     } catch {
       deps.onBeat?.(false, 0);
