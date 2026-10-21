@@ -1,6 +1,7 @@
 import {
   OPEN_SESSION_STATUSES,
   type ChatMessage,
+  type ParticipantRole,
   type ServerEvent,
   type SessionStatus,
   type SessionView,
@@ -33,6 +34,8 @@ export interface ChatState {
   lastError: string | null;
   /** The newest message from the other side or the system, for the screen-reader live region. */
   announce: ChatMessage | null;
+  /** Calls only: who is in the audio room, from the last `call` event; null until one arrives. */
+  callJoined: Record<ParticipantRole, boolean> | null;
 }
 
 export const initialChatState: ChatState = {
@@ -45,6 +48,7 @@ export const initialChatState: ChatState = {
   serverOffsetMs: 0,
   lastError: null,
   announce: null,
+  callJoined: null,
 };
 
 export type ChatAction =
@@ -158,6 +162,11 @@ function onServer(state: ChatState, event: ServerEvent, now: number): ChatState 
         ...state,
         lastError: event.code,
         pending: SEND_ERRORS.has(event.code) ? failNewestSending(state.pending) : state.pending,
+      };
+    case "call":
+      return {
+        ...state,
+        callJoined: { user: !!event.joined?.user, astrologer: !!event.joined?.astrologer },
       };
     case "pong":
       return state;

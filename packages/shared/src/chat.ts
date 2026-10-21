@@ -32,6 +32,7 @@ export const END_REASONS = [
   "join_timeout",
   "user_dropped",
   "astrologer_dropped",
+  "service_unavailable",
   "admin",
 ] as const;
 export type EndReason = (typeof END_REASONS)[number];

@@ -4,6 +4,7 @@ import { DISCLAIMER, type SessionView } from "@astro/shared";
 import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
 import { Dialog } from "@/components/billing/Dialog";
+import { CallRoom } from "@/components/call/CallRoom";
 import { SignIn } from "@/components/marketplace/SignIn";
 import { Link } from "@/i18n/navigation";
 import { BILLING } from "@/lib/billing/config";
@@ -13,9 +14,9 @@ import { clock, formatPaise } from "@/lib/marketplace/format";
 import { Composer } from "./Composer";
 import { MessageList } from "./MessageList";
 import { ReviewForm } from "./ReviewForm";
-import { useChat } from "./useChat";
+import { useChat, type EventTap } from "./useChat";
 
-function useNow(intervalMs: number): number {
+export function useNow(intervalMs: number): number {
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
     const id = setInterval(() => setNow(Date.now()), intervalMs);
@@ -24,11 +25,15 @@ function useNow(intervalMs: number): number {
   return now;
 }
 
-/** /chat/[sessionId]: waiting room, live chat with a human astrologer, then the summary. */
+/**
+ * /chat/[sessionId]: waiting room, live chat (or a voice call, `kind: "call"`) with a human
+ * astrologer, then the summary. Both kinds share the control socket from `useChat`.
+ */
 export function ChatRoom({ sessionId }: { sessionId: string }) {
   const t = useTranslations("billing.chat");
   const locale = useLocale() as "en" | "hi";
-  const chat = useChat(sessionId);
+  const tapRef: EventTap = useRef(null);
+  const chat = useChat(sessionId, tapRef);
   const { state, load } = chat;
 
   if (load === "loading") return <p className="text-muted">{t("loading")}</p>;
@@ -55,6 +60,7 @@ export function ChatRoom({ sessionId }: { sessionId: string }) {
     );
 
   const s = state.session;
+  if (s.kind === "call") return <CallRoom chat={chat} session={s} tapRef={tapRef} />;
   return (
     <div className="space-y-4">
       <p className="text-sm text-muted">
@@ -71,7 +77,7 @@ export function ChatRoom({ sessionId }: { sessionId: string }) {
   );
 }
 
-function ConnBanner({ conn, onUseHere }: { conn: ConnStatus; onUseHere: () => void }) {
+export function ConnBanner({ conn, onUseHere }: { conn: ConnStatus; onUseHere: () => void }) {
   const t = useTranslations("billing.chat.conn");
   if (conn === "open" || conn === "closed") return null;
   return (
@@ -86,7 +92,7 @@ function ConnBanner({ conn, onUseHere }: { conn: ConnStatus; onUseHere: () => vo
   );
 }
 
-function Waiting({
+export function Waiting({
   session: s,
   onCancel,
   conn,
@@ -96,6 +102,8 @@ function Waiting({
   conn: ConnStatus;
 }) {
   const t = useTranslations("billing.chat");
+  const tc = useTranslations("billing.call");
+  const isCall = s.kind === "call";
   const [busy, setBusy] = useState(false);
   const [failed, setFailed] = useState(false);
   const name = s.astrologer.display_name;
@@ -110,14 +118,14 @@ function Waiting({
             ? t("queued", { position: s.queue.position, name })
             : s.status === "accepted"
               ? t("accepted", { name })
-              : t("requested", { name, minutes: BILLING.requestTimeoutMinutes })}
+              : (isCall ? tc : t)("requested", { name, minutes: BILLING.requestTimeoutMinutes })}
         </h2>
         {s.status === "queued" && s.queue && (
           <p>
             {s.queue.eta_minutes !== null ? t("eta", { minutes: s.queue.eta_minutes }) : t("noEta")}
           </p>
         )}
-        <p className="text-sm text-muted">{t("notCharged")}</p>
+        <p className="text-sm text-muted">{(isCall ? tc : t)("notCharged")}</p>
       </div>
       {conn === "forbidden" && <p role="alert">{t("conn.forbidden")}</p>}
       <button
@@ -280,7 +288,7 @@ function ActiveChat({
   );
 }
 
-function Ended({
+export function Ended({
   session: s,
   state,
   onReviewed,
@@ -290,6 +298,10 @@ function Ended({
   onReviewed: () => void;
 }) {
   const t = useTranslations("billing.chat");
+  const tc = useTranslations("billing.call");
+  const isCall = s.kind === "call";
+  // Wording that names the kind ("Chat ended" / "Call ended"); the rest is shared.
+  const tk = isCall ? tc : t;
   const locale = useLocale() as "en" | "hi";
   const heading = useRef<HTMLHeadingElement>(null);
   useEffect(() => {
@@ -304,19 +316,19 @@ function Ended({
         className="space-y-2 rounded-md border border-border bg-surface p-5"
       >
         <h2 id="ended" ref={heading} tabIndex={-1} className="text-lg font-semibold">
-          {s.status === "cancelled" ? t("ended.cancelledTitle") : t("ended.title")}
+          {s.status === "cancelled" ? t("ended.cancelledTitle") : tk("ended.title")}
         </h2>
-        <p>{t(`ended.reasons.${reason}`)}</p>
+        <p>{tk(`ended.reasons.${reason}`)}</p>
         {s.started_at && s.ended_at && (
           <p className="text-sm">
-            {t("ended.duration", { time: clock(elapsedSeconds(s, 0, state.serverOffsetMs)) })}
+            {tk("ended.duration", { time: clock(elapsedSeconds(s, 0, state.serverOffsetMs)) })}
           </p>
         )}
         <p className="font-medium" data-testid="billed">
           {!charged
             ? t("ended.notCharged")
             : s.is_free
-              ? t("ended.freeBilled", { minutes: s.billed_minutes })
+              ? tk("ended.freeBilled", { minutes: s.billed_minutes })
               : t("ended.billed", {
                   minutes: s.billed_minutes,
                   amount: formatPaise(s.billed_paise, locale),
@@ -332,7 +344,13 @@ function Ended({
           </Link>
         </p>
       </section>
-      {s.can_review && <ReviewForm sessionId={s.id} onDone={onReviewed} />}
+      {s.can_review && (
+        <ReviewForm
+          sessionId={s.id}
+          onDone={onReviewed}
+          heading={isCall ? tc("review.heading") : undefined}
+        />
+      )}
       {state.messages.length > 0 && (
         <div className="rounded-md border border-border p-3">
           <MessageList

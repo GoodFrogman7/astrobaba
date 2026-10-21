@@ -46,7 +46,7 @@ export async function messagesRoute(
   return forward("GET", `/v1/sessions/${enc(id)}/messages?${q}`, deps);
 }
 
-export const SESSION_ACTIONS = ["accept", "decline", "end", "ws-ticket"] as const;
+export const SESSION_ACTIONS = ["accept", "decline", "end", "ws-ticket", "call-token"] as const;
 export type SessionAction = (typeof SESSION_ACTIONS)[number];
 
 export async function sessionActionRoute(
@@ -58,6 +58,7 @@ export async function sessionActionRoute(
     return json({ code: "not_found" }, 404);
   }
   const res = await forward("POST", `/v1/sessions/${enc(id)}/${action}`, deps, {});
+  if (action === "call-token") return res.ok ? callTokenResponse(id, res) : res;
   if (action !== "ws-ticket" || !res.ok) return res;
   // The browser gets a ready-to-use socket URL; the ticket stays single-use and 30 s.
   const body = (await res.json()) as { ticket?: unknown; expires_in?: unknown; path?: unknown };
@@ -67,4 +68,28 @@ export async function sessionActionRoute(
       : null;
   if (!url) return json({ code: "bad_upstream" }, 502);
   return json({ url, expires_in: body.expires_in ?? 30 });
+}
+
+/**
+ * The LiveKit join token goes to the browser as is, but only when it looks like the contract
+ * (portal.md §1): a ws(s)/http(s) URL, the session's own room and the astrologer identity.
+ */
+async function callTokenResponse(id: string, res: Response): Promise<Response> {
+  const b = (await res.json().catch(() => null)) as Record<string, unknown> | null;
+  const ok =
+    b !== null &&
+    typeof b.url === "string" &&
+    /^(wss?|https?):\/\/[^\s]+$/.test(b.url) &&
+    typeof b.token === "string" &&
+    b.token.length > 0 &&
+    b.room === `session-${id}` &&
+    b.identity === "astrologer";
+  if (!ok) return json({ code: "bad_upstream" }, 502);
+  return json({
+    url: b.url,
+    token: b.token,
+    room: b.room,
+    identity: b.identity,
+    expires_in: typeof b.expires_in === "number" ? b.expires_in : 600,
+  });
 }

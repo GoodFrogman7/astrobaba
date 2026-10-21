@@ -19,7 +19,7 @@
       "spendOrder": "When you consult, promo credit is used first (the credit that expires soonest goes first), then your recharged balance.",
       "lots": "Promo credit and expiry",
       "lot": "{amount} expires {date}",
-      "freeOffer": "Your first chat can be free for up to {minutes} minutes. Choose “Free chat” on an astrologer's profile."
+      "freeOffer": "Your first chat or call can be free for up to {minutes} minutes. Choose “Free chat” or “Free call” on an astrologer's profile."
     },
     "recharge": {
       "heading": "Add money",
@@ -59,23 +59,30 @@
       "loadMore": "Show older",
       "error": "Could not load transactions.",
       "split": "{real} recharged · {promo} promo",
-      "viewChat": "View chat",
+      "viewChat": "View consultation",
       "kinds": {
         "recharge": "Recharge",
         "recharge_bonus": "Recharge bonus (promo credit)",
-        "consultation": "Chat consultation",
-        "consultationWith": "Chat with {name}",
+        "consultation": "Consultation",
+        "consultationWith": "Consultation with {name}",
         "refund": "Refund",
-        "free_session_grant": "Free first chat credit",
+        "free_session_grant": "Free first consultation credit",
         "promo_expiry": "Promo credit expired",
         "adjustment": "Adjustment by support"
       }
     },
     "start": {
       "chat": "Chat",
+      "call": "Call",
+      "freeCall": "Free call · {minutes} min",
+      "callDialogTitle": "Call {name}",
+      "callSignIn": "Sign in to start a call.",
+      "callUnavailable": "Voice calls with this astrologer are not available right now. You can start a chat instead if it is offered.",
+      "callGeneric": "Could not start the call. Please try again.",
+      "callOff": "Voice calls are not available with this astrologer right now.",
       "freeChat": "Free chat · {minutes} min",
-      "freeOffer": "Your first chat with any astrologer can be free for up to {minutes} minutes.",
-      "minBalance": "You need at least {amount} in your wallet to start ({minutes} minutes).",
+      "freeOffer": "Your first chat or call with any astrologer can be free for up to {minutes} minutes.",
+      "minBalance": "You need at least {amount} in your wallet to start a chat or call ({minutes} minutes).",
       "partialMinute": "Charged per started minute. You can end anytime.",
       "starting": "Starting…",
       "dialogTitle": "Chat with {name}",
@@ -83,11 +90,11 @@
       "signIn": "Sign in to start a chat.",
       "insufficient": "Your balance covers {minutes, plural, =0 {less than a minute} one {# minute} other {# minutes}} at {price}/min. To start, you need at least {required}.",
       "rechargeLink": "Add {amount} to your wallet",
-      "sessionOpen": "You already have a chat open.",
-      "openSession": "Go to your open chat",
+      "sessionOpen": "You already have a consultation open. Finish or cancel it before starting another.",
+      "openSession": "Go to your open consultation",
       "chatUnavailable": "Chat with this astrologer is not available right now.",
       "ownProfile": "This is your own profile.",
-      "freeUnavailable": "The free first chat is not available on this account. You can still start a paid chat.",
+      "freeUnavailable": "The free first consultation is not available on this account. You can still start a paid chat or call.",
       "generic": "Could not start the chat. Please try again.",
       "chatOff": "Chat is not available with this astrologer right now."
     },
@@ -170,6 +177,7 @@
           "join_timeout": "The astrologer accepted, but the chat could not connect in time.",
           "user_dropped": "The chat ended because your connection was lost for too long.",
           "astrologer_dropped": "The chat ended because the astrologer's connection was lost.",
+          "service_unavailable": "The chat ended because of a problem on our side. Unused minutes are refunded.",
           "admin": "The chat was closed by our support team.",
           "unknown": "The chat is over."
         }
@@ -184,12 +192,95 @@
         "thanks": "Thanks for your review.",
         "held": "Thanks. Your review will appear after a quick check by our team.",
         "errors": {
-          "already_reviewed": "You have already reviewed this chat.",
-          "session_not_completed": "You can review only after a completed chat.",
+          "already_reviewed": "You have already reviewed this consultation.",
+          "session_not_completed": "You can review only after a completed consultation.",
           "invalid_rating": "Please choose a rating from 1 to 5.",
           "generic": "Could not post the review. Please try again."
         }
       }
+    },
+    "call": {
+      "human": "You are calling {name}, a human astrologer verified by our team. Calls are not recorded.",
+      "requested": "Waiting for {name} to accept your call. If there is no answer within {minutes} minutes, the request is cancelled automatically.",
+      "notCharged": "You are not charged while you wait. Billing starts only when you are both connected in the call.",
+      "notChargedYet": "Not charged yet: billing starts when you are both in the call.",
+      "cancel": "Cancel call request",
+      "retry": "Try again",
+      "mic": {
+        "title": "{name} accepted your call",
+        "rejoinTitle": "Your call with {name} is in progress",
+        "body": "To talk, your browser will ask to use your microphone. It is used only for this call, and nothing is recorded.",
+        "timeout": "Please join within about {seconds} seconds. If you do not, the request closes and you are not charged.",
+        "rejoinBody": "Rejoin to continue. If you are away for more than about {seconds} seconds, the call ends.",
+        "join": "Join call with microphone",
+        "rejoin": "Rejoin call",
+        "blockedTitle": "Microphone needed",
+        "issues": {
+          "denied": "Your browser is not letting this site use the microphone. Open the site settings (the icon next to the web address), set Microphone to Allow, then press Try again. On a phone, also check in the phone's settings that your browser may use the microphone.",
+          "not_found": "We could not find a microphone. Connect a microphone or headset, then press Try again.",
+          "in_use": "Your microphone is busy in another app or tab. Close it, then press Try again.",
+          "unsupported": "This browser cannot use a microphone on this page. Please try an up-to-date Chrome, Edge, Firefox or Safari.",
+          "other": "The microphone could not be started. Please try again."
+        }
+      },
+      "join": {
+        "title": "Could not connect the call",
+        "failed": "We could not connect the call audio. Check your internet connection and try again.",
+        "session_not_joinable": "This call can no longer be joined.",
+        "call_unavailable": "Voice calls are not available right now.",
+        "not_signed_in": "Please sign in again to join this call."
+      },
+      "state": {
+        "connecting": "Connecting the call…",
+        "waitingAstrologer": "You are in the call. Waiting for {name} to join…",
+        "starting": "{name} joined. Starting the call…",
+        "inCall": "In a call with {name}",
+        "reconnecting": "Connection unstable. Reconnecting the call…",
+        "astrologerAway": "{name}'s audio dropped. Waiting for them to come back…",
+        "dropped": "Call audio disconnected",
+        "ended": "The call ended."
+      },
+      "audioBlocked": "Your browser paused the call audio until you tap the page.",
+      "enableAudio": "Tap to enable audio",
+      "mute": "Mute microphone",
+      "muted": "Your microphone is muted. The astrologer cannot hear you.",
+      "speaker": "Speaker",
+      "speakerDefault": "System default",
+      "speakerN": "Speaker {n}",
+      "free": "Free call: up to {minutes} minutes",
+      "lowBalance": "Your balance covers about {minutes, plural, =0 {less than a minute} one {# more minute} other {# more minutes}}. The call ends automatically when it runs out.",
+      "end": "End call",
+      "endTitle": "End this call?",
+      "endBody": "You will not be charged for minutes after you end. The current minute is already paid.",
+      "endConfirm": "Yes, end call",
+      "keep": "Stay on the call",
+      "endError": "Could not end the call. Please try again.",
+      "ended": {
+        "title": "Call ended",
+        "duration": "Call time: {time}",
+        "freeBilled": "Free call: {minutes, plural, one {# minute} other {# minutes}} used. Nothing was charged to your balance.",
+        "reasons": {
+          "user_ended": "You ended the call.",
+          "astrologer_ended": "The astrologer ended the call.",
+          "insufficient_funds": "The call ended because your balance ran out.",
+          "free_minutes_used": "Your free minutes were used up.",
+          "user_cancelled": "You cancelled the call request.",
+          "astrologer_declined": "The astrologer could not take this call.",
+          "request_timeout": "The astrologer did not respond in time.",
+          "join_timeout": "The call could not connect in time, so it was closed without charge.",
+          "user_dropped": "The call ended because your connection was lost for too long.",
+          "astrologer_dropped": "The call ended because the astrologer's connection was lost.",
+          "service_unavailable": "The call ended because of a problem on our side. Unused minutes are refunded.",
+          "admin": "The call was closed by our support team.",
+          "unknown": "The call is over."
+        }
+      },
+      "review": {
+        "heading": "How was your call?"
+      }
+    },
+    "session": {
+      "title": "Your consultation"
     }
   }
 }

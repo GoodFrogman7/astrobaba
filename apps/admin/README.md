@@ -15,6 +15,12 @@ core API; only users with the `admin` role see anything.
   unknown (timeout, 5xx) and replaced after any definite answer
 - `/money/free-sessions`: first-free-session claims with abuse score and reasons, flagged
   filter, allow / block / reset overrides with a note (audited)
+- `/money/payouts?period=YYYY-MM&status=`: monthly payout statements (Phase 5,
+  docs/api/portal.md §3) with status filter and totals; "Generate for period" (ended IST months
+  only, confirm). `/money/payouts/<id>`: totals, session lines, bank-detail placeholders and the
+  next step only: Approve (draft), Mark paid with bank reference + paid-on date (approved; spells
+  out the `payout:{id}` ledger posting), Void with a note (draft/approved). API errors such as
+  `409 exceeds_payable` are shown in plain words. Bank transfers themselves are manual.
 - `/money/reconciliation`: daily runs (ok / drift / error, drift amount, checks), "Run now"
 - `/money/wallets?user_id=`: balances, promo lots and recent transactions for a user
 

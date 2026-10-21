@@ -253,3 +253,52 @@ export interface AdminSession {
   billed_minutes: number;
   billed_paise: number;
 }
+
+/* ---- Payouts (Phase 5, docs/api/portal.md §3) ---- */
+
+/** `GET /v1/admin/payouts` row: a Payout plus the astrologer it belongs to. */
+export interface AdminPayout {
+  id: string;
+  period: string;
+  status: "draft" | "approved" | "paid" | "void" | string;
+  gross_paise: number;
+  commission_paise: number;
+  refunds_paise: number;
+  net_paise: number;
+  carried_forward_paise: number;
+  sessions: number;
+  minutes: number;
+  generated_at: string;
+  approved_at: string | null;
+  paid_at: string | null;
+  reference: string | null;
+  astrologer?: { id: string; display_name: string; slug?: string | null } | null;
+  astrologer_id?: string;
+}
+
+/** One session line of a statement (the portal's EarningRow). */
+export interface PayoutLine {
+  session_id: string;
+  kind: string;
+  started_at: string | null;
+  ended_at: string | null;
+  billed_minutes: number;
+  gross_paise: number;
+  commission_paise: number;
+  refunds_paise: number;
+  net_paise: number;
+  client_label?: string;
+}
+
+/** `GET /v1/admin/payouts/{id}`: the astrologer view plus bank-detail placeholders. */
+export interface AdminPayoutDetail extends AdminPayout {
+  lines?: PayoutLine[];
+  adjustments?: {
+    amount_paise?: number;
+    kind?: string;
+    note?: string | null;
+    description?: string | null;
+  }[];
+  /** Placeholders until bank details are collected; shape not fixed by the contract. */
+  bank?: Record<string, string | number | boolean | null> | null;
+}

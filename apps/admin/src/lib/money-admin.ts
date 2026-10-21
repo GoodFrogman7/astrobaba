@@ -135,6 +135,7 @@ const RULES: Record<string, string> = {
   failed_connect: "Failed to connect",
   astrologer_drop: "Astrologer dropped",
   astrologer_dropped: "Astrologer dropped",
+  service_unavailable: "Voice service outage",
   low_rating: "Low rating",
 };
 

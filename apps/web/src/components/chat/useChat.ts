@@ -1,6 +1,6 @@
 "use client";
 
-import { CHAT_LIMITS, type ChatMessage, type SessionView } from "@astro/shared";
+import { CHAT_LIMITS, type ChatMessage, type ServerEvent, type SessionView } from "@astro/shared";
 import { useCallback, useEffect, useReducer, useRef, useState } from "react";
 import { call, refreshWallet } from "@/lib/billing/client";
 import {
@@ -17,8 +17,14 @@ export type LoadState = "loading" | "signed_out" | "not_found" | "error" | "read
 const POLL_MS = 5000;
 const TYPING_SEND_EVERY_MS = 3000;
 
+/**
+ * Lets a caller see each socket event as it arrives, before React renders it (a call drops its
+ * audio room on `ended` straight away). Set `.current`; it is read on every event.
+ */
+export type EventTap = { current: ((e: ServerEvent) => void) | null };
+
 /** Everything the chat page needs: session, messages, socket status and actions. */
-export function useChat(sessionId: string) {
+export function useChat(sessionId: string, tapRef?: EventTap) {
   const [state, dispatch] = useReducer(chatReducer, initialChatState);
   const [load, setLoad] = useState<LoadState>("loading");
   const [conn, setConn] = useState<ConnStatus>("connecting");
@@ -73,7 +79,10 @@ export function useChat(sessionId: string) {
         return r.ok ? r.data.items : null;
       },
       lastSeq: () => lastSeqRef.current,
-      onEvent: (event) => dispatch({ type: "server", event, now: Date.now() }),
+      onEvent: (event) => {
+        tapRef?.current?.(event);
+        dispatch({ type: "server", event, now: Date.now() });
+      },
       onBackfill: (messages) => dispatch({ type: "backfill", messages }),
       onStatus: (s) => {
         setConn(s);
@@ -97,7 +106,7 @@ export function useChat(sessionId: string) {
       c.stop();
       connRef.current = null;
     };
-  }, [ready, terminal, base]);
+  }, [ready, terminal, base, tapRef]);
 
   // While waiting for the astrologer, also poll (the socket may not be up yet).
   const waiting = status === "queued" || status === "requested" || status === "accepted";

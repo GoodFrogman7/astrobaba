@@ -1,3 +1,5 @@
+import type { Availability } from "@astro/shared";
+
 /** Shapes from docs/api/marketplace.md (Phase 3 contract). Money is integer paise. */
 export type Presence = "online" | "busy" | "offline";
 export type Sort = "recommended" | "price_asc" | "price_desc" | "experience" | "rating";
@@ -30,6 +32,8 @@ export interface AstrologerProfile extends AstrologerCard {
   verified: { identity: boolean; qualification: boolean; interview: boolean };
   on_platform_since: string; // YYYY-MM
   consult: { chat_enabled: boolean; call_enabled: boolean };
+  /** Usual weekly schedule in IST (docs/api/portal.md §2.1); absent or empty → not shown. */
+  availability?: Availability | null;
 }
 
 export interface ListResponse {

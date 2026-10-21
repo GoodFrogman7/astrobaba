@@ -2,16 +2,15 @@ import { useLocale, useTranslations } from "next-intl";
 import { rupeesPerMin } from "@/lib/marketplace/format";
 import type { AstrologerProfile } from "@/lib/marketplace/types";
 import { PresenceBadge } from "./Presence";
-import { StartChat } from "./StartChat";
+import { StartConsult } from "./StartConsult";
 
 /**
- * Consult card: sticky beside the profile on wide screens. Chat starts from here when the
- * astrologer has chat enabled; voice calls come in Phase 5, so that button is disabled and says
- * so. No fake availability or countdowns.
+ * Consult card: sticky beside the profile on wide screens. Chat and voice calls start from here
+ * at the same per-minute price, each when the astrologer offers it (calls also need the
+ * platform's voice_calls flag, which the API enforces). No fake availability or countdowns.
  */
 export function ConsultCard({ p }: { p: AstrologerProfile }) {
   const t = useTranslations("market.consult");
-  const tb = useTranslations("billing.start");
   const locale = useLocale() as "en" | "hi";
   return (
     <section
@@ -30,39 +29,14 @@ export function ConsultCard({ p }: { p: AstrologerProfile }) {
         <PresenceBadge presence={p.presence} wait={p.wait_minutes} />
       </div>
       <div className="mt-4">
-        {p.consult.chat_enabled ? (
-          <StartChat
-            astrologerId={p.id}
-            name={p.display_name}
-            pricePerMinPaise={p.price_per_min_paise}
-          />
-        ) : (
-          <>
-            <button
-              type="button"
-              disabled
-              aria-describedby="chat-off"
-              className="w-full cursor-not-allowed rounded-sm bg-primary px-4 py-2 font-medium text-primary-fg opacity-60"
-            >
-              {t("chat")}
-            </button>
-            <p id="chat-off" className="mt-2 text-sm text-muted">
-              {tb("chatOff")}
-            </p>
-          </>
-        )}
+        <StartConsult
+          astrologerId={p.id}
+          name={p.display_name}
+          pricePerMinPaise={p.price_per_min_paise}
+          chat={p.consult.chat_enabled}
+          voice={p.consult.call_enabled}
+        />
       </div>
-      <button
-        type="button"
-        disabled
-        aria-describedby="call-soon"
-        className="mt-3 w-full cursor-not-allowed rounded-sm border border-primary px-4 py-2 font-medium text-primary opacity-60"
-      >
-        {t("call")}
-      </button>
-      <p id="call-soon" className="mt-2 text-sm text-muted">
-        {t("callSoon")}
-      </p>
       <p className="mt-2 text-xs text-muted">{t("billing")}</p>
     </section>
   );
@@ -85,23 +59,18 @@ export function MobileConsultBar({ p }: { p: AstrologerProfile }) {
           {!p.consult.chat_enabled && (
             <span className="block text-xs text-muted">{tb("chatOff")}</span>
           )}
+          {!p.consult.call_enabled && (
+            <span className="block text-xs text-muted">{tb("callOff")}</span>
+          )}
         </p>
-        {p.consult.chat_enabled ? (
-          <StartChat
-            astrologerId={p.id}
-            name={p.display_name}
-            pricePerMinPaise={p.price_per_min_paise}
-            compact
-          />
-        ) : (
-          <button
-            type="button"
-            disabled
-            className="cursor-not-allowed rounded-sm bg-primary px-4 py-2 font-medium text-primary-fg opacity-60"
-          >
-            {t("chat")}
-          </button>
-        )}
+        <StartConsult
+          astrologerId={p.id}
+          name={p.display_name}
+          pricePerMinPaise={p.price_per_min_paise}
+          chat={p.consult.chat_enabled}
+          voice={p.consult.call_enabled}
+          compact
+        />
       </div>
     </div>
   );

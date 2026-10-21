@@ -35,6 +35,8 @@ export interface ChatState {
   error: { code: string; message: string } | null;
   /** server_time − local clock at the last hello, for an accurate elapsed timer. */
   serverOffsetMs: number;
+  /** Calls only: who is in the audio room, from the socket's `call` event (null until known). */
+  callJoined: Record<ParticipantRole, boolean> | null;
 }
 
 export type ChatAction =
@@ -69,6 +71,7 @@ export function initialChatState(
     lowBalanceMinutes: null,
     error: null,
     serverOffsetMs: 0,
+    callJoined: null,
   };
 }
 
@@ -155,6 +158,7 @@ export function chatReducer(state: ChatState, action: ChatAction): ChatState {
             session: ev.session,
             pending: failSending(state.pending),
             peerTypingUntil: null,
+            callJoined: state.callJoined ? { user: false, astrologer: false } : null,
           };
         case "message":
           return withMessages(state, [ev.message]);
@@ -163,6 +167,14 @@ export function chatReducer(state: ChatState, action: ChatAction): ChatState {
           return { ...state, peerTypingUntil: action.now + TYPING_SHOW_MS };
         case "low_balance":
           return { ...state, lowBalanceMinutes: ev.minutes_left };
+        case "call":
+          return {
+            ...state,
+            callJoined: {
+              user: ev.joined.user === true,
+              astrologer: ev.joined.astrologer === true,
+            },
+          };
         case "error":
           return {
             ...state,

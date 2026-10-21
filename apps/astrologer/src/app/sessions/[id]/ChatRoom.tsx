@@ -243,7 +243,11 @@ export function ChatRoom({ initial }: { initial: SessionView }) {
           <p className="mt-1 text-sm">{endReasonText(s.end_reason)}</p>
           <p className="mt-1 text-sm text-muted">
             Billed {s.billed_minutes} min
-            {!s.is_free && ` · ${formatRupees(s.billed_paise)}`}. Earnings detail comes later.
+            {!s.is_free && ` · ${formatRupees(s.billed_paise)}`}. Your share appears under{" "}
+            <Link href="/earnings" className="underline">
+              Earnings
+            </Link>
+            .
           </p>
           <Link href="/" className="mt-3 inline-block underline">
             Back to the console

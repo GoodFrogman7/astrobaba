@@ -5,8 +5,16 @@ import { useId, useState } from "react";
 import { call } from "@/lib/billing/client";
 import { TAXONOMY } from "@/lib/marketplace/taxonomy";
 
-/** Review after a completed chat (one per session; the API enforces it). */
-export function ReviewForm({ sessionId, onDone }: { sessionId: string; onDone: () => void }) {
+/** Review after a completed chat or call (one per session; the API enforces it). */
+export function ReviewForm({
+  sessionId,
+  onDone,
+  heading,
+}: {
+  sessionId: string;
+  onDone: () => void;
+  heading?: string;
+}) {
   const t = useTranslations("billing.chat.review");
   const [rating, setRating] = useState(0);
   const [text, setText] = useState("");
@@ -36,7 +44,7 @@ export function ReviewForm({ sessionId, onDone }: { sessionId: string; onDone: (
       onSubmit={(e) => void submit(e)}
       className="space-y-3 rounded-md border border-border bg-surface p-5"
     >
-      <h3 className="text-lg font-semibold">{t("heading")}</h3>
+      <h3 className="text-lg font-semibold">{heading ?? t("heading")}</h3>
       <fieldset>
         <legend className="text-sm font-medium">{t("rating")}</legend>
         <div className="mt-1 flex flex-wrap gap-3">

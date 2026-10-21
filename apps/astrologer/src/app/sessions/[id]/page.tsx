@@ -5,10 +5,11 @@ import { StatusNotice } from "@/components/StatusNotice";
 import { api, ApiError } from "@/lib/api";
 import { SESSION_ID } from "@/lib/forward";
 import { consolePage } from "@/lib/guard";
+import { CallRoom } from "./CallRoom";
 import { ChatRoom } from "./ChatRoom";
 
 export const dynamic = "force-dynamic";
-export const metadata: Metadata = { title: "Chat" };
+export const metadata: Metadata = { title: "Consultation" };
 
 export default async function ChatPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -24,5 +25,5 @@ export default async function ChatPage({ params }: { params: Promise<{ id: strin
   if (access.kind === "anon") return null;
   if (access.kind !== "live") return <StatusNotice access={access} />;
   if (!data) notFound();
-  return <ChatRoom initial={data} />;
+  return data.kind === "call" ? <CallRoom initial={data} /> : <ChatRoom initial={data} />;
 }

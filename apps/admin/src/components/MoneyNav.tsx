@@ -4,6 +4,7 @@ import { formatRupees, formatSignedRupees } from "@/lib/money";
 export const MONEY_PAGES = [
   { href: "/money/refunds", label: "Refunds" },
   { href: "/money/free-sessions", label: "Free sessions" },
+  { href: "/money/payouts", label: "Payouts" },
   { href: "/money/reconciliation", label: "Reconciliation" },
   { href: "/money/wallets", label: "User wallet" },
 ] as const;

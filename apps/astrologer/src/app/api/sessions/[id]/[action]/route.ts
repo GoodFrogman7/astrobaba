@@ -4,7 +4,7 @@ import { sessionActionRoute } from "@/lib/routes";
 
 export const dynamic = "force-dynamic";
 
-/** accept | decline | end | ws-ticket */
+/** accept | decline | end | ws-ticket | call-token */
 export async function POST(
   _: Request,
   { params }: { params: Promise<{ id: string; action: string }> },

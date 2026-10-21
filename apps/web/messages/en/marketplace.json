@@ -72,13 +72,18 @@
       "reported": "Thanks. A moderator will look at it.",
       "reportSignIn": "Please sign in to report a review.",
       "reportError": "Could not send the report. Please try again.",
-      "demoNotice": "This is a demo profile for development. It is not a real astrologer."
+      "demoNotice": "This is a demo profile for development. It is not a real astrologer.",
+      "availability": {
+        "title": "Usually available (IST)",
+        "range": "{from} to {to}",
+        "pair": "{a} and {b}",
+        "note": "Times are India Standard Time. This is a usual schedule; the status above shows whether the astrologer is online now."
+      }
     },
     "consult": {
       "title": "Consult {name}",
       "chat": "Chat",
       "call": "Call",
-      "callSoon": "Voice calls open in a later release.",
       "perMin": "per minute",
       "billing": "You pay per minute from your wallet. You can end anytime."
     },

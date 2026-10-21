@@ -66,9 +66,11 @@ const END_TEXT: Record<string, string> = {
   join_timeout: "The chat did not start in time.",
   user_dropped: "The client's connection dropped.",
   astrologer_dropped: "Your connection dropped.",
+  service_unavailable: "The voice service failed on our side; this does not count against you.",
   admin: "Ended by the support team.",
 };
 
-export function endReasonText(reason: string | null): string {
-  return (reason && END_TEXT[reason]) || "The chat has ended.";
+export function endReasonText(reason: string | null, kind: "chat" | "call" = "chat"): string {
+  const text = (reason && END_TEXT[reason]) || "The chat has ended.";
+  return kind === "call" ? text.replace(/\bchat\b/, "call") : text;
 }

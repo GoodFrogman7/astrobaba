@@ -69,12 +69,37 @@ export interface Payout {
   gross_paise: number;
   commission_paise: number;
   refunds_paise: number;
+  /** Earned before this period and not yet paid (void earlier payouts, a debt is negative). */
+  carried_in_paise: number;
+  /** gross − commission − refunds + carried_in. */
   net_paise: number;
+  /** Set on void payouts: the amount rolled into the next period. */
   carried_forward_paise: number;
+  void_reason: "below_minimum" | "admin" | null;
   sessions: number;
   minutes: number;
   generated_at: string;
   approved_at: string | null;
   paid_at: string | null;
+  /** IST date the bank transfer was made. */
+  paid_on: string | null;
+  /** Bank UTR, paid only. */
   reference: string | null;
+  /** States that TDS and GST are not modelled yet (a CA decides). */
+  tax_note: string;
+}
+
+export interface PayoutAdjustment {
+  kind: "carried_forward_in" | "carried_forward_out";
+  amount_paise: number;
+  period: string;
+}
+
+/** `POST /v1/admin/payouts/generate` result (counts). */
+export interface PayoutGenerateResult {
+  period: string;
+  generated: number;
+  updated: number;
+  skipped: number;
+  carried_forward: number;
 }

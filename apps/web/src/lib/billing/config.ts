@@ -7,6 +7,8 @@ import billingFile from "../../../../../data/marketplace/billing.json" with { ty
 export const BILLING = {
   minStartMinutes: billingFile.sessions.min_start_minutes,
   requestTimeoutMinutes: Math.ceil(billingFile.sessions.request_timeout_s / 60),
+  joinTimeoutSeconds: billingFile.sessions.join_timeout_s,
+  heartbeatGraceSeconds: billingFile.sessions.heartbeat_grace_s,
   lowBalanceWarningMinutes: billingFile.sessions.low_balance_warning_minutes,
   realCreditExpiryDays: billingFile.real_credit_expiry_days,
   promoExpiryDays: billingFile.recharge_bonus_tiers.promo_expiry_days,

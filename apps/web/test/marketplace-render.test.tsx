@@ -32,7 +32,7 @@ import hiCore from "../messages/hi.json" with { type: "json" };
 import hiMarket from "../messages/hi/marketplace.json" with { type: "json" };
 import hiBilling from "../messages/hi/billing.json" with { type: "json" };
 import { AstrologerCard } from "../src/components/marketplace/AstrologerCard";
-import { ConsultCard } from "../src/components/marketplace/ConsultCard";
+import { ConsultCard, MobileConsultBar } from "../src/components/marketplace/ConsultCard";
 import { EmptyState } from "../src/components/marketplace/EmptyState";
 import { FilterForm } from "../src/components/marketplace/FilterForm";
 import { ProfileBio, ProfileHeader } from "../src/components/marketplace/ProfileHeader";
@@ -146,13 +146,16 @@ describe("profile", () => {
     expect(html).not.toContain("demo profile for development");
   });
 
-  it("chat starts from the card; calls stay disabled and say so", () => {
+  it("chat starts from the card; calls are off for this astrologer and say so", () => {
     const html = render(<ConsultCard p={profile} />);
     // Chat button is live, with the minimum balance spelled out (2 min × ₹12.50).
     expect(html).toMatch(/<button type="button" class="[^"]*w-full[^"]*">Chat<\/button>/);
-    expect(html).toContain("You need at least ₹25 in your wallet to start (2 minutes).");
-    expect(html).toContain("Voice calls open in a later release.");
+    expect(html).toContain(
+      "You need at least ₹25 in your wallet to start a chat or call (2 minutes).",
+    );
+    expect(html).toContain("Voice calls are not available with this astrologer right now.");
     expect(html).toMatch(/<button[^>]*disabled=""[^>]*>Call<\/button>/);
+    expect(html).not.toContain("later release");
     // No free offer until the wallet (client-side) says the user is eligible.
     expect(html).not.toContain("Free chat");
     const off = render(
@@ -160,6 +163,61 @@ describe("profile", () => {
     );
     expect(off).toContain("Chat is not available with this astrologer right now.");
     expect(off).toMatch(/<button[^>]*disabled=""[^>]*>Chat<\/button>/);
+    expect(off).not.toContain("You need at least");
+  });
+
+  it("the Call button is live when the astrologer takes calls, at the same price", () => {
+    const p = { ...profile, consult: { chat_enabled: true, call_enabled: true } };
+    const html = render(<ConsultCard p={p} />);
+    expect(html).toMatch(/<button type="button" class="[^"]*w-full[^"]*">Chat<\/button>/);
+    expect(html).toMatch(/<button type="button" class="[^"]*w-full[^"]*">Call<\/button>/);
+    expect(html).not.toContain("Voice calls are not available");
+    expect(html).toContain("₹12.50");
+    const bar = render(<MobileConsultBar p={p} />);
+    expect(bar).toMatch(/<button type="button" class="[^"]*">Call<\/button>/);
+    const hi = render(<ConsultCard p={p} />, "hi");
+    expect(hi).toMatch(/>कॉल करें<\/button>/);
+    // Calls only: chat stays off and says so; the call needs the same minimum balance.
+    const callOnly = render(
+      <ConsultCard p={{ ...profile, consult: { chat_enabled: false, call_enabled: true } }} />,
+    );
+    expect(callOnly).toMatch(/<button[^>]*disabled=""[^>]*>Chat<\/button>/);
+    expect(callOnly).toMatch(/<button type="button" class="[^"]*">Call<\/button>/);
+    expect(callOnly).toContain("You need at least ₹25");
+  });
+
+  it("shows the usual schedule in IST, merged by day, only when there are slots", () => {
+    const p: AstrologerProfile = {
+      ...profile,
+      availability: {
+        timezone: "Asia/Kolkata",
+        slots: [
+          { weekday: 6, start: "10:00", end: "12:00" },
+          { weekday: 0, start: "17:00", end: "20:30" },
+          { weekday: 1, start: "17:00", end: "20:30" },
+          { weekday: 2, start: "17:00", end: "20:30" },
+          { weekday: 0, start: "09:00", end: "12:00" },
+        ],
+      },
+    };
+    const html = render(<ProfileHeader p={p} />);
+    expect(html).toContain("Usually available (IST)");
+    expect(html).toContain(
+      '<dt class="text-muted"><span aria-hidden="true">Mon</span><span class="sr-only">Monday</span></dt><dd class="tabular-nums">9:00 am – 12:00 pm, 5:00 pm – 8:30 pm</dd>',
+    );
+    expect(html).toContain('<span aria-hidden="true">Tue, Wed</span>');
+    expect(html).toContain("Tuesday and Wednesday");
+    expect(html).toContain('<span aria-hidden="true">Sun</span>');
+    expect(html.indexOf(">Mon<")).toBeLessThan(html.indexOf(">Sun<"));
+    const hi = render(<ProfileHeader p={p} />, "hi");
+    expect(hi).toContain("आम तौर पर उपलब्ध (IST)");
+    expect(hi).toContain("मंगलवार और बुधवार");
+    expect(hi).toContain(">सोम<");
+    for (const none of [undefined, null, { timezone: "Asia/Kolkata" as const, slots: [] }]) {
+      const empty = render(<ProfileHeader p={{ ...profile, availability: none }} />);
+      expect(empty).not.toContain("Usually available");
+      expect(empty).not.toContain('data-testid="availability"');
+    }
   });
 
   it("Hindi page notes when the bio is only in English", () => {

@@ -7,7 +7,8 @@ import { AstrologerCard } from "./marketplace/AstrologerCard";
 /**
  * Consultation call-to-action at the end of every tool (PLAN.md §5 Phase 2/3): up to three
  * public, verified astrologers. When none are public yet, or the API is down, it says plainly that
- * consultations open soon: no invented profiles, counts or timers. The list is cached for five
+ * consultations are open (chat, and voice calls where the astrologer and the platform offer them)
+ * without inventing profiles, counts or timers. The list is cached for five
  * minutes, so presence (which changes faster) is not shown here.
  */
 export async function ExpertCta({ locale }: { locale: Locale }) {

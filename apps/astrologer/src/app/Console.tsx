@@ -1,9 +1,10 @@
 "use client";
 
-import type { SessionView } from "@astro/shared";
+import type { AvailabilitySlot, SessionView } from "@astro/shared";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { activeSlot } from "@/lib/availability";
 import { formatRate, formatWaiting, titleWithBadge } from "@/lib/format";
 import { createHeartbeat, newRequestIds, type Heartbeat } from "@/lib/presence";
 
@@ -46,7 +47,12 @@ const ACTION_ERRORS: Record<string, string> = {
   api_unavailable: "The service is unreachable. Try again in a moment.",
 };
 
-export function Console() {
+/** "chat" or "call" in plain words, for labels and announcements. */
+function kindWord(s: Pick<SessionView, "kind">): "chat" | "call" {
+  return s.kind === "call" ? "call" : "chat";
+}
+
+export function Console({ slots = [] }: { slots?: AvailabilitySlot[] }) {
   const router = useRouter();
   const [presence, setPresence] = useState<Presence>("offline");
   const [presenceError, setPresenceError] = useState<string | null>(null);
@@ -58,6 +64,7 @@ export function Console() {
   const [busyId, setBusyId] = useState<string | null>(null);
   const [confirmDecline, setConfirmDecline] = useState<string | null>(null);
   const [now, setNow] = useState(() => Date.now());
+  const [reminderHidden, setReminderHidden] = useState<string | null>(null);
   const heartbeat = useRef<Heartbeat | null>(null);
   const seen = useRef<Set<string> | null>(null);
   const baseTitle = useRef<string | null>(null);
@@ -134,8 +141,8 @@ export function Console() {
         const s = body.items.find((x) => x.id === fresh[0]);
         setAnnouncement(
           fresh.length === 1 && s
-            ? `New chat request from ${s.client_label} (${s.is_free ? "free" : formatRate(s.price_per_min_paise)}).`
-            : `${fresh.length} new chat requests.`,
+            ? `New ${kindWord(s)} request from ${s.client_label} (${s.is_free ? "free" : formatRate(s.price_per_min_paise)}).`
+            : `${fresh.length} new requests.`,
         );
       }
     } catch {
@@ -195,6 +202,10 @@ export function Console() {
   }
 
   const online = presence === "online";
+  // The schedule never changes presence (portal.md §2.1); it only prompts, gently.
+  const slotNow = activeSlot(slots, now);
+  const slotKey = slotNow ? `${slotNow.weekday}-${slotNow.start}-${slotNow.end}` : null;
+  const showReminder = slotNow !== null && presence === "offline" && reminderHidden !== slotKey;
 
   return (
     <div className="mt-6 space-y-8">
@@ -219,15 +230,34 @@ export function Console() {
           </button>
           <span className="text-sm" role="status" aria-live="polite">
             {online
-              ? "You are online. New chat requests can reach you."
+              ? "You are online. New requests can reach you."
               : "You are offline. No new requests will reach you."}
           </span>
         </div>
         <p className="mt-3 text-sm text-muted">
           Going offline stops new requests straight away; a chat already in progress continues.
           While online, keep this tab open: if it closes, you drop to offline within 2 minutes. When
-          you are in a chat, clients see you as busy.
+          you are in a chat or call, clients see you as busy. Your{" "}
+          <Link href="/schedule" className="underline">
+            weekly schedule
+          </Link>{" "}
+          is shown on your profile but does not switch you online.
         </p>
+        {showReminder && slotNow && (
+          <div className="mt-3 flex flex-wrap items-center gap-3 rounded-md border border-border bg-bg px-4 py-3 text-sm">
+            <p className="flex-1">
+              Your schedule says you are available now ({slotNow.start}–{slotNow.end} IST), but you
+              are offline. Go online when you are ready to take requests.
+            </p>
+            <button
+              type="button"
+              onClick={() => setReminderHidden(slotKey)}
+              className="text-muted underline"
+            >
+              Not now
+            </button>
+          </div>
+        )}
         {beatWarning && online && (
           <p className="mt-2 text-sm text-danger">
             Could not refresh your online status. Retrying every minute.
@@ -271,7 +301,7 @@ export function Console() {
           <p className="mt-4 text-muted">Loading…</p>
         ) : items.length === 0 ? (
           <p className="mt-4 text-muted">
-            No requests right now.{!online && " Go online to receive chat requests."}
+            No requests right now.{!online && " Go online to receive requests."}
           </p>
         ) : (
           <ul className="mt-4 space-y-3">
@@ -279,7 +309,18 @@ export function Console() {
               <li key={s.id} className="rounded-md border border-border bg-surface p-4">
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
-                    <p className="font-medium">{s.client_label}</p>
+                    <p className="flex flex-wrap items-center gap-2 font-medium">
+                      <span
+                        className={`rounded-sm px-2 py-0.5 text-xs font-semibold uppercase tracking-wide ${
+                          s.kind === "call"
+                            ? "bg-accent text-accent-fg"
+                            : "border border-border text-fg"
+                        }`}
+                      >
+                        {s.kind === "call" ? "Voice call" : "Chat"}
+                      </span>
+                      <span>{s.client_label}</span>
+                    </p>
                     <p className="text-sm text-muted">
                       {s.is_free
                         ? `Free session${s.free_minutes ? ` (up to ${s.free_minutes} min)` : ""}`
@@ -291,8 +332,16 @@ export function Console() {
                           ? `Waiting ${formatWaiting(s.created_at, now)}`
                           : s.status === "accepted"
                             ? "Accepted, waiting for the client to join"
-                            : "Chat in progress"}
+                            : s.kind === "call"
+                              ? "Call in progress"
+                              : "Chat in progress"}
                     </p>
+                    {s.kind === "call" && s.status === "requested" && (
+                      <p className="text-xs text-muted">
+                        Accepting opens the call room. Allow microphone access when your browser
+                        asks.
+                      </p>
+                    )}
                   </div>
                   <div className="flex flex-wrap gap-2">
                     {(s.status === "accepted" || s.status === "active") && (
@@ -300,7 +349,7 @@ export function Console() {
                         href={`/sessions/${encodeURIComponent(s.id)}`}
                         className="rounded-sm bg-primary px-3 py-1.5 text-sm text-primary-fg"
                       >
-                        Open chat
+                        {s.kind === "call" ? "Open call" : "Open chat"}
                       </Link>
                     )}
                     {s.status === "requested" && (
@@ -310,7 +359,7 @@ export function Console() {
                         onClick={() => void act(s.id, "accept")}
                         className="rounded-sm bg-primary px-3 py-1.5 text-sm text-primary-fg disabled:opacity-60"
                       >
-                        Accept
+                        {s.kind === "call" ? "Accept call" : "Accept chat"}
                       </button>
                     )}
                     {(s.status === "requested" || s.status === "queued") &&

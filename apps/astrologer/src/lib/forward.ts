@@ -15,6 +15,11 @@ const NO_STORE = { "cache-control": "no-store, max-age=0" };
 /** Session ids are opaque but short and URL-safe; anything else never reaches the API. */
 export const SESSION_ID = /^[A-Za-z0-9_-]{1,64}$/;
 
+/** Review and payout ids: the same opaque, URL-safe shape. */
+export const OPAQUE_ID = SESSION_ID;
+
+export const NO_STORE_HEADERS: Readonly<Record<string, string>> = NO_STORE;
+
 export function json(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), {
     status,
@@ -23,7 +28,7 @@ export function json(body: unknown, status = 200): Response {
 }
 
 export async function forward(
-  method: "GET" | "POST",
+  method: "GET" | "POST" | "PUT" | "PATCH",
   path: string,
   deps: ForwardDeps,
   body?: unknown,

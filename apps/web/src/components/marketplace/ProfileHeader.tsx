@@ -2,6 +2,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { monthYear, rupeesPerMin } from "@/lib/marketplace/format";
 import { languageName, skillName, tierName } from "@/lib/marketplace/taxonomy";
 import type { AstrologerProfile } from "@/lib/marketplace/types";
+import { AvailabilityList } from "./AvailabilityList";
 import { Avatar } from "./Avatar";
 import { DemoBadge } from "./DemoBadge";
 import { PresenceBadge } from "./Presence";
@@ -60,6 +61,7 @@ export function ProfileHeader({ p }: { p: AstrologerProfile }) {
           </dd>
         </div>
       </dl>
+      <AvailabilityList p={p} />
       {verified.length > 0 && (
         <div className="mt-4">
           <h2 className="text-sm font-medium">{t("verified")}</h2>
