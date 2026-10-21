@@ -20,6 +20,18 @@ runs the checks below and shows what is still failing.
   Any other value makes the site `noindex`, which is right for staging.
 - **Load test on staging:** 500 concurrent chat sessions with no errors, p95 message round trip
   under 500 ms, and ledger invariants holding (`scripts/loadtest/README.md`).
+  - Measured on the 4-CPU dev sandbox (2026-10-21; the load generator, Postgres and Redis share
+    the machine), 2-minute runs:
+
+    | Sessions | API processes | Errors | Round trip p50 / p95 | Money checks |
+    |---|---|---|---|---|
+    | 100 | 1 | 0 | 22 / 242 ms | pass |
+    | 250 | 4 | 0 | 34 / 479 ms | pass |
+    | 500 | 4 | 10 of 22,000 messages | 651 / 5,650 ms (CPU saturated) | pass |
+
+  - Run the API with several worker processes (one per core). Each process needs a Redis
+    connection per open chat socket (`REDIS_MAX_CONNECTIONS`, default 2,000). Keep
+    processes × (`DB_POOL_SIZE` + `DB_MAX_OVERFLOW`) under Postgres `max_connections`.
 - **Not decided yet:** the hosting setup (AWS ap-south-1 is the plan's assumption) and who
   operates it. Nothing in this repo provisions infrastructure.
 

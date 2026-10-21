@@ -65,6 +65,11 @@ class Settings(BaseSettings):
     web_internal_url: str = "http://localhost:3000"
     # The public site, for links in emails; and the astro engine the API calls for reports.
     public_site_url: str = "http://localhost:3000"
+    # Pools per API process. Each chat socket holds one Redis connection (pub/sub); Postgres
+    # connections across all processes must stay under the server's max_connections.
+    redis_max_connections: int = Field(default=2000, ge=10)
+    db_pool_size: int = Field(default=10, ge=1, le=100)
+    db_max_overflow: int = Field(default=10, ge=0, le=100)
     # Raw analytics events older than this are deleted by `cli analytics-purge`.
     analytics_retention_days: int = Field(default=400, ge=30, le=1100)
     # The policies.json version a lawyer approved (Phase 7 launch gate); empty = none yet.

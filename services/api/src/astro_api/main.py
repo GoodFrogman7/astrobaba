@@ -7,7 +7,6 @@ from typing import Any
 from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from redis.asyncio import Redis
 
 from astro_api import (
     __version__,
@@ -36,7 +35,7 @@ from astro_api import (
     wallet_api,
 )
 from astro_api.config import Settings, check_production_settings, get_settings
-from astro_api.db import make_engine, make_sessionmaker
+from astro_api.db import make_engine, make_redis, make_sessionmaker
 from astro_api.errors import ApiError, api_error_handler
 from astro_api.flags import all_flags
 from astro_api.health import check_dependencies
@@ -58,9 +57,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     @asynccontextmanager
     async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         app.state.settings = settings
-        app.state.engine = make_engine(settings.database_url.get_secret_value())
+        app.state.engine = make_engine(settings.database_url.get_secret_value(), settings)
         app.state.sessionmaker = make_sessionmaker(app.state.engine)
-        app.state.redis = Redis.from_url(settings.redis_url.get_secret_value())
+        app.state.redis = make_redis(settings)
         app.state.otp = OtpService(app.state.redis, settings, sms)
         app.state.storage = storage
         log.info("api started", extra={"env": settings.app_env, "version": __version__})
