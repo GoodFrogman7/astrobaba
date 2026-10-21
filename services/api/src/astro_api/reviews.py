@@ -11,6 +11,7 @@ from redis.asyncio import Redis
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from astro_api import refunds
 from astro_api.audit import audit
 from astro_api.auth import current_user
 from astro_api.config import Settings
@@ -93,6 +94,10 @@ async def create_review(
     db.add(review)
     await db.flush()
     audit(db, actor(user), "review.create", "review", str(review.id), held=bool(reasons))
+    # Low-rating refund rule (billing.json), in the same transaction as the review.
+    await refunds.on_review(
+        db, session_id=session.id, rating=body.rating, at=dt.datetime.now(dt.UTC)
+    )
     await db.commit()
     return own_review_view(review)
 

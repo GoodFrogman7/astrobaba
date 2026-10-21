@@ -124,3 +124,54 @@ two always sum to the charge.
 - Phase 4 tests come first: property tests (entries balance, projection = sum of entries),
   100-way concurrent debit test, webhook replay test, kill-mid-session test, reconciliation drift test.
 - Postgres is the only money store. Redis may cache balances for display only, never for decisions.
+
+## Implementation notes (Phase 4, 2026-10-21)
+
+Code: `services/api/src/astro_api/{wallet,refunds,free_session,payments,payments_webhooks,
+reconciliation,wallet_api,admin_money,billing_config}.py`, tables in `models_ledger.py`,
+migration `0004`. Tests were written first (`tests/test_ledger*.py`, `test_wallet*.py`,
+`test_payments.py`, `test_refunds.py`, `test_free_session.py`, `test_reconciliation.py`,
+`test_admin_money.py`).
+
+- **Database guards.** A `BEFORE UPDATE OR DELETE` trigger makes `ledger_transactions` and
+  `ledger_entries` append-only; a `DEFERRABLE INITIALLY DEFERRED` constraint trigger on both
+  tables rejects, at commit, a transaction with no entries or with debits ≠ credits. Entries
+  have `amount_paise > 0`; entries on `user:*:promo` must name their promo lot; user balance
+  projections have `CHECK (balance_paise >= 0)`. The DB role split (INSERT/SELECT only) is still
+  to be done when production roles exist; the trigger already blocks mutation for every role.
+- **Which balances are projected.** `account_balances` holds user and astrologer accounts only.
+  Platform, gateway and bank accounts are summed from entries when read: projecting them would
+  make `platform:commission` one row that every charge in the system locks until commit.
+- **Locking.** Every operation that touches a user's money first upserts and locks the user's
+  `real` then `promo` balance rows (`SELECT … FOR UPDATE`), then the user's lots, then updates
+  other projections in sorted order. The idempotency key is checked again after the lock, so a
+  concurrent retry returns the original instead of failing on funds. Idempotent insert:
+  `INSERT … ON CONFLICT (idempotency_key) DO NOTHING`, then compare `payload_hash`.
+- **Account added:** `platform:gateway_fees` (expense) for Razorpay fees and their GST deducted
+  at settlement. Settlement posting (`razorpay:settlement:{id}`): debit `bank:settlement` (net),
+  debit `platform:gateway_fees`, credit `gateway:razorpay:clearing` (gross).
+- **Refund postings.** A refund of `A` paise on a session reverses that session's charges in
+  proportion, with cumulative rounding so repeated partial refunds never exceed a bucket:
+  promo share = floor((refunded + A) × promo_charged / charged) − promo_refunded; real gets
+  the rest. The promo share comes back as a **new general promo lot** (`campaign: refund`,
+  `promo_expiry_days`), real back to real. The debit side splits the same way between
+  `astrologer:{id}:payable` and `platform:commission` (commission share by the same formula,
+  astrologer the rest). Refunds never exceed what is left to refund on the session; manual
+  goodwill above that is refused, so `platform:refunds` is not used yet (founder decision).
+  Free sessions are never refunded (the user paid nothing).
+- **Rules.** `astrologer_drop` refunds the minutes that started after the astrologer was last
+  seen (the minute in progress counts as served). `low_rating` refunds
+  min(cap, charged × refund_bps / 10000, left to refund), at most once per user per rolling
+  30 days (counted under the user's wallet lock). Keys `refund:{rule}:{session_id}`, manual
+  `refund:manual:{session_id}:{Idempotency-Key}`. Every refund has a `refunds` row and an audit
+  entry with ids and amounts (the admin's note is kept on the row, never in audit or logs).
+- **Free session lot.** Restricted to its session, spent first there, invisible elsewhere,
+  closed by `close_session_lots` at session end, with a 1-day safety expiry. After an admin
+  `reset` the grant key gets a suffix (`promo:free_session:{user}:reset{n}`) so the user can be
+  granted again; otherwise it is once per user ever.
+- **Promo expiry** is exact at spend time (expired lots are never spent) and posted by
+  `python -m astro_api.cli expire-promo` (run it from cron, e.g. hourly). Real-credit expiry
+  (`real_credit_expiry_days`) is not implemented until the Phase 7 policy review.
+- **Reconciliation** matches gateway payments to recharge credits by payment id
+  (`ledger_transactions.external_ref`) and by the gateway's payment time (`occurred_at`), so a
+  webhook arriving after midnight still reconciles to the payment's day.

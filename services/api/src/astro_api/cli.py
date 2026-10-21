@@ -1,11 +1,16 @@
-"""Operator commands. `python -m astro_api.cli grant-role <phone> admin` / `revoke-role`."""
+"""Operator commands. `python -m astro_api.cli grant-role <phone> admin` / `revoke-role`;
+`reconcile [--date YYYY-MM-DD]` (default: yesterday IST; exit 1 on drift or error);
+`expire-promo` (expire promo lots past their expiry)."""
 
 import argparse
 import asyncio
+import datetime as dt
 import sys
 
+from redis.asyncio import Redis
 from sqlalchemy import select
 
+from astro_api import payments, reconciliation, wallet
 from astro_api.config import get_settings
 from astro_api.db import make_engine, make_sessionmaker
 from astro_api.errors import ApiError
@@ -33,6 +38,36 @@ async def set_role(phone: str, role: str, grant: bool) -> str:
         await engine.dispose()
 
 
+async def reconcile(day: dt.date) -> tuple[str, int]:
+    settings = get_settings()
+    engine = make_engine(settings.database_url.get_secret_value())
+    redis = Redis.from_url(settings.redis_url.get_secret_value())
+    try:
+        async with make_sessionmaker(engine)() as db:
+            gateway = payments.make_gateway(settings, redis)
+            run = await reconciliation.run(db, gateway, day, trigger="cli")
+            await db.commit()
+            return run.status, run.drift_paise
+    finally:
+        await redis.aclose()
+        await engine.dispose()
+
+
+async def expire_promo() -> int:
+    engine = make_engine(get_settings().database_url.get_secret_value())
+    total = 0
+    try:
+        async with make_sessionmaker(engine)() as db:
+            while True:
+                expired = await wallet.expire_due_lots(db, now=dt.datetime.now(dt.UTC), limit=200)
+                await db.commit()
+                if expired == 0:
+                    return total
+                total += expired
+    finally:
+        await engine.dispose()
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(prog="python -m astro_api.cli")
     sub = ap.add_subparsers(dest="command", required=True)
@@ -40,7 +75,18 @@ def main(argv: list[str] | None = None) -> int:
         p = sub.add_parser(name)
         p.add_argument("phone")
         p.add_argument("role", choices=ROLES)
+    rec = sub.add_parser("reconcile", help="ledger vs gateway for one IST day")
+    rec.add_argument("--date", type=dt.date.fromisoformat, default=None)
+    sub.add_parser("expire-promo", help="expire promo lots past their expiry")
     args = ap.parse_args(argv)
+    if args.command == "reconcile":
+        day = args.date or reconciliation.default_day()
+        status, drift = asyncio.run(reconcile(day))
+        print(f"reconciliation {day.isoformat()} status={status} drift_paise={drift}")
+        return 0 if status == "ok" else 1
+    if args.command == "expire-promo":
+        print(f"expired_paise={asyncio.run(expire_promo())}")
+        return 0
     try:
         phone = normalize_phone(args.phone)
     except ApiError as exc:

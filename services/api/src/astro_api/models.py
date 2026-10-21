@@ -14,12 +14,14 @@ from sqlalchemy import (
     Enum,
     Float,
     ForeignKey,
+    Index,
     Integer,
     LargeBinary,
     Text,
     Time,
     UniqueConstraint,
     func,
+    text,
 )
 from sqlalchemy.dialects.postgresql import ARRAY, CITEXT, JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
@@ -44,7 +46,30 @@ VERIFICATION_STATUSES = ("pending", "passed", "failed")
 DOCUMENT_KINDS = ("identity", "qualification", "other")
 DOCUMENT_REVIEW = ("pending", "accepted", "rejected")
 SESSION_KINDS = ("chat", "call")
-SESSION_STATUSES = ("requested", "active", "completed", "cancelled", "failed")
+SESSION_STATUSES = (
+    "queued",
+    "requested",
+    "accepted",
+    "active",
+    "completed",
+    "cancelled",
+    "failed",
+)
+OPEN_SESSION_STATUSES = ("queued", "requested", "accepted", "active")
+ENDED_SESSION_STATUSES = ("completed", "cancelled", "failed")
+END_REASONS = (
+    "user_ended",
+    "astrologer_ended",
+    "insufficient_funds",
+    "free_minutes_used",
+    "user_cancelled",
+    "astrologer_declined",
+    "request_timeout",
+    "join_timeout",
+    "user_dropped",
+    "astrologer_dropped",
+    "admin",
+)
 REVIEW_STATUSES = ("published", "flagged", "hidden")
 DEFAULT_FLAGS = {"chat_enabled": True, "call_enabled": False, "show_in_directory": True}
 
@@ -237,10 +262,36 @@ class KycDocument(Base):
 
 
 class ConsultSession(Base):
-    """Minimal consultation record (Phase 3: reviews need a completed session). Phase 4 adds
-    billing and chat."""
+    """A consultation (Phase 4: chat). State machine and metering: session_service.py, ADR-0007.
+
+    Money facts (`price_per_min_paise`, `commission_bps`) are captured at creation so later price
+    or rate changes never reprice a session. `billed_minutes` is the highest minute posted to the
+    ledger (`session:{id}:minute:{n}`), updated in the same transaction as the charge; the next
+    minute is due at `started_at + billed_minutes * minute`.
+    """
 
     __tablename__ = "consult_sessions"
+    __table_args__ = (
+        UniqueConstraint("user_id", "idempotency_key", name="uq_consult_sessions_user_idem"),
+        CheckConstraint("price_per_min_paise >= 0", name="session_price_nonneg"),
+        CheckConstraint("commission_bps BETWEEN 0 AND 10000", name="session_commission_range"),
+        CheckConstraint("billed_minutes >= 0 AND billed_paise >= 0", name="session_billed_nonneg"),
+        CheckConstraint("last_seq >= 0", name="session_last_seq_nonneg"),
+        CheckConstraint(
+            "end_reason IS NULL OR end_reason IN ("
+            + ", ".join(f"'{r}'" for r in END_REASONS)
+            + ")",
+            name="session_end_reason_known",
+        ),
+        # At most one open session per user (the API checks first; this is the backstop).
+        Index(
+            "uq_consult_sessions_one_open_per_user",
+            "user_id",
+            unique=True,
+            postgresql_where=text("status IN ('queued', 'requested', 'accepted', 'active')"),
+        ),
+        Index("ix_consult_sessions_status_astrologer", "status", "astrologer_id"),
+    )
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=_uuid)
     user_id: Mapped[uuid.UUID] = mapped_column(
@@ -253,11 +304,31 @@ class ConsultSession(Base):
     status: Mapped[str] = mapped_column(
         Enum(*SESSION_STATUSES, name="session_status"), default="requested"
     )
+    end_reason: Mapped[str | None] = mapped_column(Text)
     started_at: Mapped[dt.datetime | None] = mapped_column(DateTime(timezone=True))
     ended_at: Mapped[dt.datetime | None] = mapped_column(DateTime(timezone=True))
     created_at: Mapped[dt.datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )
+    # Queue order (set while queued); the request-timeout clock starts at requested_at.
+    queued_at: Mapped[dt.datetime | None] = mapped_column(DateTime(timezone=True))
+    requested_at: Mapped[dt.datetime | None] = mapped_column(DateTime(timezone=True))
+    accepted_at: Mapped[dt.datetime | None] = mapped_column(DateTime(timezone=True))
+    price_per_min_paise: Mapped[int] = mapped_column(BigInteger, default=0, server_default="0")
+    commission_bps: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
+    is_free: Mapped[bool] = mapped_column(Boolean, default=False, server_default="false")
+    free_minutes: Mapped[int | None] = mapped_column(Integer)
+    billed_minutes: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
+    billed_paise: Mapped[int] = mapped_column(BigInteger, default=0, server_default="0")
+    idempotency_key: Mapped[str | None] = mapped_column(Text)
+    request_hash: Mapped[str | None] = mapped_column(Text)
+    # Highest chat message seq (system messages included).
+    last_seq: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
+    # Last time each side was seen while active (copied from Redis heartbeats by the meter).
+    user_last_seen_at: Mapped[dt.datetime | None] = mapped_column(DateTime(timezone=True))
+    astrologer_last_seen_at: Mapped[dt.datetime | None] = mapped_column(DateTime(timezone=True))
+    # Set once the after-end steps (refund rules, presence, queue promotion) have run.
+    settled_at: Mapped[dt.datetime | None] = mapped_column(DateTime(timezone=True))
 
 
 class Review(Base):
