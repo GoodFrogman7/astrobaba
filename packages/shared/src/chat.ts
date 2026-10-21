@@ -83,9 +83,7 @@ export type ServerEvent =
   | { type: "pong" };
 
 export type ClientEvent =
-  | { type: "message"; client_id: string; text: string }
-  | { type: "typing" }
-  | { type: "ping" };
+  { type: "message"; client_id: string; text: string } | { type: "typing" } | { type: "ping" };
 
 /** Limits mirrored by the server. */
 export const CHAT_LIMITS = {
