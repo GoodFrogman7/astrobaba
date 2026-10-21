@@ -104,9 +104,10 @@ def client(clean) -> Iterator[TestClient]:  # type: ignore[no-untyped-def]
         yield c
 
 
-async def _session_for(url: str, phone: str, roles: tuple[str, ...]) -> str:
+async def _session_for(url: str, phone: str, roles: tuple[str, ...], consents: bool = True) -> str:
     """Create (or reuse) a user and a fresh bearer session directly in the database, so tests can
-    sign in many users without the OTP rate limits."""
+    sign in many users without the OTP rate limits. With `consents` the user also holds every
+    consent kind at the current policies version (Phase 7 enforcement)."""
     import datetime as dt
     import secrets
 
@@ -127,6 +128,18 @@ async def _session_for(url: str, phone: str, roles: tuple[str, ...]) -> str:
             else:
                 user.roles = sorted(set(user.roles) | set(roles))
             await db.flush()
+            if consents:
+                from astro_api import consent
+                from astro_api.models_privacy import CONSENT_KINDS
+
+                await consent.record(
+                    db,
+                    user,
+                    CONSENT_KINDS,
+                    version=consent.current_version(),
+                    ip_hash=None,
+                    device_hash=None,
+                )
             token = secrets.token_urlsafe(32)
             db.add(
                 AuthSession(
@@ -143,10 +156,11 @@ async def _session_for(url: str, phone: str, roles: tuple[str, ...]) -> str:
 
 @pytest.fixture
 def login(clean):  # type: ignore[no-untyped-def]
-    """login(phone, *roles) -> Authorization headers for that user."""
+    """login(phone, *roles, consents=True) -> Authorization headers for that user."""
 
-    def _login(phone: str, *roles: str) -> dict[str, str]:
-        token = asyncio.run(_session_for(clean.database_url.get_secret_value(), phone, roles))
+    def _login(phone: str, *roles: str, consents: bool = True) -> dict[str, str]:
+        url = clean.database_url.get_secret_value()
+        token = asyncio.run(_session_for(url, phone, roles, consents))
         return {"Authorization": f"Bearer {token}"}
 
     return _login

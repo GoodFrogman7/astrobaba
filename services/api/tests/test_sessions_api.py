@@ -48,6 +48,7 @@ SESSION_VIEW_KEYS = {
     "billed_paise",
     "minutes_left",
     "can_review",
+    "safety_flag",
 }
 
 

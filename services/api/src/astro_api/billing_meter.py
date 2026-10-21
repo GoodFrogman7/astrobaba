@@ -26,7 +26,9 @@ Each tick:
    while its control socket stays open; a rejoin within the grace period keeps the call going.
    Otherwise charge every minute that is due (minute n+1 at started_at + n * minute): free
    sessions stop at free_minutes (`free_minutes_used`), an empty wallet ends at the boundary
-   (`insufficient_funds`), and `low_balance` is sent when exactly one more minute is covered.
+   (`insufficient_funds`), and `low_balance` is sent when exactly one more minute is covered,
+   except in a session flagged for crisis language (docs/api/trust.md §3: upsell pauses; the
+   session still ends at zero balance).
 4. ended sessions whose after-end steps did not finish (crash) are settled again.
 5. astrologers who are free with a non-empty queue get the head promoted.
 
@@ -302,7 +304,11 @@ async def _meter_one(deps: svc.Deps, sid: uuid.UUID, now: dt.datetime, report: T
             ended = True
         if charged_any and not ended:
             left = await svc.minutes_left(db, s)
-            if left is not None and left == svc.rules().low_balance_warning_minutes:
+            if (
+                left is not None
+                and left == svc.rules().low_balance_warning_minutes
+                and not await svc.safety_flagged(db, s.id)
+            ):
                 low_balance = left
                 await svc.add_system_message(db, deps, s, "low_balance", now)
         await db.commit()

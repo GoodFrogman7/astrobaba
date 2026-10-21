@@ -18,6 +18,7 @@ from astro_api import billing_config, free_session, wallet
 from astro_api import session_service as svc
 from astro_api.audit import audit
 from astro_api.auth import CurrentSession, client_ip
+from astro_api.consent import RequireAstrologerConsent, RequireUserConsent
 from astro_api.db import Db, redis_of
 from astro_api.errors import ApiError
 from astro_api.flags import flag_enabled
@@ -110,7 +111,7 @@ async def _open_session(db: AsyncSession, user: User) -> ConsultSession | None:
     ).scalar_one_or_none()
 
 
-@router.post("/sessions", status_code=201)
+@router.post("/sessions", status_code=201, dependencies=[RequireUserConsent])
 async def create_session(
     body: SessionIn,
     request: Request,
@@ -418,7 +419,7 @@ async def _done(
     return out
 
 
-@router.post("/sessions/{session_id}/accept")
+@router.post("/sessions/{session_id}/accept", dependencies=[RequireAstrologerConsent])
 async def accept(
     session_id: uuid.UUID, request: Request, session_user: CurrentSession, db: Db
 ) -> dict[str, Any]:

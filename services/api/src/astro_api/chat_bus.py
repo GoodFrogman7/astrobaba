@@ -21,7 +21,7 @@
   `callverclaim:{session_id}` keeps two meter processes from checking the same call at once.
 
 Nothing here carries message text except the `message` event payload itself, which goes only to
-the session's own channel.
+the session's own channel. `safety` events (docs/api/trust.md §3) carry the crisis kind only.
 """
 
 import datetime as dt
@@ -130,6 +130,18 @@ async def publish_event(
     redis: Redis, session_id: uuid.UUID, event: dict[str, Any], to: str = "both"
 ) -> None:
     await publish(redis, session_id, {"to": to, "event": event})
+
+
+def safety_event() -> dict[str, Any]:
+    """`{type: "safety", kind: "self_harm"}` (chat.ts): the client shows the crisis resources
+    and the not-a-helpline notice, the astrologer the crisis guidance (conduct.json). `kind`
+    names the banner: an emergency flag (danger, violence) shows the same resources (112)."""
+    return {"type": "safety", "kind": "self_harm"}
+
+
+async def publish_safety(redis: Redis, session_id: uuid.UUID) -> None:
+    """Tell both sides that the session was flagged."""
+    await publish_event(redis, session_id, safety_event(), to="both")
 
 
 # ---------------------------------------------------------------- heartbeats

@@ -5,6 +5,12 @@ older (4009). Frames from the client refresh the heartbeat the meter relies on. 
 socket through the Redis channel of the session, so the two sides may be served by different
 API processes. Message text is never logged.
 
+Safety (docs/api/trust.md §3, astro_api.safety): every text message is checked before it is
+stored. Crisis language from the client is delivered and flags the session; both sides then get
+`{type: "safety", kind: "self_harm"}`, again right after `hello` on every (re)connect. An
+astrologer message that breaks a conduct rule is refused with `error message_blocked` +
+`reason` + `client_id` and is never stored; only the reason code reaches the moderation queue.
+
 On a call (`kind: "call"`) the same socket is the control channel and the meter's heartbeat:
 text `message` frames are refused (`call_has_no_text`), and after `hello` the socket gets a
 `call` event with who is in the LiveKit room (sent again whenever that changes).
@@ -22,7 +28,7 @@ from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 from redis.asyncio import Redis
 from sqlalchemy import select
 
-from astro_api import chat_bus, ws_tickets
+from astro_api import chat_bus, safety, ws_tickets
 from astro_api import session_service as svc
 from astro_api.models import ENDED_SESSION_STATUSES, Astrologer, ConsultSession
 from astro_api.ratelimit import incr_window
@@ -128,9 +134,24 @@ class Connection:
         if await incr_window(self.redis, key, RATE_WINDOW_S) > RATE_LIMIT:
             await self.error("rate_limited", "You are sending messages too fast.")
             return
+        text = text.strip()
+        check = safety.check_message(self.role, text)
         try:
+            if check.refusal is not None:
+                # Not stored, not relayed: only the reason code is recorded.
+                await svc.refuse_message(self.deps, self.session_id, check.refusal)
+                await self.send(
+                    {
+                        "type": "error",
+                        "code": "message_blocked",
+                        "message": safety.refusal_message(check.refusal),
+                        "reason": check.refusal,
+                        "client_id": client_id,
+                    }
+                )
+                return
             message, created = await svc.post_message(
-                self.deps, self.session_id, self.role, client_id, text.strip()
+                self.deps, self.session_id, self.role, client_id, text, crisis=check.crisis
             )
         except svc.NotActive:
             await self.error("session_not_active", "Messages can be sent while the chat is on.")
@@ -138,6 +159,9 @@ class Connection:
         event = {"type": "message", "message": message}
         if created:
             await chat_bus.publish_event(self.redis, self.session_id, event)
+            if check.crisis is not None:
+                # Every flagged message re-sends it, so a dismissed banner comes back.
+                await chat_bus.publish_safety(self.redis, self.session_id)
         else:
             await self.send(event)  # a resend: echo the stored copy to the sender only
 
@@ -198,6 +222,8 @@ async def chat_socket(websocket: WebSocket, session_id: uuid.UUID) -> None:
                 "server_time": svc.iso(dt.datetime.now(dt.UTC)),
             }
         )
+        if session["safety_flag"]:  # every (re)connect shows the crisis resources again
+            await conn.send(chat_bus.safety_event())
         if status in ENDED_SESSION_STATUSES:
             await conn.send({"type": "ended", "session": session})
             await websocket.close(code=CLOSE_ENDED)

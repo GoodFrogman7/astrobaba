@@ -19,6 +19,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from astro_api import billing_config, free_session, payments, wallet
 from astro_api.auth import CurrentSession, client_ip
 from astro_api.config import Settings
+from astro_api.consent import RequireUserConsent
 from astro_api.db import Db, redis_of, settings_of
 from astro_api.errors import ApiError
 from astro_api.flags import flag_enabled
@@ -135,7 +136,7 @@ async def recharge_options(request: Request, su: CurrentSession) -> dict[str, An
     }
 
 
-@router.post("/recharge-orders", status_code=201)
+@router.post("/recharge-orders", status_code=201, dependencies=[RequireUserConsent])
 async def create_recharge_order(
     body: RechargeIn,
     request: Request,

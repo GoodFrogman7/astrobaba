@@ -39,6 +39,7 @@ from typing import Any
 from fastapi import FastAPI
 from redis.asyncio import Redis
 from sqlalchemy import func, select, update
+from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
@@ -54,7 +55,9 @@ from astro_api.models import (
     ConsultSession,
     Review,
 )
+from astro_api.models_safety import ModerationEvent, SafetyEvent
 from astro_api.models_sessions import ChatMessage
+from astro_api.safety import CrisisKind, Refusal
 
 log = logging.getLogger("astro_api.sessions")
 
@@ -252,6 +255,8 @@ async def view(
         "billed_paise": s.billed_paise,
         "minutes_left": await minutes_left(db, s) if role == "user" else None,
         "can_review": can_review,
+        # Crisis language from the client (docs/api/trust.md §3): resources shown, no upsell.
+        "safety_flag": await safety_flagged(db, s.id),
     }
 
 
@@ -306,24 +311,37 @@ class NotActive(Exception):
 
 
 async def post_message(
-    deps: Deps, session_id: uuid.UUID, sender: str, client_id: str, text: str
+    deps: Deps,
+    session_id: uuid.UUID,
+    sender: str,
+    client_id: str,
+    text: str,
+    *,
+    crisis: CrisisKind | None = None,
 ) -> tuple[dict[str, Any], bool]:
     """Store one chat message (encrypted) and return (ChatMessage view, created). A repeated
-    client_id from the same sender returns the stored message with created=False."""
+    client_id from the same sender returns the stored message with created=False.
+
+    `crisis` (from astro_api.safety.check_message, client messages only): the session is flagged
+    in the same transaction: one `safety_events` row per (session, kind) at this message's seq,
+    and a `safety` item in the moderation queue. No text is copied anywhere."""
     async with deps.sessionmaker() as db:
         existing = await _by_client_id(db, session_id, sender, client_id)
         if existing is not None:
             return message_view(existing, decrypt(deps, existing)), False
-        seq = (
+        row = (
             await db.execute(
                 update(ConsultSession)
                 .where(ConsultSession.id == session_id, ConsultSession.status == "active")
                 .values(last_seq=ConsultSession.last_seq + 1)
-                .returning(ConsultSession.last_seq)
+                .returning(ConsultSession.last_seq, ConsultSession.astrologer_id)
             )
-        ).scalar_one_or_none()
-        if seq is None:
+        ).one_or_none()
+        if row is None:
             raise NotActive
+        seq, astrologer_id = row
+        if crisis is not None:
+            await _flag(db, session_id, astrologer_id, seq, crisis)
         sealed = deps.cipher.encrypt(text, aad(session_id, seq))
         m = ChatMessage(
             session_id=session_id,
@@ -345,6 +363,81 @@ async def post_message(
             return message_view(existing, decrypt(deps, existing)), False
         await db.refresh(m)
         return message_view(m, text), True
+
+
+async def _flag(
+    db: AsyncSession,
+    session_id: uuid.UUID,
+    astrologer_id: uuid.UUID,
+    seq: int,
+    kind: CrisisKind,
+) -> None:
+    """Flag the session (first flagged message per kind wins) inside the caller's transaction."""
+    event_id = (
+        await db.execute(
+            pg_insert(SafetyEvent)
+            .values(id=uuid.uuid4(), session_id=session_id, message_seq=seq, kind=kind)
+            .on_conflict_do_nothing(constraint="uq_safety_events_session_kind")
+            .returning(SafetyEvent.id)
+        )
+    ).scalar_one_or_none()
+    if event_id is None:
+        return  # already flagged for this kind
+    db.add(
+        ModerationEvent(
+            kind="safety",
+            reason=kind,
+            astrologer_id=astrologer_id,
+            session_id=session_id,
+            safety_event_id=event_id,
+        )
+    )
+    audit(db, "system", "session.safety_flag", "consult_session", str(session_id), kind=kind)
+
+
+async def safety_flagged(db: AsyncSession, session_id: uuid.UUID) -> bool:
+    """A flagged session gets no upsell (no low_balance recharge prompts)."""
+    found = await db.execute(
+        select(SafetyEvent.id).where(SafetyEvent.session_id == session_id).limit(1)
+    )
+    return found.scalar_one_or_none() is not None
+
+
+async def refuse_message(deps: Deps, session_id: uuid.UUID, reason: Refusal) -> None:
+    """Record a refused astrologer message for the moderation queue: the reason code only, never
+    the text. Repeats of a rule in the same session add to the open item's count. Raises
+    NotActive when the session is not active (the message would not be sent anyway)."""
+    async with deps.sessionmaker() as db:
+        found = (
+            await db.execute(
+                select(ConsultSession.astrologer_id).where(
+                    ConsultSession.id == session_id, ConsultSession.status == "active"
+                )
+            )
+        ).scalar_one_or_none()
+        if found is None:
+            raise NotActive
+        now = utcnow()
+        stmt = pg_insert(ModerationEvent).values(
+            id=uuid.uuid4(),
+            kind="refused",
+            status="open",
+            reason=reason,
+            astrologer_id=found,
+            session_id=session_id,
+            count=1,
+            created_at=now,
+            last_at=now,
+        )
+        await db.execute(
+            stmt.on_conflict_do_update(
+                index_elements=["astrologer_id", "session_id", "reason"],
+                index_where=(ModerationEvent.kind == "refused")
+                & (ModerationEvent.status == "open"),
+                set_={"count": ModerationEvent.count + 1, "last_at": now},
+            )
+        )
+        await db.commit()
 
 
 async def _by_client_id(

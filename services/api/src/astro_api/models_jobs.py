@@ -11,7 +11,15 @@ from sqlalchemy.orm import Mapped, mapped_column
 
 from astro_api.db import Base
 
-JOB_KINDS = ("report_render", "ai_answer", "remedy_lead_notify", "report_email")
+JOB_KINDS = (
+    "report_render",
+    "ai_answer",
+    "remedy_lead_notify",
+    "report_email",
+    # Privacy (migration 0012): build a data export; remove files after deletion or expiry.
+    "data_export",
+    "account_cleanup",
+)
 JOB_STATUSES = ("queued", "running", "done", "failed")
 
 

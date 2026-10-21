@@ -23,7 +23,7 @@ from astro_api.config import Settings
 from astro_api.db import Db, redis_of, settings_of
 from astro_api.errors import ApiError
 from astro_api.flags import flag_enabled
-from astro_api.models import PUBLIC_STATUSES, Astrologer, Review
+from astro_api.models import PUBLIC_STATUSES, TOMBSTONE_PREFIX, Astrologer, Review, User
 from astro_api.models_portal import IST_ZONE, availability_view
 from astro_api.taxonomy import check_values, taxonomy
 
@@ -320,14 +320,14 @@ async def get_profile(slug: str, request: Request, db: Db) -> dict[str, Any]:
     return profile(a, rating, presence, await availability_view(db, a.id))
 
 
-def public_review(r: Review) -> dict[str, Any]:
+def public_review(r: Review, *, former: bool = False) -> dict[str, Any]:
     return {
         "id": r.id,
         "rating": r.rating,
         "text": r.text,
         "created_at": r.created_at,
-        # Never the reviewer's name or phone.
-        "author_label": "Verified client",
+        # Never the reviewer's name or phone; "Former client" once they deleted their account.
+        "author_label": "Former client" if former else "Verified client",
         "reply": {"text": r.reply_text, "at": r.reply_at} if r.reply_text else None,
     }
 
@@ -342,17 +342,20 @@ async def list_reviews(
 ) -> dict[str, Any]:
     a = await public_by_slug(db, settings_of(request), slug)
     offset = decode_cursor(cursor)
-    base = select(Review).where(Review.astrologer_id == a.id, review_visible())
-    rows = list(
-        (
-            await db.execute(
-                base.order_by(Review.created_at.desc(), Review.id).offset(offset).limit(limit + 1)
-            )
-        ).scalars()
+    deleted = User.phone.startswith(TOMBSTONE_PREFIX)
+    base = (
+        select(Review, deleted)
+        .join(User, User.id == Review.user_id)
+        .where(Review.astrologer_id == a.id, review_visible())
     )
+    rows = (
+        await db.execute(
+            base.order_by(Review.created_at.desc(), Review.id).offset(offset).limit(limit + 1)
+        )
+    ).all()
     rating = (await ratings_of(db, [a.id])).get(a.id, Rating())
     return {
-        "items": [public_review(r) for r in rows[:limit]],
+        "items": [public_review(r, former=bool(gone)) for r, gone in rows[:limit]],
         "next_cursor": encode_cursor(offset + limit) if len(rows) > limit else None,
         "rating": rating.as_dict(),
     }

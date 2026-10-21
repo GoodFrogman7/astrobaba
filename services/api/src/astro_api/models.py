@@ -77,6 +77,10 @@ REVIEW_STATUSES = ("published", "flagged", "hidden")
 DEFAULT_FLAGS = {"chat_enabled": True, "call_enabled": False, "show_in_directory": True}
 
 
+# Phone of a deleted account (docs/api/trust.md §2): `deleted:{HMAC(phone)}:{user id}`.
+TOMBSTONE_PREFIX = "deleted:"
+
+
 class User(Base):
     __tablename__ = "users"
 

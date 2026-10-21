@@ -55,7 +55,7 @@ plugins = ["pydantic.mypy"]
 # Each service has a tests/conftest.py; name modules by path so they do not collide.
 explicit_package_bases = true
 mypy_path = ["services/api/src", "services/astro/src", "services/worker/src"]
-files = ["services/api/src", "services/astro/src", "services/worker/src", "services/api/tests", "services/astro/tests", "services/worker/tests", "evals/astro"]
+files = ["services/api/src", "services/astro/src", "services/worker/src", "services/api/tests", "services/astro/tests", "services/worker/tests", "evals/astro", "evals/safety"]
 
 [[tool.mypy.overrides]]
 module = ["swisseph", "geonamescache", "skyfield.*"]
@@ -64,6 +64,6 @@ ignore_missing_imports = true
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
-testpaths = ["services/api/tests", "services/astro/tests", "services/worker/tests", "evals/astro"]
+testpaths = ["services/api/tests", "services/astro/tests", "services/worker/tests", "evals/astro", "evals/safety"]
 markers = ["integration: needs Postgres and Redis (set DATABASE_URL and REDIS_URL)"]
 addopts = "--import-mode=importlib"

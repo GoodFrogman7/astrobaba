@@ -63,6 +63,8 @@ export interface SessionView {
   /** User only: whole minutes the wallet still covers; null for the astrologer. */
   minutes_left: number | null;
   can_review: boolean;
+  /** Crisis language from the client (docs/api/trust.md §3): show resources, no upsell. */
+  safety_flag: boolean;
 }
 
 export interface ChatMessage {
@@ -86,7 +88,8 @@ export type ServerEvent =
   /** Calls only: who is in the audio room (docs/api/portal.md §1). */
   | { type: "call"; joined: Record<ParticipantRole, boolean> }
   | { type: "ended"; session: SessionView }
-  | { type: "error"; code: string; message: string }
+  /** `reason` and `client_id` are set for `code: "message_blocked"` (docs/api/trust.md §3). */
+  | { type: "error"; code: string; message: string; reason?: BlockReason; client_id?: string }
   | { type: "pong" };
 
 export type ClientEvent =
@@ -96,6 +99,17 @@ export type ClientEvent =
  * `text` of a `sender: "system"` message is a code, never personal data: `session_started`,
  * `low_balance`, or `session_ended:<EndReason>`.
  */
+/** Why an astrologer's message was refused (not stored); rule texts in data/safety/conduct.json. */
+export const BLOCK_REASONS = [
+  "contact_details",
+  "off_platform_payment",
+  "cure_claim",
+  "guarantee",
+  "fear_selling",
+  "remedy_sale",
+] as const;
+export type BlockReason = (typeof BLOCK_REASONS)[number];
+
 export const SYSTEM_MESSAGE_CODES = ["session_started", "low_balance", "session_ended"] as const;
 
 /** `POST /v1/sessions/{id}/call-token`: join the LiveKit room for a call. */

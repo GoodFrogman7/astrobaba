@@ -22,6 +22,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from astro_api import billing_config, payments, reports, wallet
 from astro_api.auth import CurrentUser, current_session
 from astro_api.config import Settings
+from astro_api.consent import RequireUserConsent
 from astro_api.db import Db, redis_of, settings_of
 from astro_api.errors import ApiError
 from astro_api.idempotency import Idempotency, idempotency_key
@@ -220,7 +221,7 @@ async def _create_order(
     return order
 
 
-@router.post("/v1/reports/orders", status_code=201)
+@router.post("/v1/reports/orders", status_code=201, dependencies=[RequireUserConsent])
 async def create_order(
     body: OrderIn,
     request: Request,

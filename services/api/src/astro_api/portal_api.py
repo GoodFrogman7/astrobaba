@@ -21,6 +21,7 @@ from astro_api import earnings, payouts, wallet
 from astro_api.applicant import own_astrologer
 from astro_api.audit import audit
 from astro_api.auth import CurrentUser
+from astro_api.consent import RequireAstrologerConsent
 from astro_api.db import Db, settings_of
 from astro_api.errors import ApiError
 from astro_api.flags import flag_enabled
@@ -94,7 +95,7 @@ async def get_availability(user: CurrentUser, db: Db) -> dict[str, Any]:
     return await availability_view(db, a.id)
 
 
-@router.put("/availability")
+@router.put("/availability", dependencies=[RequireAstrologerConsent])
 async def put_availability(body: AvailabilityIn, user: CurrentUser, db: Db) -> dict[str, Any]:
     a = await own_astrologer(db, user, lock=True)
     slots = parse_slots(body.slots)
@@ -136,7 +137,7 @@ async def get_consult(user: CurrentUser, db: Db) -> dict[str, bool]:
     return consult_view(await own_astrologer(db, user))
 
 
-@router.patch("/consult")
+@router.patch("/consult", dependencies=[RequireAstrologerConsent])
 async def patch_consult(body: ConsultIn, user: CurrentUser, db: Db) -> dict[str, bool]:
     a = await own_astrologer(db, user, lock=True)
     changes = {k: v for k, v in body.model_dump(exclude_unset=True).items() if v is not None}

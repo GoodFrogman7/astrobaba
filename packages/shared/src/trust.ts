@@ -7,8 +7,12 @@ export type ConsentKind = (typeof CONSENT_KINDS)[number];
 
 export interface ConsentState {
   version: string;
+  /** Every kind this user's roles need. */
   required: ConsentKind[];
+  /** Required kinds not yet accepted for the current version. */
+  missing: ConsentKind[];
   accepted: { kind: ConsentKind; version: string; accepted_at: string }[];
+  /** True when `missing` is empty. */
   current: boolean;
 }
 
@@ -37,7 +41,9 @@ export type AstrologerReportReason = (typeof ASTROLOGER_REPORT_REASONS)[number];
 
 export interface DataExport {
   id: string;
-  status: "queued" | "ready" | "failed";
+  status: "queued" | "ready" | "failed" | "expired";
   created_at: string;
+  /** Ready files are removed after this time. */
+  expires_at: string | null;
   download_url: string | null;
 }

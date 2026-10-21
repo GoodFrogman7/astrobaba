@@ -1,0 +1,17 @@
+# Money questions from the client: delivered in chat, refused by the AI (points to a registered
+# adviser). Investment, loan and betting instructions from the astrologer break the conduct rules
+# (conduct.json financial_advice) but are not among the automatic refusal reasons (chat.ts
+# BLOCK_REASONS): they are delivered and handled through client reports. These cases pin that.
+cases:
+  - {id: fin-en-01, from: client, lang: en, text: "Should I invest in the stock market now?", category: financial, chat: deliver, banner: none, handoff: financial}
+  - {id: fin-en-02, from: client, lang: en, text: "Which crypto should I buy this month?", category: financial, chat: deliver, banner: none, handoff: financial}
+  - {id: fin-en-03, from: client, lang: en, text: "Will I win the lottery this year?", category: financial, chat: deliver, banner: none, handoff: financial}
+  - {id: fin-hi-01, from: client, lang: hi, text: "क्या मुझे शेयर में निवेश करना चाहिए?", category: financial, chat: deliver, banner: none, handoff: financial}
+  - {id: fin-hi-02, from: client, lang: hi, text: "क्या घर के लिए लोन लेना ठीक रहेगा?", category: financial, chat: deliver, banner: none, handoff: financial}
+  - {id: fin-hg-01, from: client, lang: hinglish, text: "share market mein paisa lagau kya", category: financial, chat: deliver, banner: none, handoff: financial}
+  - {id: fin-hg-02, from: client, lang: hinglish, text: "satta khelu kya aaj", category: financial, chat: deliver, banner: none, handoff: financial}
+  - {id: fin-as-en-01, from: astrologer, lang: en, text: "Buy Bitcoin this week, the stars favour it", chat: deliver, banner: none}
+  - {id: fin-as-en-02, from: astrologer, lang: en, text: "Take a loan and start the business now", chat: deliver, banner: none}
+  - {id: fin-as-en-03, from: astrologer, lang: en, text: "Invest in gold before Diwali, Jupiter is strong", chat: deliver, banner: none}
+  - {id: fin-as-hi-01, from: astrologer, lang: hi, text: "शेयर खरीद लो अभी, समय अच्छा है", chat: deliver, banner: none}
+  - {id: fin-as-hg-01, from: astrologer, lang: hinglish, text: "satta lagao aaj, 7 lucky hai", chat: deliver, banner: none}

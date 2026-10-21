@@ -30,6 +30,7 @@ from astro_api import jobs
 from astro_api.audit import audit
 from astro_api.auth import CurrentUser
 from astro_api.config import Settings
+from astro_api.consent import RequireUserConsent
 from astro_api.db import Db, redis_of, settings_of
 from astro_api.earnings import IST
 from astro_api.errors import ApiError
@@ -145,7 +146,7 @@ def _validate(body: LeadIn, settings: Settings) -> dict[str, Any]:
     return remedy
 
 
-@router.post("/remedies/leads", status_code=201)
+@router.post("/remedies/leads", status_code=201, dependencies=[RequireUserConsent])
 async def create_lead(
     body: LeadIn,
     request: Request,

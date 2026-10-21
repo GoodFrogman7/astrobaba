@@ -13,6 +13,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from astro_api.audit import audit
 from astro_api.auth import CurrentUser
+from astro_api.consent import RequireAstrologerConsent
 from astro_api.db import Db, redis_of, settings_of
 from astro_api.errors import ApiError
 from astro_api.marketplace import (
@@ -345,7 +346,7 @@ async def delete_document(
     _storage(request).delete(doc.storage_key)
 
 
-@router.post("/me/presence")
+@router.post("/me/presence", dependencies=[RequireAstrologerConsent])
 async def set_presence(
     body: PresenceIn, request: Request, user: CurrentUser, db: Db
 ) -> dict[str, Any]:

@@ -27,6 +27,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from astro_api import ai_safety, jobs, wallet
 from astro_api.auth import CurrentUser
 from astro_api.chat_crypto import MessageCipher, Sealed, cipher_from_settings
+from astro_api.consent import RequireUserConsent
 from astro_api.db import Db, redis_of, settings_of
 from astro_api.errors import ApiError
 from astro_api.flags import flag_enabled
@@ -399,7 +400,11 @@ async def get_conversation(
     }
 
 
-@router.post("/conversations/{conversation_id}/questions", status_code=202)
+@router.post(
+    "/conversations/{conversation_id}/questions",
+    status_code=202,
+    dependencies=[RequireUserConsent],
+)
 async def create_question(
     conversation_id: uuid.UUID,
     body: QuestionIn,
