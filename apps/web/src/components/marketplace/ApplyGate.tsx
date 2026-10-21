@@ -17,7 +17,7 @@ export function ApplyGate() {
       {state.kind === "signed_out" && (
         <>
           <p>{t("signInFirst")}</p>
-          <SignIn onSignedIn={() => void reload()} />
+          <SignIn source="astrologer-apply" onSignedIn={() => void reload()} />
         </>
       )}
       {state.kind === "none" && <ApplicationForm onDone={() => void reload()} />}

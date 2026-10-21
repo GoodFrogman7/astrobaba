@@ -41,7 +41,7 @@ export function WalletView() {
     return (
       <div className="space-y-3">
         <p>{t("signIn")}</p>
-        <SignIn onSignedIn={() => void refreshWallet()} />
+        <SignIn source="wallet" onSignedIn={() => void refreshWallet()} />
       </div>
     );
   return (

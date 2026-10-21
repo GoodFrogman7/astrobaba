@@ -13,6 +13,7 @@ import { validateBirth } from "@/lib/tools/validate";
 import { ErrorList, PrivacyNote, SubmitButton } from "./ErrorList";
 import { KundliResult } from "./KundliResult";
 import { useSubmit } from "./useSubmit";
+import { useToolTracking } from "@/components/analytics/useToolTracking";
 
 type Full = {
   kundli: Kundli;
@@ -24,10 +25,17 @@ type Full = {
 export function KundliRunner() {
   const [draft, setDraft] = useState<BirthDraft>(emptyBirth);
   const { pending, result, errors, submit } = useSubmit<Full>();
+  const started = useToolTracking(
+    "kundli",
+    result,
+    result ? result.birth.time === null : undefined,
+  );
   return (
     <div className="space-y-8">
       <form
         noValidate
+        onInput={started}
+        onChange={started}
         onSubmit={(e) => {
           e.preventDefault();
           const birth = draftToInput(draft);

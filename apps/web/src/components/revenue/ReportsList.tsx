@@ -58,7 +58,7 @@ export function ReportsList() {
     return (
       <div className="space-y-3">
         <p>{t("signIn")}</p>
-        <SignIn onSignedIn={() => void load()} />
+        <SignIn source="reports" onSignedIn={() => void load()} />
       </div>
     );
   if (state === "error")

@@ -34,6 +34,17 @@
       "lawyer": "The legal basis for each purpose (consent or legitimate use) under the DPDP Act, and the consent wording itself."
     },
     {
+      "id": "analytics",
+      "heading": "Analytics",
+      "body": [
+        "To learn which pages and free tools are useful, we record a small, fixed set of usage events: the pages you open (the address only, with record numbers removed), which free tool you start and finish, clicks on consultation buttons, sign-in steps and, on the first page of a visit, whether you came from a search engine, a social network, another site or a campaign link. Events never contain your name, phone number, email address, birth details, chat messages or anything you type.",
+        "This is first-party analytics: the events go only to our own servers, and we use no third-party analytics or advertising trackers. A random identifier in a cookie, kept for {aidDays} days, links the events from one browser; we do not store your IP address or browser details with them. After you sign in, that browser's events are linked to your account, so they are included when you download your data and deleted when your account is deleted. Raw events are deleted after {retentionDays} days.",
+        "If your browser sends Global Privacy Control or Do Not Track, nothing is collected. You can also turn analytics off for this browser with the switch below. Turning it off removes the identifier cookie and keeps only your choice, for one year."
+      ],
+      "slot": "analytics",
+      "lawyer": "Whether the analytics cookie needs prior consent under the DPDP Act, and the final cookie and retention periods."
+    },
+    {
       "id": "processors",
       "heading": "Who processes data for us",
       "body": [

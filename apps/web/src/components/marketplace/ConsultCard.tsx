@@ -31,6 +31,7 @@ export function ConsultCard({ p }: { p: AstrologerProfile }) {
       <div className="mt-4">
         <StartConsult
           astrologerId={p.id}
+          slug={p.slug}
           name={p.display_name}
           pricePerMinPaise={p.price_per_min_paise}
           chat={p.consult.chat_enabled}
@@ -65,6 +66,7 @@ export function MobileConsultBar({ p }: { p: AstrologerProfile }) {
         </p>
         <StartConsult
           astrologerId={p.id}
+          slug={p.slug}
           name={p.display_name}
           pricePerMinPaise={p.price_per_min_paise}
           chat={p.consult.chat_enabled}

@@ -150,7 +150,9 @@ export function ReportForm({
           {outcome?.kind === "signin" && <p role="alert">{t("errors.signin")}</p>}
         </div>
       </form>
-      {outcome?.kind === "signin" && <SignIn onSignedIn={() => void send()} />}
+      {outcome?.kind === "signin" && (
+        <SignIn source="report-astrologer" onSignedIn={() => void send()} />
+      )}
     </div>
   );
 }

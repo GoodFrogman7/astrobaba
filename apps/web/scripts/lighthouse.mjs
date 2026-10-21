@@ -33,6 +33,20 @@ if (!process.env.LIGHTHOUSE_PAGES) {
   }
 }
 
+// A non-production build sends `X-Robots-Tag: noindex` and a disallow-all robots.txt on purpose
+// (docs/api/growth.md §3), which Lighthouse's "is-crawlable" audit counts against SEO. Skip that
+// one audit then, and only then; a production build is audited in full.
+let noindexBuild = false;
+try {
+  noindexBuild = /noindex/i.test((await fetch(`${BASE}/`)).headers.get("x-robots-tag") ?? "");
+} catch {
+  /* the per-page probe below reports an unreachable server */
+}
+if (noindexBuild)
+  console.warn(
+    "NOTE non-production build (X-Robots-Tag: noindex): skipping the is-crawlable audit",
+  );
+
 const out = mkdtempSync(path.join(tmpdir(), "lh-"));
 let failed = false;
 const rows = [];
@@ -78,6 +92,7 @@ try {
           `--output-path=${file}`,
           `--only-categories=${CATEGORIES.join(",")}`,
           "--form-factor=mobile",
+          ...(noindexBuild ? ["--skip-audits=is-crawlable"] : []),
           "--chrome-flags=--headless=new --no-sandbox --disable-gpu",
         ],
         { stdio: ["ignore", "ignore", "inherit"], env: process.env },

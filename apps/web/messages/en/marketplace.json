@@ -112,6 +112,8 @@
       "seeStatus": "See your application status",
       "form": {
         "title": "Your application",
+        "invite": "Invite code (if you have one)",
+        "inviteHint": "If we sent you an invite link, the code is already filled in.",
         "displayName": "Display name",
         "bio": "About you (shown on your profile, 50-2000 characters)",
         "bioHi": "About you in Hindi (optional)",
@@ -135,7 +137,9 @@
           "requested_price_per_min_paise": "Enter a price within the range.",
           "accepts_terms": "Please confirm to continue.",
           "already_applied": "You have already applied.",
-          "generic": "Could not submit. Please try again."
+          "generic": "Could not submit. Please try again.",
+          "invite_required": "Applications are by invitation only right now. Open the invite link we sent you, or enter your invite code above.",
+          "invite_invalid": "This invite code is not valid. It may have expired, been used already or been withdrawn. Please ask us for a new one."
         }
       }
     },

@@ -6,7 +6,9 @@ import { hasLocale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
+import { AnalyticsSwitch } from "@/components/analytics/AnalyticsSwitch";
 import { routing } from "@/i18n/routing";
+import { AID_COOKIE_DAYS, ANALYTICS_RETENTION_DAYS } from "@/lib/analytics/config";
 import { BILLING } from "@/lib/billing/config";
 import { formatPaise } from "@/lib/marketplace/format";
 import { pageMetadata } from "@/lib/seo";
@@ -25,6 +27,8 @@ function values(): Record<string, string | number> {
     minStart: BILLING.minStartMinutes,
     grace: BILLING.heartbeatGraceSeconds,
     promoDays: BILLING.promoExpiryDays,
+    aidDays: AID_COOKIE_DAYS,
+    retentionDays: ANALYTICS_RETENTION_DAYS,
   };
 }
 
@@ -237,6 +241,7 @@ const SLOTS: Record<LegalPageKey, SlotBuilder> = {
     operator: await operatorBlock(locale, legal),
     processors: await processorsBlock(locale, legal),
     retention: await retentionBlock(locale, legal),
+    analytics: <AnalyticsSwitch />,
   }),
   refunds: async (locale) => ({ rules: await refundRulesBlock(locale) }),
   credit: async (locale) => ({ facts: await creditFactsBlock(locale) }),

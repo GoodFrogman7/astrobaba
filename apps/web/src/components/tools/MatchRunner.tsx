@@ -14,16 +14,26 @@ import { validateBirth } from "@/lib/tools/validate";
 import { ErrorList, PrivacyNote, SubmitButton } from "./ErrorList";
 import { MatchResult } from "./MatchResult";
 import { useSubmit } from "./useSubmit";
+import { useToolTracking } from "@/components/analytics/useToolTracking";
 
 export function MatchRunner() {
   const tf = useTranslations("toolsUi.form");
   const [a, setA] = useState<BirthDraft>(emptyBirth);
   const [b, setB] = useState<BirthDraft>(emptyBirth);
   const { pending, result, errors, submit } = useSubmit<Match>();
+  const started = useToolTracking(
+    "kundli-matching",
+    result,
+    result
+      ? [result.groom, result.bride].some((p) => p.flags.includes("unknown_birth_time"))
+      : undefined,
+  );
   return (
     <div className="space-y-8">
       <form
         noValidate
+        onInput={started}
+        onChange={started}
         onSubmit={(e) => {
           e.preventDefault();
           const pa = draftToInput(a);

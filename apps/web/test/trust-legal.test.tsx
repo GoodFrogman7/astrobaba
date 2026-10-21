@@ -9,13 +9,15 @@ import helplines from "../../../data/safety/helplines.json" with { type: "json" 
 import enCore from "../messages/en.json" with { type: "json" };
 import enRevenue from "../messages/en/revenue.json" with { type: "json" };
 import enTrust from "../messages/en/trust.json" with { type: "json" };
+import enGrowth from "../messages/en/growth.json" with { type: "json" };
 import hiCore from "../messages/hi.json" with { type: "json" };
 import hiRevenue from "../messages/hi/revenue.json" with { type: "json" };
 import hiTrust from "../messages/hi/trust.json" with { type: "json" };
+import hiGrowth from "../messages/hi/growth.json" with { type: "json" };
 
 const MESSAGES = {
-  en: { ...enCore, ...enRevenue, ...enTrust },
-  hi: { ...hiCore, ...hiRevenue, ...hiTrust },
+  en: { ...enCore, ...enRevenue, ...enTrust, ...enGrowth },
+  hi: { ...hiCore, ...hiRevenue, ...hiTrust, ...hiGrowth },
 };
 
 vi.mock("server-only", () => ({}));
@@ -204,6 +206,22 @@ describe("/privacy", () => {
     expect([...html.matchAll(/data-processor="([^"]+)"/g)].map((m) => m[1])).toEqual(["razorpay"]);
     expect(html).toContain(hiTrust.trust.privacy.regionIndia);
     expect(normalizeLegal({ version: 1 })).toBeNull();
+  });
+});
+
+describe("/privacy analytics section (docs/api/growth.md §1.1)", () => {
+  it("explains the analytics, quotes the configured periods and shows the switch", async () => {
+    for (const locale of ["en", "hi"] as const) {
+      const html = decode(await renderAsync(await PrivacyPage(params(locale)), locale));
+      expect(html).toContain('id="analytics"');
+      expect(html).toContain('data-testid="analytics-switch"');
+      expect(html).toContain('role="switch"');
+      expect(html).toContain(MESSAGES[locale].growth.analytics.label);
+      expect(html).toContain("180");
+      expect(html).toContain("400");
+      expect(html).toContain("Global Privacy Control");
+      expect(html).not.toMatch(/\{(aidDays|retentionDays)\}/);
+    }
   });
 });
 

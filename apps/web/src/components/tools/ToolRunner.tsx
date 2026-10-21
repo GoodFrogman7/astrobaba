@@ -24,12 +24,20 @@ import {
   UnknownTimeNote,
 } from "./Results";
 import { useSubmit } from "./useSubmit";
+import { useToolTracking } from "@/components/analytics/useToolTracking";
 
 type Output =
   | { kind: "kundli"; kundli: Kundli }
   | { kind: "dasha"; dasha: Dasha; tz: string; unknownTime: boolean }
-  | { kind: "doshas"; doshas: Doshas; tz: string }
+  | { kind: "doshas"; doshas: Doshas; tz: string; unknownTime: boolean }
   | { kind: "numerology"; numerology: Numerology };
+
+/** For analytics: whether the result was computed without a birth time (numerology: n/a). */
+function unknownTimeOf(out: Output | null): boolean | undefined {
+  if (!out || out.kind === "numerology") return undefined;
+  if (out.kind === "kundli") return out.kundli.birth.unknown_time;
+  return out.unknownTime;
+}
 
 async function computeFor(
   slug: ToolKind,
@@ -63,7 +71,17 @@ async function computeFor(
   }
   if (slug === "mangal-dosha" || slug === "sade-sati" || slug === "kaal-sarp-dosha") {
     const r = await computeDoshas(birth);
-    return r.ok ? { ok: true, data: { kind: "doshas", doshas: r.data, tz: birth.place.tz } } : r;
+    return r.ok
+      ? {
+          ok: true,
+          data: {
+            kind: "doshas",
+            doshas: r.data,
+            tz: birth.place.tz,
+            unknownTime: birth.time === null,
+          },
+        }
+      : r;
   }
   const r = await computeKundli(birth);
   return r.ok ? { ok: true, data: { kind: "kundli", kundli: r.data } } : r;
@@ -82,11 +100,14 @@ export function ToolRunner({ slug, form }: { slug: ToolKind; form: ToolForm }) {
   const [name, setName] = useState("");
   const [dob, setDob] = useState("");
   const { pending, result, errors, submit } = useSubmit<Output>();
+  const started = useToolTracking(slug, result, unknownTimeOf(result));
 
   return (
     <div className="space-y-6">
       <form
         noValidate
+        onInput={started}
+        onChange={started}
         onSubmit={(e) => {
           e.preventDefault();
           submit(() => computeFor(slug, draft, name, dob), localErrors(slug, draft, name, dob));

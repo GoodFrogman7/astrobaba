@@ -4,7 +4,9 @@
 // < 800 characters of visible text in <main>, Hindi pages without Devanagari, and dated pages whose
 // IST date differs between title, description and body (or is not today/tomorrow where it must be).
 // Also fails when a personal page (/wallet, /chat/…, /account/…, /ai) is in the sitemap or is
-// served without noindex.
+// served without noindex. /learn articles (docs/api/growth.md §3) must carry Article JSON-LD and
+// the entertainment disclaimer; an article may exist in one language only, so it needs hreflang
+// for its own locale and x-default. With no article in the sitemap, /learn must be 404.
 //
 // Usage: BASE_URL=http://localhost:3000 node scripts/seo-check.mjs
 const BASE = (process.env.BASE_URL ?? "http://localhost:3000").replace(/\/$/, "");
@@ -85,7 +87,9 @@ function checkPage(url, html, { today, tomorrow }) {
       (m) => attr(m[0], "hrefLang") ?? attr(m[0], "hreflang"),
     ),
   );
-  for (const l of ["en", "hi", "x-default"])
+  const tail = path.replace(/^\/hi(?=\/|$)/, "") || "/";
+  const isLearn = tail === "/learn" || tail.startsWith("/learn/");
+  for (const l of isLearn ? [locale, "x-default"] : ["en", "hi", "x-default"])
     if (!hreflangs.has(l)) problems.push(`missing hreflang ${l}`);
 
   const types = new Set();
@@ -101,6 +105,11 @@ function checkPage(url, html, { today, tomorrow }) {
   }
   for (const t of ["Organization", "BreadcrumbList"])
     if (!types.has(t)) problems.push(`missing ${t} JSON-LD`);
+  if (/^\/learn\/[^/]+$/.test(tail)) {
+    if (!types.has("Article")) problems.push("missing Article JSON-LD");
+    if (!/data-testid="article-disclaimer"/.test(html))
+      problems.push("article without the entertainment disclaimer");
+  }
   const hasFaq = /<details\b/i.test(/<main\b[\s\S]*<\/main>/i.exec(html)?.[0] ?? "");
   if (hasFaq && !types.has("FAQPage")) problems.push("FAQs shown but no FAQPage JSON-LD");
 
@@ -116,7 +125,6 @@ function checkPage(url, html, { today, tomorrow }) {
     const shown = decode(time[2].replace(/<[^>]+>/g, "")).trim();
     if (!titles[0]?.includes(shown)) problems.push(`title lacks the page date "${shown}"`);
     if (!descTags[0]?.includes(shown)) problems.push(`description lacks the page date "${shown}"`);
-    const tail = path.replace(/^\/hi/, "");
     const expected = /^\/panchang\/[^/]+\/tomorrow$/.test(tail)
       ? tomorrow
       : /^\/panchang(\/[^/]+)?$/.test(tail) || /^\/horoscope\/daily\//.test(tail)
@@ -168,6 +176,15 @@ async function main() {
     if (page.status !== 200 || !/noindex/.test(robots))
       failures.push([path, [`status ${page.status}, robots "${robots}" (want 200 + noindex)`]]);
   }
+
+  // /learn is 404 until an article is published and reviewed (then it is in the sitemap).
+  const learnListed = urls.some((u) => /^\/(hi\/)?learn(\/|$)/.test(new URL(u).pathname));
+  if (!learnListed)
+    for (const path of ["/learn", "/hi/learn"]) {
+      const page = await fetchText(`${BASE}${path}`);
+      if (page.status !== 404)
+        failures.push([path, [`status ${page.status} with no article in the sitemap (want 404)`]]);
+    }
 
   const dates = istDates();
   const descriptions = new Map();

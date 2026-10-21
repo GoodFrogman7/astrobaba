@@ -44,7 +44,7 @@ export function AiAssistant() {
     return (
       <div className="space-y-3">
         <p>{t("signIn")}</p>
-        <SignIn onSignedIn={() => void refreshWallet()} />
+        <SignIn source="ai-assistant" onSignedIn={() => void refreshWallet()} />
       </div>
     );
 

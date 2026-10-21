@@ -2,6 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import { useRef, useState } from "react";
+import { track } from "@/lib/analytics/client";
 import { requestConsent } from "@/lib/trust/consent";
 import { postJson } from "@/components/marketplace/SignIn";
 import type { BirthInput } from "@/lib/tools/types";
@@ -48,6 +49,7 @@ export function SaveKundli({ birth }: { birth: BirthInput }) {
         if (r.status === 202) {
           setChallenge(String(r.body.challenge_id));
           setStep("code");
+          track("otp_requested", { source: "save-kundli" });
         } else setError(errorText(String(r.body.code ?? "")));
       } else if (step === "code") {
         const r = await postJson("/api/auth/otp/verify", { challenge_id: challenge, code });

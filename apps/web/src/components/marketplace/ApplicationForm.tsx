@@ -12,13 +12,56 @@ import { TAXONOMY } from "@/lib/marketplace/taxonomy";
 import type { ApplicationInput } from "@/lib/marketplace/types";
 
 const field = "mt-1 w-full rounded-sm border border-border bg-surface px-3 py-2";
+const INVITE_MAX = 64;
+
+/** The invite code from an invite link (`?invite=CODE`, docs/api/growth.md §2.1), tidied the
+ *  way people type it: upper case, no spaces or hyphens. Empty when absent. */
+export function inviteFromSearch(search: string | URLSearchParams): string {
+  const params = typeof search === "string" ? new URLSearchParams(search) : search;
+  return (params.get("invite") ?? "")
+    .replace(/[\s-]+/g, "")
+    .toUpperCase()
+    .slice(0, INVITE_MAX);
+}
+
+/** The JSON body for the API: `invite_code` only when one was given. */
+export function applicationBody(
+  input: ApplicationInput,
+  invite: string,
+): ApplicationInput & { invite_code?: string } {
+  const code = invite.trim();
+  return code ? { ...input, invite_code: code.slice(0, INVITE_MAX) } : input;
+}
+
+/** Error keys (under market.apply.form.errors) for a failed submission. */
+export function applicationErrors(status: number, body: { code?: string; fields?: string[] }) {
+  if (body.fields?.length) return body.fields;
+  if (status === 403 && body.code === "invite_required") return ["invite_required"];
+  if (status === 422 && body.code === "invite_invalid") return ["invite_invalid"];
+  if (body.code === "already_applied") return ["already_applied"];
+  return ["generic"];
+}
 
 /** Astrologer application. All details go in the POST body to /api/astrologer/application. */
-export function ApplicationForm({ onDone }: { onDone: () => void }) {
+export function ApplicationForm({
+  onDone,
+  invite: initialInvite,
+}: {
+  onDone: () => void;
+  /** Prefilled invite code; when omitted it is read from `?invite=` in the address. */
+  invite?: string;
+}) {
   const t = useTranslations("market.apply.form");
   const locale = useLocale() as "en" | "hi";
   const [errors, setErrors] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
+  // The form mounts only in the browser (ApplyGate shows it after loading the applicant), so
+  // reading the address here cannot cause a hydration mismatch.
+  const [invite, setInvite] = useState(
+    () =>
+      initialInvite ??
+      (typeof window === "undefined" ? "" : inviteFromSearch(window.location.search)),
+  );
 
   async function submit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -42,11 +85,11 @@ export function ApplicationForm({ onDone }: { onDone: () => void }) {
       const res = await fetch("/api/astrologer/application", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify(input),
+        body: JSON.stringify(applicationBody(input, invite)),
       });
       if (res.ok) return onDone();
       const body = (await res.json().catch(() => ({}))) as { code?: string; fields?: string[] };
-      setErrors(body.fields ?? [body.code === "already_applied" ? "already_applied" : "generic"]);
+      setErrors(applicationErrors(res.status, body));
     } catch {
       setErrors(["generic"]);
     } finally {
@@ -68,6 +111,24 @@ export function ApplicationForm({ onDone }: { onDone: () => void }) {
       className="max-w-2xl space-y-5 rounded-md border border-border bg-surface p-5"
     >
       <h2 className="text-lg font-semibold">{t("title")}</h2>
+      <label className="block text-sm font-medium">
+        {t("invite")}
+        <input
+          name="invite_code"
+          value={invite}
+          onChange={(e) => setInvite(e.currentTarget.value)}
+          maxLength={INVITE_MAX}
+          autoCapitalize="characters"
+          autoComplete="off"
+          spellCheck={false}
+          aria-describedby="invite-hint"
+          aria-invalid={errors.includes("invite_invalid") || errors.includes("invite_required")}
+          className={`${field} font-mono uppercase`}
+        />
+        <span id="invite-hint" className="mt-1 block text-sm font-normal text-muted">
+          {t("inviteHint")}
+        </span>
+      </label>
       <label className="block text-sm font-medium">
         {t("displayName")}
         <input
@@ -177,6 +238,8 @@ export function ApplicationForm({ onDone }: { onDone: () => void }) {
       </label>
       {err("accepts_terms")}
       <p role="alert" aria-live="assertive">
+        {err("invite_required")}
+        {err("invite_invalid")}
         {err("already_applied")}
         {err("generic")}
       </p>

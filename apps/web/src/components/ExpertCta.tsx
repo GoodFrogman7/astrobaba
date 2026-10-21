@@ -38,7 +38,7 @@ export async function ExpertCta({ locale }: { locale: Locale }) {
       <ul className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {experts.map((a) => (
           <li key={a.id}>
-            <AstrologerCard a={a} showPresence={false} />
+            <AstrologerCard a={a} showPresence={false} ctaSource="expert-card" />
           </li>
         ))}
       </ul>

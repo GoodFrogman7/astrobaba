@@ -6,6 +6,7 @@ import { useRef, useState } from "react";
 import { Dialog } from "@/components/billing/Dialog";
 import { useWallet } from "@/components/billing/useWallet";
 import { Link, useRouter } from "@/i18n/navigation";
+import { track } from "@/lib/analytics/client";
 import { refreshWallet } from "@/lib/billing/client";
 import { BILLING, minStartPaise } from "@/lib/billing/config";
 import { IntentKeys } from "@/lib/billing/idempotency";
@@ -30,6 +31,7 @@ export function outcomeKey(kind: SessionKind, key: Extract<Outcome, { kind: "mes
  */
 export function StartConsult({
   astrologerId,
+  slug,
   name,
   pricePerMinPaise,
   chat,
@@ -37,6 +39,8 @@ export function StartConsult({
   compact = false,
 }: {
   astrologerId: string;
+  /** For the consult_cta_clicked analytics event only. */
+  slug?: string;
   name: string;
   pricePerMinPaise: number;
   chat: boolean;
@@ -82,13 +86,25 @@ export function StartConsult({
   const off = "cursor-not-allowed opacity-60";
   const minAmount = formatPaise(minStartPaise(pricePerMinPaise), locale);
   const isBusy = (k: SessionKind, f: boolean) => busy === `${k}:${f}`;
+  // consult_cta_clicked: where the button is (consult card or phone bar) and whether it is the
+  // free offer; never anything about the visitor.
+  const ctaClicked = (free: boolean) => {
+    const source = `${compact ? "profile-bar" : "profile"}${free ? "-free" : ""}`;
+    track(
+      "consult_cta_clicked",
+      slug && /^[a-z0-9-]{1,80}$/.test(slug) ? { source, astrologer_slug: slug } : { source },
+    );
+  };
 
   const paidButton = (k: SessionKind, enabled: boolean, style: string) => (
     <button
       type="button"
       disabled={!enabled || busy !== null}
       aria-describedby={enabled || compact ? undefined : `${k}-off`}
-      onClick={() => void start(k, false)}
+      onClick={() => {
+        ctaClicked(false);
+        void start(k, false);
+      }}
       className={`${style} ${compact ? "" : "w-full"} ${enabled ? "" : off}`.trim()}
     >
       {isBusy(k, false) ? t("starting") : t(k)}
@@ -124,7 +140,10 @@ export function StartConsult({
             <button
               type="button"
               disabled={busy !== null}
-              onClick={() => void start("chat", true)}
+              onClick={() => {
+                ctaClicked(true);
+                void start("chat", true);
+              }}
               className="rounded-sm border border-primary px-4 py-2 text-sm font-medium text-primary disabled:opacity-60"
             >
               {t("freeChat", { minutes: free.minutes })}
@@ -134,7 +153,10 @@ export function StartConsult({
             <button
               type="button"
               disabled={busy !== null}
-              onClick={() => void start("call", true)}
+              onClick={() => {
+                ctaClicked(true);
+                void start("call", true);
+              }}
               className="rounded-sm border border-primary px-4 py-2 text-sm font-medium text-primary disabled:opacity-60"
             >
               {t("freeCall", { minutes: free.minutes })}
@@ -151,6 +173,7 @@ export function StartConsult({
           <>
             <p>{kind === "call" ? t("callSignIn") : t("signIn")}</p>
             <SignIn
+              source="consult"
               onSignedIn={() => {
                 setOutcome(null);
                 void refreshWallet().then(() => start(last.current.kind, last.current.free));

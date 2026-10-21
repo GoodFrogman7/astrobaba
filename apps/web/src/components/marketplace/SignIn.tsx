@@ -2,6 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import { useState } from "react";
+import { track } from "@/lib/analytics/client";
 import { requestConsent } from "@/lib/trust/consent";
 
 /** POST JSON to one of our route handlers; the body is {} when the answer is not JSON. */
@@ -19,8 +20,16 @@ export async function postJson(url: string, body: unknown) {
  * Phone OTP sign-in (same /api/auth routes as "Save my kundli"). The token lands in an
  * httpOnly cookie set by the route handler; this component never sees it. After a successful
  * sign-in the consent step (ConsentGate) opens if the user's consents are not current.
+ * `source` (a slug) says where the sign-in was shown, for the otp_requested analytics event;
+ * the phone number is never part of it.
  */
-export function SignIn({ onSignedIn }: { onSignedIn: () => void }) {
+export function SignIn({
+  onSignedIn,
+  source = "sign-in",
+}: {
+  onSignedIn: () => void;
+  source?: string;
+}) {
   const t = useTranslations("market.signin");
   const [phone, setPhone] = useState("");
   const [code, setCode] = useState("");
@@ -37,8 +46,10 @@ export function SignIn({ onSignedIn }: { onSignedIn: () => void }) {
     try {
       if (!challenge) {
         const r = await postJson("/api/auth/otp/request", { phone });
-        if (r.status === 202) setChallenge(String(r.body.challenge_id));
-        else setError(err(r.body.code));
+        if (r.status === 202) {
+          setChallenge(String(r.body.challenge_id));
+          track("otp_requested", { source });
+        } else setError(err(r.body.code));
       } else {
         const r = await postJson("/api/auth/otp/verify", { challenge_id: challenge, code });
         if (r.status === 200) {

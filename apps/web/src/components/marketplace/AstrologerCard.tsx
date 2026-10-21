@@ -8,8 +8,19 @@ import { DemoBadge } from "./DemoBadge";
 import { PresenceBadge } from "./Presence";
 import { RatingText } from "./RatingText";
 
-/** Directory card. `showPresence` is false where the data may be cached (expert cards). */
-export function AstrologerCard({ a, showPresence = true }: { a: Card; showPresence?: boolean }) {
+/**
+ * Directory card. `showPresence` is false where the data may be cached (expert cards).
+ * `ctaSource` names where the card is shown, for the consult_cta_clicked analytics event.
+ */
+export function AstrologerCard({
+  a,
+  showPresence = true,
+  ctaSource = "directory-card",
+}: {
+  a: Card;
+  showPresence?: boolean;
+  ctaSource?: string;
+}) {
   const t = useTranslations("market.card");
   const locale = useLocale() as "en" | "hi";
   return (
@@ -21,7 +32,12 @@ export function AstrologerCard({ a, showPresence = true }: { a: Card; showPresen
         <Avatar name={a.display_name} />
         <div className="min-w-0 flex-1">
           <h3 className="font-semibold leading-snug">
-            <Link href={`/astrologers/${a.slug}`} className="hover:underline">
+            <Link
+              href={`/astrologers/${a.slug}`}
+              className="hover:underline"
+              data-consult-cta={ctaSource}
+              data-astrologer-slug={a.slug}
+            >
               {a.display_name}
             </Link>
           </h3>

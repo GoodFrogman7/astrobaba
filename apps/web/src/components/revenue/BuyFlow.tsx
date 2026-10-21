@@ -73,6 +73,7 @@ export function BuyFlow({
       <div className="space-y-3">
         <p>{t("signIn")}</p>
         <SignIn
+          source="report-buy"
           onSignedIn={() => {
             setState({ step: "idle" });
             void refreshWallet();

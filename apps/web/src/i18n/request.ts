@@ -11,6 +11,7 @@ const MESSAGE_AREAS = [
   "report",
   "revenue",
   "trust",
+  "growth",
 ] as const;
 
 export default getRequestConfig(async ({ requestLocale }) => {

@@ -3,11 +3,13 @@ import { hasLocale, NextIntlClientProvider } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
+import { Analytics } from "@/components/analytics/Analytics";
 import { JsonLd } from "@/components/JsonLd";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SiteHeader } from "@/components/SiteHeader";
 import { ConsentGate } from "@/components/trust/ConsentGate";
 import { routing } from "@/i18n/routing";
+import { siteVerification } from "@/lib/publishing";
 import { organizationLd } from "@/lib/seo";
 import { SITE_URL } from "@/site";
 import "../globals.css";
@@ -25,7 +27,12 @@ export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }));
 }
 
-export const metadata: Metadata = { metadataBase: new URL(SITE_URL) };
+// Search Console / Bing Webmaster verification tags, when GOOGLE_/BING_SITE_VERIFICATION are set.
+const verification = siteVerification();
+export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
+  ...(verification ? { verification } : {}),
+};
 
 export default async function LocaleLayout({
   children,
@@ -64,6 +71,7 @@ export default async function LocaleLayout({
           {children}
           <SiteFooter locale={locale} />
           <ConsentGate />
+          <Analytics />
         </NextIntlClientProvider>
       </body>
     </html>

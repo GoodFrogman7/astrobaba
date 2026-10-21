@@ -63,7 +63,7 @@ export function AccountView() {
     return (
       <div className="space-y-3">
         <p>{t("signIn")}</p>
-        <SignIn onSignedIn={() => void load()} />
+        <SignIn source="account" onSignedIn={() => void load()} />
       </div>
     );
   if (me === null)

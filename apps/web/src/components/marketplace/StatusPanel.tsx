@@ -21,7 +21,7 @@ export function StatusPanel() {
     return (
       <div className="space-y-3">
         <p>{t("signedOut")}</p>
-        <SignIn onSignedIn={() => void reload()} />
+        <SignIn source="astrologer-status" onSignedIn={() => void reload()} />
       </div>
     );
   if (state.kind === "none")

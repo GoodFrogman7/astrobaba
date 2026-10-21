@@ -352,6 +352,8 @@ describe("print page", () => {
     new Response(JSON.stringify(body), { status, headers: { "content-type": "application/json" } });
 
   it("is private: noindex, nofollow, disallowed in robots.txt and outside locale routing", () => {
+    // Outside production robots.txt disallows everything (docs/api/growth.md §3).
+    vi.stubEnv("NEXT_PUBLIC_SITE_ENV", "production");
     expect(printMetadata.robots).toMatchObject({ index: false, follow: false });
     const rules = robots().rules;
     const disallow = (Array.isArray(rules) ? rules : [rules]).flatMap((r) => r.disallow ?? []);

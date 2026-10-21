@@ -49,7 +49,7 @@ function SignedInLead({ remedyId }: { remedyId: string }) {
     return (
       <div className="space-y-3">
         <p>{t("signIn")}</p>
-        <SignIn onSignedIn={() => void refreshWallet()} />
+        <SignIn source="remedy-request" onSignedIn={() => void refreshWallet()} />
       </div>
     );
   return <LeadForm remedyId={remedyId} />;

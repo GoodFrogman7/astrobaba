@@ -43,7 +43,7 @@ export function ChatRoom({ sessionId }: { sessionId: string }) {
     return (
       <div className="space-y-3">
         <p>{t("signIn")}</p>
-        <SignIn onSignedIn={() => void chat.reload()} />
+        <SignIn source="chat" onSignedIn={() => void chat.reload()} />
       </div>
     );
   if (load === "not_found") return <p>{t("notFound")}</p>;
