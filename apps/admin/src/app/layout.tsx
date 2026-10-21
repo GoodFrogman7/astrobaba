@@ -20,6 +20,10 @@ const NAV = [
   { href: "/remedies", label: "Remedy leads" },
   { href: "/moderation", label: "Moderation" },
   { href: "/privacy/deletions", label: "Deletions" },
+  { href: "/growth", label: "Growth" },
+  { href: "/supply", label: "Supply" },
+  { href: "/content", label: "Content" },
+  { href: "/launch", label: "Launch" },
 ];
 
 export default function RootLayout({ children }: { children: ReactNode }) {

@@ -6,11 +6,12 @@ import { ApiError } from "./api";
  */
 export async function tryLoad<T>(
   load: () => Promise<T>,
-): Promise<{ ok: true; value: T } | { ok: false; status: number; error: string }> {
+): Promise<{ ok: true; value: T } | { ok: false; status: number; code: string; error: string }> {
   try {
     return { ok: true, value: await load() };
   } catch (e) {
-    if (e instanceof ApiError) return { ok: false, status: e.status, error: e.message || e.code };
+    if (e instanceof ApiError)
+      return { ok: false, status: e.status, code: e.code, error: e.message || e.code };
     throw e;
   }
 }

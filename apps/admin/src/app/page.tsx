@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { LaunchReadiness } from "@astro/shared";
 import { NotAuthorised } from "@/components/NotAuthorised";
 import { api } from "@/lib/api";
 import { adminPage } from "@/lib/guard";
@@ -17,7 +18,7 @@ async function count<T>(load: () => Promise<Page<T>>): Promise<number | null> {
 
 export default async function Dashboard() {
   const { access, data } = await adminPage(async () => {
-    const [kyc, interview, flagged, horoscopes] = await Promise.all([
+    const [kyc, interview, flagged, horoscopes, launchFailing] = await Promise.all([
       count(() =>
         api.get<Page<AdminAstrologerRow>>("/v1/admin/astrologers?status=kyc_submitted&limit=50"),
       ),
@@ -29,8 +30,12 @@ export default async function Dashboard() {
         .get<HoroscopeEntry[]>("/v1/admin/horoscopes?status=pending_review&limit=200")
         .then((r) => r.length)
         .catch(() => null),
+      api
+        .get<LaunchReadiness>("/v1/admin/launch-readiness")
+        .then((r) => r.checks.filter((c) => c.status === "fail").length)
+        .catch(() => null),
     ]);
-    return { kyc, interview, flagged, horoscopes };
+    return { kyc, interview, flagged, horoscopes, launchFailing };
   });
   if (access.kind !== "admin" || !data) return <NotAuthorised />;
   const cards = [
@@ -38,6 +43,7 @@ export default async function Dashboard() {
     { label: "Interviews to record", value: data.interview, href: "/astrologers?status=interview" },
     { label: "Flagged reviews", value: data.flagged, href: "/reviews?status=flagged" },
     { label: "Horoscopes awaiting review", value: data.horoscopes, href: "/horoscopes" },
+    { label: "Launch readiness: checks failing", value: data.launchFailing, href: "/launch" },
   ];
   return (
     <main id="main" className="mx-auto max-w-6xl px-4 py-8">

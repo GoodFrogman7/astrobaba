@@ -8,6 +8,8 @@ COPY packages/shared/package.json packages/shared/
 RUN pnpm install --frozen-lockfile --filter @astro/admin...
 COPY packages/shared packages/shared
 COPY data/marketplace data/marketplace
+COPY data/astro data/astro
+COPY data/growth data/growth
 COPY apps/admin apps/admin
 ENV NEXT_OUTPUT=standalone NEXT_TELEMETRY_DISABLED=1
 RUN pnpm --filter @astro/admin build

@@ -91,6 +91,7 @@ export const api = {
     ),
   patch: async <T>(path: string, body: unknown) =>
     parse<T>(await apiFetch(path, { method: "PATCH", body: JSON.stringify(body) })),
+  del: async <T = void>(path: string) => parse<T>(await apiFetch(path, { method: "DELETE" })),
 };
 
 /** The signed-in user, or null (no cookie, expired or revoked session, API down). */
