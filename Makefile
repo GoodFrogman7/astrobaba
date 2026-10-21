@@ -2,7 +2,7 @@
 SHELL := /bin/bash
 COMPOSE := docker compose
 
-.PHONY: help setup env data dev down logs ps lint typecheck test test-integration build smoke ci fmt migrate clean
+.PHONY: help setup env data dev down logs ps seed admin-role lint typecheck test test-integration build smoke ci fmt migrate clean
 
 help: ## List targets
 	@grep -hE '^[a-z-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-18s %s\n", $$1, $$2}'
@@ -29,6 +29,7 @@ dev: env ## Boot Postgres, Redis, API, astro engine and web in Docker, wait unti
 	@echo "  web    http://localhost:3000   (Hindi: http://localhost:3000/hi)"
 	@echo "  api    http://localhost:8000/docs   readiness: /readyz"
 	@echo "  astro  http://localhost:8001/docs"
+	@echo "  admin  http://localhost:3001   (make admin-role PHONE=98xxxxxxxx; make seed for demo data)"
 	@echo ""
 	@echo "  logs: make logs    stop: make down"
 
@@ -40,6 +41,12 @@ logs: ## Follow dev stack logs
 
 ps: ## Show dev stack status
 	$(COMPOSE) ps
+
+seed: ## Demo astrologers, reviews and a demo client (development only; refused in production)
+	$(COMPOSE) exec api /app/.venv/bin/python -m astro_api.seed demo-astrologers
+
+admin-role: ## Grant the admin role: make admin-role PHONE=9876543210
+	$(COMPOSE) exec api /app/.venv/bin/python -m astro_api.cli grant-role $(PHONE) admin
 
 lint: ## Lint JS/TS and Python
 	pnpm lint

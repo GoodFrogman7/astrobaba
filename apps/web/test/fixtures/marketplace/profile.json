@@ -1,0 +1,22 @@
+{
+  "$comment": "Shaped exactly like GET /v1/astrologers/{slug}.",
+  "id": "a2",
+  "slug": "meera-joshi",
+  "display_name": "Meera Joshi",
+  "photo_url": null,
+  "skills": ["tarot", "numerology"],
+  "languages": ["mr", "hi"],
+  "gender": "female",
+  "tier": "rising",
+  "price_per_min_paise": 1250,
+  "experience_years": 3,
+  "rating": { "average": 4.5, "count": 2 },
+  "presence": "online",
+  "wait_minutes": null,
+  "is_demo": false,
+  "bio": "I read tarot and numerology with a focus on practical next steps.\nSessions in Marathi and Hindi.",
+  "bio_hi": null,
+  "verified": { "identity": true, "qualification": true, "interview": true },
+  "on_platform_since": "2026-09",
+  "consult": { "chat_enabled": true, "call_enabled": false }
+}

@@ -10,6 +10,7 @@ COPY packages/shared packages/shared
 # Static Jyotish tables and the panchang city list are bundled into the build.
 COPY data/astro data/astro
 COPY data/seo data/seo
+COPY data/marketplace data/marketplace
 COPY apps/web apps/web
 ENV NEXT_OUTPUT=standalone NEXT_TELEMETRY_DISABLED=1
 RUN pnpm --filter @astro/web build

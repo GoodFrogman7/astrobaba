@@ -140,6 +140,7 @@ jobs:
       - name: Start astro engine, API and web
         run: |
           (cd services/api && uv run alembic upgrade head)
+          uv run python -m astro_api.seed demo-astrologers
           nohup uv run uvicorn astro_engine.main:app --port 8001 > astro.log 2>&1 &
           nohup uv run uvicorn astro_api.main:app --port 8000 > api.log 2>&1 &
           (cd apps/web && nohup node_modules/.bin/next start --port 3000 > ../../web.log 2>&1 &)

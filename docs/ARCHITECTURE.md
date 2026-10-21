@@ -1,6 +1,6 @@
 # Architecture
 
-Living document. Updated at the end of every phase (PLAN.md §0.6). Current state: **Phase 2**.
+Living document. Updated at the end of every phase (PLAN.md §0.6). Current state: **Phase 3**.
 
 ## Repo
 
@@ -9,11 +9,14 @@ apps/
   web/            Next.js 16 App Router: public site + user app (SSR, en + /hi): home, kundli,
                   kundli matching, 10 free tools, panchang (48 cities), horoscopes (36 pages)
   astrologer/     Astrologer portal (Phase 5), placeholder
-  admin/          Ops console (Phase 3), placeholder
+  admin/          Ops console (Next.js, port 3001): astrologer KYC review and decisions,
+                  review moderation, horoscope QA queue; admin role required
 services/
-  api/            FastAPI core API: phone OTP sign-in, saved kundlis, horoscope publishing and
-                  review (admin); marketplace/wallet/sessions later
-    migrations/   Alembic: 0001 baseline, 0002 users/sessions/kundlis/horoscopes/audit_log
+  api/            FastAPI core API: phone OTP sign-in, saved kundlis, horoscope publishing,
+                  marketplace (applications, KYC documents, directory, profiles, reviews,
+                  presence), admin endpoints; wallet and sessions in Phase 4
+    migrations/   Alembic: 0001 baseline, 0002 users/sessions/kundlis/horoscopes/audit_log,
+                  0003 roles/astrologers/verifications/kyc_documents/consult_sessions/reviews
   astro/          FastAPI astro engine (AGPL-3.0-only, ADR-0001): kundli, panchang, dasha,
                   doshas, matching, transits, city search
   worker/         CLI jobs: horoscope generation (facts → LLM → validator → review queue) and
@@ -93,6 +96,21 @@ canonical, hreflang, JSON-LD, ≥ 800 characters of body text, one IST date acro
 description and body, Hindi in Devanagari); `scripts/lighthouse.mjs` requires ≥ 90 in every
 category on mobile for representative pages.
 
+## Marketplace (Phase 3)
+
+Contract: [docs/api/marketplace.md](api/marketplace.md). Decisions: [ADR-0006](adr/0006-marketplace-trust.md).
+
+```
+applicant ── /astrologers/apply (web) ──> API: application, KYC upload (random keys, local|s3)
+admin ── apps/admin ──> API admin: verify identity → qualification → interview → approve
+                                    (tier + price) → probation (public) → approved
+user ── /astrologers (filters, sort, presence) ── /astrologers/<slug> (Person JSON-LD, reviews)
+```
+
+Taxonomy (skills, languages, tiers with price bounds) is `data/marketplace/taxonomy.json`,
+shared by API, web and admin. Presence lives in Redis (`presence:{id}`, TTL heartbeat).
+`make seed` loads 30 labelled demo astrologers (development only).
+
 ## Cross-cutting rules in code
 
 | Rule (PLAN.md) | Where it lives |
@@ -107,6 +125,9 @@ category on mobile for representative pages.
 | AGPL boundary (ADR-0001) | Only `services/astro` imports `swisseph` (test enforced); `/v1/source` |
 | No unreviewed LLM text on horoscope pages (§6) | `horoscope_entries.status`; public API returns `published` only; pages fall back to template sentences from facts |
 | Phone numbers and OTPs never stored or logged in clear | OTP stored as HMAC in Redis; phones masked in logs; session token stored as SHA-256 |
+| Unapproved astrologers invisible everywhere (§5 P3) | one visibility helper in `astro_api.marketplace`; tests per status incl. sitemap |
+| Seed data never in production (§5 P3) | seed refuses outside development/test; `is_seed` rows hidden in production |
+| No fake online counts or scarcity (§6) | presence and wait time only from Redis state; empty directory says so |
 | Unreviewed Jyotish tables never public | `/v1/match`, `/v1/doshas` return 503 `tables_not_reviewed` in staging/production |
 | Own design system (§0.1) | `packages/shared/src/tokens.ts` + `tokens/tokens.css`, AA contrast tested |
 

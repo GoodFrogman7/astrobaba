@@ -23,3 +23,12 @@ are marked.
 - [ ] Astrologer sign-off on `data/astro` tables marked `needs_astrologer_review` (Ashtakoota, dosha rules, nakshatra attributes, choghadiya, numerology, horoscope rules); production blocks /v1/match and /v1/doshas until then
 - [ ] A named editor reviews horoscope prose daily before it publishes (ADR-0005)
 - [x] GeoNames CC-BY attribution returned with every city result (`attribution` field); show it in the UI (Phase 2)
+
+## Marketplace (Phase 3)
+
+- [x] KYC documents: random storage keys, type/size checks, admin-only access, every view audited
+- [ ] S3 bucket in ap-south-1 with SSE-KMS and no public access before any real applicant uploads
+- [ ] KYC retention and deletion policy (DPDP): how long documents are kept after approval/rejection
+- [ ] Astrologer terms (independent contractor, conduct rules, banned topics) reviewed by a lawyer
+- [ ] Admin second factor (TOTP) before more than one admin exists
+- [x] Reviews only after completed sessions; contact details and outcome claims held for moderation

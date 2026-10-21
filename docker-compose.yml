@@ -37,9 +37,11 @@ services:
       CORS_ORIGINS: '["http://localhost:3000"]'
       SECRET_KEY: ${SECRET_KEY:-dev-only-change-me}
       SMS_PROVIDER: ${SMS_PROVIDER:-console}
-      ADMIN_TOKEN: ${ADMIN_TOKEN:-}
+      DOCUMENTS_BACKEND: local
+      DOCUMENTS_DIR: /app/uploads
       ASTRO_URL: http://astro:8001
     ports: ["127.0.0.1:8000:8000"]
+    volumes: [kycdocs:/app/uploads]
     depends_on:
       postgres: { condition: service_healthy }
       redis: { condition: service_healthy }
@@ -86,6 +88,20 @@ services:
       api: { condition: service_healthy }
       astro: { condition: service_healthy }
 
+  admin:
+    build: { context: ., dockerfile: apps/admin/Dockerfile }
+    environment:
+      API_URL: http://api:8000
+    ports: ["127.0.0.1:3001:3001"]
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:3001/login"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    depends_on:
+      api: { condition: service_healthy }
+
 volumes:
   pgdata:
   redisdata:
+  kycdocs:

@@ -15,11 +15,23 @@ const CATEGORIES = ["performance", "accessibility", "best-practices", "seo"];
 const RUNS = Math.max(1, Number(process.env.LIGHTHOUSE_RUNS ?? 3));
 const PAGES = (
   process.env.LIGHTHOUSE_PAGES ??
-  "/,/hi,/kundli,/tools/nakshatra,/kundli-matching,/panchang/new-delhi,/horoscope/daily/aries,/hi/horoscope/daily/aries"
+  "/,/hi,/kundli,/tools/nakshatra,/kundli-matching,/panchang/new-delhi,/horoscope/daily/aries,/hi/horoscope/daily/aries,/astrologers"
 )
   .split(",")
   .map((p) => p.trim())
   .filter(Boolean);
+
+// One astrologer profile, if any is public (first <loc> under /astrologers/<slug> in the sitemap).
+if (!process.env.LIGHTHOUSE_PAGES) {
+  try {
+    const xml = await (await fetch(`${BASE}/sitemap.xml`)).text();
+    const m = xml.match(/<loc>[^<]*?(\/astrologers\/(?!apply<)[a-z0-9-]+)<\/loc>/);
+    if (m) PAGES.push(m[1]);
+    else console.warn("SKIP astrologer profile (none public in the sitemap)");
+  } catch {
+    console.warn("SKIP astrologer profile (sitemap unavailable)");
+  }
+}
 
 const out = mkdtempSync(path.join(tmpdir(), "lh-"));
 let failed = false;

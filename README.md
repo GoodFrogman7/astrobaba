@@ -4,7 +4,7 @@ Two-sided astrology marketplace (users ↔ vetted astrologers) fed by free, accu
 tools. Plan: [docs/PLAN.md](docs/PLAN.md). Architecture: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 Decisions: [docs/adr/](docs/adr/README.md).
 
-Status: **Phase 2 (free-tools SEO funnel)** complete. Phase 3 (marketplace core) waits on the go-ahead.
+Status: **Phase 3 (marketplace core)** complete. Phase 4 (wallet, billing, chat sessions) waits on the go-ahead.
 
 ## Quick start
 
@@ -14,6 +14,8 @@ Docker only:
 make dev        # Postgres, Redis, API, astro engine, web; waits until healthy
 open http://localhost:3000      # English
 open http://localhost:3000/hi   # Hindi
+make seed       # 30 demo astrologers (development only)
+open http://localhost:3001      # admin (make admin-role PHONE=98xxxxxxxx first)
 make down
 ```
 

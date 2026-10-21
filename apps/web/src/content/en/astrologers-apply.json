@@ -1,0 +1,54 @@
+{
+  "title": "Join as an astrologer",
+  "description": "Apply to consult on our platform: submit your profile, upload identity and qualification proof, interview with our team and start on probation.",
+  "h1": "Join as an astrologer",
+  "intro": "We work with astrologers who explain charts clearly and treat clients with care. Applying takes about ten minutes; verification usually takes a few days.",
+  "sections": [
+    {
+      "heading": "1. Your application",
+      "body": [
+        "Sign in with your mobile number and tell us about your practice: the systems you work in, the languages you consult in, your years of practice and the per-minute price you would like. You can write your profile in English and, optionally, in Hindi."
+      ]
+    },
+    {
+      "heading": "2. Documents",
+      "body": [
+        "Upload proof of identity and proof of training or qualification as PDF, JPEG or PNG files of up to 5 MB each. Only our verification team can see them; they are never shown on your profile."
+      ]
+    },
+    {
+      "heading": "3. Interview",
+      "body": [
+        "An experienced reviewer calls you to talk through your methods, how you handle sensitive questions, and our code of conduct: no fear-based advice, no promised outcomes, and no medical, legal or financial advice."
+      ]
+    },
+    {
+      "heading": "4. Probation, then approval",
+      "body": [
+        "If the interview goes well, we confirm your tier and price and your profile goes live on probation. During probation we review early sessions and client feedback. After that, your profile is fully approved. You can see where your application stands at any time on your status page."
+      ]
+    }
+  ],
+  "faqs": [
+    {
+      "q": "What qualifications do I need?",
+      "a": "We accept formal courses, apprenticeships with a known teacher and long documented practice. Upload whatever proof you have; the interview helps us understand the rest."
+    },
+    {
+      "q": "Who sees my documents?",
+      "a": "Only our verification team. Documents are stored privately, every access is logged, and they are never shown publicly."
+    },
+    {
+      "q": "How is my price decided?",
+      "a": "You request a price within the range shown on the form. After verification we confirm a tier and a price within that tier's range."
+    },
+    {
+      "q": "How do I get paid?",
+      "a": "Earnings are calculated per minute of completed consultations, minus the platform commission for your tier, and paid out monthly with a statement."
+    },
+    {
+      "q": "Can I edit my application?",
+      "a": "Yes, until our team starts reviewing your documents. After that, contact us if something needs to change."
+    }
+  ]
+}
