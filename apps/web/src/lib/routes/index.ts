@@ -1,6 +1,8 @@
 import { toolRoutes } from "./tools";
 import { almanacRoutes } from "./almanac";
 import { astrologerRoutes } from "./astrologers";
+import { revenueRoutes } from "./revenue";
+import { REMEDIES_INDEXABLE } from "@/lib/revenue/config";
 
 /** One indexable page, identical path in every locale (Hindi adds the /hi prefix). */
 export interface SiteRoute {
@@ -16,5 +18,11 @@ const coreRoutes: SiteRoute[] = [{ path: "/", changeFrequency: "daily", priority
  * added at request time (see app/sitemap.ts).
  */
 export function siteRoutes(): SiteRoute[] {
-  return [...coreRoutes, ...toolRoutes(), ...almanacRoutes(), ...astrologerRoutes()];
+  return [
+    ...coreRoutes,
+    ...toolRoutes(),
+    ...almanacRoutes(),
+    ...astrologerRoutes(),
+    ...revenueRoutes({ remedies: REMEDIES_INDEXABLE }),
+  ];
 }

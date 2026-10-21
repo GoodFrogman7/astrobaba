@@ -3,14 +3,15 @@
 // equal to the URL, missing hreflang, invalid JSON-LD or missing Organization/BreadcrumbList/FAQPage,
 // < 800 characters of visible text in <main>, Hindi pages without Devanagari, and dated pages whose
 // IST date differs between title, description and body (or is not today/tomorrow where it must be).
-// Also fails when a personal page (/wallet, /chat/…) is in the sitemap or is served without noindex.
+// Also fails when a personal page (/wallet, /chat/…, /account/…, /ai) is in the sitemap or is
+// served without noindex.
 //
 // Usage: BASE_URL=http://localhost:3000 node scripts/seo-check.mjs
 const BASE = (process.env.BASE_URL ?? "http://localhost:3000").replace(/\/$/, "");
 const SITE = (process.env.SITE_URL ?? BASE).replace(/\/$/, ""); // host used inside the sitemap
 const MIN_TEXT = 800;
 const CONCURRENCY = 8;
-const PRIVATE = ["/wallet", "/chat"];
+const PRIVATE = ["/wallet", "/chat", "/account", "/ai"];
 
 const decode = (s) =>
   s
@@ -146,13 +147,20 @@ async function main() {
   const urls = [...new Set([...sm.text.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => decode(m[1])))];
   if (!urls.length) throw new Error("sitemap has no URLs");
 
-  // Personal pages (wallet, chat) must never be in the sitemap and must say noindex.
+  // Personal pages (wallet, chat, account, AI) must never be in the sitemap and must say noindex.
   for (const u of urls) {
     const path = new URL(u).pathname.replace(/^\/hi(?=\/|$)/, "");
     if (PRIVATE.some((p) => path === p || path.startsWith(`${p}/`)))
       failures.push([u, ["personal page listed in the sitemap"]]);
   }
-  for (const path of ["/wallet", "/hi/wallet", "/chat/example", "/hi/chat/example"]) {
+  for (const path of [
+    "/wallet",
+    "/hi/wallet",
+    "/chat/example",
+    "/hi/chat/example",
+    "/account/reports",
+    "/hi/account/reports",
+  ]) {
     const page = await fetchText(`${BASE}${path}`);
     const robots = /<meta[^>]*name="robots"[^>]*content="([^"]*)"/i.exec(page.text)?.[1] ?? "";
     if (page.status !== 200 || !/noindex/.test(robots))

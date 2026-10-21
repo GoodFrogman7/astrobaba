@@ -67,8 +67,12 @@
         "refund": "रिफ़ंड",
         "free_session_grant": "पहले मुफ़्त परामर्श का क्रेडिट",
         "promo_expiry": "प्रोमो क्रेडिट की अवधि समाप्त",
-        "adjustment": "सहायता टीम द्वारा समायोजन"
-      }
+        "adjustment": "सहायता टीम द्वारा समायोजन",
+        "purchase": "ख़रीद",
+        "purchaseReport": "रिपोर्ट",
+        "purchaseAi": "एआई सवाल"
+      },
+      "viewReports": "मेरी रिपोर्ट देखें"
     },
     "start": {
       "chat": "चैट करें",

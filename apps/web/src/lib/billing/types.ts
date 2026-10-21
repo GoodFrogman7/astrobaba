@@ -25,6 +25,7 @@ export const TXN_KINDS = [
   "recharge",
   "recharge_bonus",
   "consultation",
+  "purchase",
   "refund",
   "free_session_grant",
   "promo_expiry",
@@ -42,6 +43,11 @@ export interface WalletTxn {
   created_at: string;
   session_id: string | null;
   astrologer: { slug: string; display_name: string } | null;
+  /**
+   * For `purchase` rows: what was bought, when the API says so (docs/api/revenue.md products).
+   * Not in billing.md yet; without it the row is labelled "Purchase".
+   */
+  product?: "report" | "ai_question" | null;
 }
 
 export interface TxnPage {

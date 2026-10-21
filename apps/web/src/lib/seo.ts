@@ -69,10 +69,10 @@ export function faqLd(faqs: { q: string; a: string }[]): JsonLdObject {
 }
 
 /**
- * Personal pages (wallet, chat): never indexed, never in the sitemap. `follow: false` keeps
+ * Personal pages (wallet, chat, account, AI assistant): never indexed, never in the sitemap. `follow: false` keeps
  * crawlers from wandering from a page that only exists for one signed-in person.
  */
-export const PRIVATE_PATH_PREFIXES = ["/wallet", "/chat"] as const;
+export const PRIVATE_PATH_PREFIXES = ["/wallet", "/chat", "/account", "/ai"] as const;
 
 export function privateMetadata(title: string): Metadata {
   return { title: `${title} | ${BRAND_NAME}`, robots: { index: false, follow: false } };

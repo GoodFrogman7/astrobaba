@@ -67,8 +67,12 @@
         "refund": "Refund",
         "free_session_grant": "Free first consultation credit",
         "promo_expiry": "Promo credit expired",
-        "adjustment": "Adjustment by support"
-      }
+        "adjustment": "Adjustment by support",
+        "purchase": "Purchase",
+        "purchaseReport": "Report",
+        "purchaseAi": "AI question"
+      },
+      "viewReports": "View my reports"
     },
     "start": {
       "chat": "Chat",

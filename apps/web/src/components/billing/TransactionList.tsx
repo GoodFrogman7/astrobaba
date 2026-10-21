@@ -60,14 +60,25 @@ export function TransactionList() {
   );
 }
 
+/** The row's label key: purchases say what was bought when the row data says so. */
+export function txnLabelKey(txn: Pick<WalletTxn, "kind" | "product">): string {
+  if (txn.kind === "purchase") {
+    if (txn.product === "report") return "kinds.purchaseReport";
+    if (txn.product === "ai_question") return "kinds.purchaseAi";
+    return "kinds.purchase";
+  }
+  return `kinds.${txn.kind}`;
+}
+
 function TxnRow({ txn }: { txn: WalletTxn }) {
   const t = useTranslations("billing.txn");
   const locale = useLocale() as "en" | "hi";
+  const key = txnLabelKey(txn);
   const label =
     txn.kind === "consultation" && txn.astrologer
       ? t("kinds.consultationWith", { name: txn.astrologer.display_name })
-      : t.has(`kinds.${txn.kind}`)
-        ? t(`kinds.${txn.kind}`)
+      : t.has(key)
+        ? t(key)
         : txn.kind;
   const split = txn.real_paise !== 0 && txn.promo_paise !== 0;
   return (
@@ -94,6 +105,11 @@ function TxnRow({ txn }: { txn: WalletTxn }) {
         {txn.session_id && (
           <Link href={`/chat/${txn.session_id}`} className="text-sm text-accent underline">
             {t("viewChat")}
+          </Link>
+        )}
+        {txn.kind === "purchase" && txn.product === "report" && (
+          <Link href="/account/reports" className="text-sm text-accent underline">
+            {t("viewReports")}
           </Link>
         )}
       </div>

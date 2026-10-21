@@ -1,0 +1,56 @@
+{
+  "title": "Kundli and kundli matching PDF reports",
+  "description": "Printable kundli and matching reports in English or Hindi, computed by our ephemeris engine. See every section, the price and a free sample.",
+  "h1": "Kundli and matching reports (PDF)",
+  "intro": "A printable report of your birth chart, or of a match between two charts, made from the same calculations as our free tools. Every number in it comes from the astronomical engine or from published reference tables. Nothing is guessed, and nothing is written to frighten you.",
+  "sections": [
+    {
+      "heading": "What is inside a kundli report",
+      "body": [
+        "The kundli report starts with your birth details and the panchang at the moment of birth: tithi, nakshatra, yoga, karana and weekday. It then shows your chart in both the North Indian and the South Indian style, followed by a planets table with sign, degree, nakshatra, pada, sign lord, house and whether the planet is retrograde.",
+        "Further pages list the twelve houses with their occupants and lords, the nakshatras of the Moon, the Sun and the ascendant, and the Vimshottari dasha: every mahadasha with its dates, and the antardashas of the current and the next mahadasha. Mangal dosha, Kaal Sarp dosha and Sade Sati are shown with the status of the rule table they come from, followed by your core numerology numbers."
+      ]
+    },
+    {
+      "heading": "What is inside a matching report",
+      "body": [
+        "The matching report places both charts side by side and then sets out the Ashtakoota table: all eight kootas with the points for each, the total out of 36, and the Mangal dosha comparison for both people. Like the kundli report, it closes with the method and sources and a plain disclaimer."
+      ]
+    },
+    {
+      "heading": "How each report is made",
+      "body": [
+        "When your payment is confirmed we take a snapshot of the calculations for the saved kundli or kundlis you chose, together with the version of our engine. The PDF is printed from that snapshot. If it ever has to be generated again, the same snapshot is used, so the numbers never change after you buy.",
+        "Each section begins with a short note on how to read it. Tables that are still waiting for review by an astrologer are labelled as such, exactly as they are on the website, and the last section lists the ayanamsha, node and house system used."
+      ]
+    },
+    {
+      "heading": "Delivery, language and refunds",
+      "body": [
+        "Most reports are ready within a few minutes. You can download yours from My reports at any time, and if you add an email address we send the link once and then erase the address. You choose English or Hindi when you buy, whatever language you are browsing in. If a report cannot be generated after several attempts, the full amount is refunded automatically."
+      ]
+    }
+  ],
+  "faqs": [
+    {
+      "q": "How quickly will I get my report?",
+      "a": "Usually within a few minutes of the payment being confirmed. My reports shows the progress and a download button as soon as the PDF is ready."
+    },
+    {
+      "q": "What happens if my report cannot be generated?",
+      "a": "We try several times. If it still fails, the report is marked as failed and the full amount is refunded automatically, without you having to ask."
+    },
+    {
+      "q": "Can I see a sample before buying?",
+      "a": "Yes. Each report has a free sample in English and Hindi, made by the same process from the birth details of a fictional person."
+    },
+    {
+      "q": "Do I need to save a kundli first?",
+      "a": "Yes. Sign in and save a kundli from the kundli page. The kundli report needs one saved kundli and the matching report needs two."
+    },
+    {
+      "q": "Is a report a prediction or professional advice?",
+      "a": "No. It sets out calculated positions, tables and periods for guidance and entertainment. It is not medical, legal or financial advice and makes no promise about events in your life."
+    }
+  ]
+}

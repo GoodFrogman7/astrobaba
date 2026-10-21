@@ -37,6 +37,7 @@ export default async function HomePage({ params }: Props) {
   setRequestLocale(locale);
   const t = await getTranslations({ locale, namespace: "almanac.home" });
   const th = await getTranslations({ locale, namespace: "home" });
+  const tr = await getTranslations({ locale, namespace: "revenue.home" });
   const { today } = requestIstDays();
   const dateText = formatIstDate(today, locale);
   const summary = await todaySummary(today);
@@ -47,6 +48,7 @@ export default async function HomePage({ params }: Props) {
     { href: "/kundli-matching", title: t("matching"), body: t("matchingBody") },
     { href: "/panchang", title: t("panchang"), body: t("panchangBody") },
     { href: "/tools", title: t("tools"), body: t("toolsBody") },
+    { href: "/reports", title: tr("title"), body: tr("body") },
   ];
 
   return (

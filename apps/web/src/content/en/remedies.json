@@ -1,0 +1,46 @@
+{
+  "title": "Pujas and follow-ups through partners",
+  "description": "Ask a listed partner to contact you about a puja or a follow-up consultation. We pass on your request; we do not sell remedies or promise results.",
+  "h1": "Pujas and follow-ups through partners",
+  "intro": "Some people like to arrange a puja, or a follow-up after a consultation. We do not sell remedies and we keep no stock of any kind. This page lists services offered by independent partners. If you ask, we pass your request to the partner, who then contacts you directly.",
+  "sections": [
+    {
+      "heading": "How a partner request works",
+      "body": [
+        "Sign in, choose a service and press Request via partner. You can add a preferred date and a short note of up to 500 characters, and you must tick the consent box before anything is sent. The partner receives your request with your phone number and contacts you to discuss it. Sending a request costs nothing and does not commit you to anything.",
+        "The price note on each service comes from the partner. Any price, date and arrangement is agreed between you and the partner. We do not take payment for these services on this site."
+      ]
+    },
+    {
+      "heading": "What we do not do",
+      "body": [
+        "We do not sell pujas, stones, yantras or any other objects, and we never say that something bad will happen unless you pay for a remedy. No service on this page promises any outcome for your health, relationships, career or money. If anyone, including a partner, tells you otherwise, please report it to us.",
+        "Nothing on this page is medical, legal or financial advice. For those matters, please speak to a qualified professional."
+      ]
+    },
+    {
+      "heading": "Your details",
+      "body": [
+        "Your phone number is shown only to the partner who handles your request; everywhere else, including our support screens, it is masked. Your note is stored encrypted. We use these details only to pass on this request, and you can ask us to delete them."
+      ]
+    }
+  ],
+  "faqs": [
+    {
+      "q": "Do you sell pujas or remedies?",
+      "a": "No. We list services offered by independent partners and pass your request to them. We keep no stock and take no payment for these services."
+    },
+    {
+      "q": "Is any result promised?",
+      "a": "No. No service on this page promises an outcome, and we do not allow partners to make such claims to you."
+    },
+    {
+      "q": "Does sending a request cost anything?",
+      "a": "No. Sending a request is free. Any price is agreed directly with the partner when they contact you."
+    },
+    {
+      "q": "What does the partner receive?",
+      "a": "The service you chose, your preferred date and note if you gave them, your language and your phone number, so they can call you about this request."
+    }
+  ]
+}

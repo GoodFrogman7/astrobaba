@@ -59,7 +59,13 @@ try {
     failed += problems.length ? 1 : 0;
   }
   // Personal pages: rendered, but never indexable.
-  for (const path of ["/wallet", "/hi/wallet", "/chat/example-session"]) {
+  for (const path of [
+    "/wallet",
+    "/hi/wallet",
+    "/chat/example-session",
+    "/account/reports",
+    "/hi/account/reports",
+  ]) {
     const res = await fetch(base + path, { redirect: "manual" });
     const html = await res.text();
     const ok = res.status === 200 && /<meta name="robots" content="noindex, nofollow"/.test(html);

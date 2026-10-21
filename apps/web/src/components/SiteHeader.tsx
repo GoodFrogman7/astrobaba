@@ -9,6 +9,7 @@ export const NAV = [
   { key: "panchang", href: "/panchang" },
   { key: "horoscope", href: "/horoscope" },
   { key: "tools", href: "/tools" },
+  { key: "reports", href: "/reports" },
 ] as const;
 
 export async function SiteHeader({ locale }: { locale: Locale }) {
