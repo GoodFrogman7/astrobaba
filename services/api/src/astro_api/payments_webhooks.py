@@ -8,6 +8,10 @@
 3. Credit only when the paid amount and currency equal the order's (else `mismatch`, alert).
    Keys: `razorpay:payment:{payment_id}:captured`, bonus `recharge_bonus:{order_id}`.
 
+Report orders (docs/api/revenue.md §2.1) share this path: an order id that is not a recharge is
+looked up among report orders and handled by `astro_api.reports` (credit `platform:report_revenue`
+instead of the user's wallet, same mismatch and duplicate-payment rules).
+
 Stored payloads keep ids, amounts and statuses only (allow-list): no email, phone, VPA or card.
 Dev-only routes (`/v1/dev/payments/...`) drive the Fake gateway through the same code path and
 are 404 outside development/test or with a real provider.
@@ -26,12 +30,13 @@ from sqlalchemy import select, update
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from astro_api import billing_config, payments, wallet
+from astro_api import billing_config, payments, reports, wallet
 from astro_api.auth import CurrentUser
 from astro_api.config import Settings
 from astro_api.db import Db, redis_of, settings_of
 from astro_api.errors import ApiError
 from astro_api.models_ledger import PaymentEvent, RechargeOrder
+from astro_api.models_reports import ReportOrder
 from astro_api.roles import AdminUser
 
 log = logging.getLogger(__name__)
@@ -96,6 +101,10 @@ async def _order_for_update(db: AsyncSession, provider_order_id: Any) -> Recharg
 async def _captured(db: AsyncSession, event_id: str, payment: dict[str, Any]) -> str:
     order = await _order_for_update(db, payment.get("order_id"))
     if order is None:
+        # Not a recharge: a paid report's Razorpay order (docs/api/revenue.md §2.1)?
+        report_order = await reports.order_for_provider_id(db, payment.get("order_id"))
+        if report_order is not None:
+            return await reports.razorpay_captured(db, event_id, report_order, payment)
         log.warning("payment_unknown_order", extra={"event_id": event_id})
         return "unknown_order"
     if payment.get("status") != "captured":
@@ -151,6 +160,9 @@ async def _captured(db: AsyncSession, event_id: str, payment: dict[str, Any]) ->
 async def _failed(db: AsyncSession, event_id: str, payment: dict[str, Any]) -> str:
     order = await _order_for_update(db, payment.get("order_id"))
     if order is None:
+        report_order = await reports.order_for_provider_id(db, payment.get("order_id"))
+        if report_order is not None:
+            return reports.razorpay_failed(report_order)
         log.warning("payment_unknown_order", extra={"event_id": event_id})
         return "unknown_order"
     if order.status != "paid":
@@ -265,9 +277,12 @@ def _fake_gateway(request: Request) -> payments.FakeGateway:
 async def simulate_payment(
     order_id: uuid.UUID, body: SimulateIn, request: Request, user: CurrentUser, db: Db
 ) -> dict[str, Any]:
-    """Fake provider only: pay (or fail) one of your orders, through the real webhook path."""
+    """Fake provider only: pay (or fail) one of your orders (a recharge or a report bought with
+    Razorpay), through the real webhook path."""
     gateway = _fake_gateway(request)
-    order = await db.get(RechargeOrder, order_id)
+    order: RechargeOrder | ReportOrder | None = await db.get(RechargeOrder, order_id)
+    if order is None:
+        order = await db.get(ReportOrder, order_id)
     if order is None or order.user_id != user.id or order.provider_order_id is None:
         raise ApiError(404, "not_found", "Order not found.")
     if order.status == "paid":

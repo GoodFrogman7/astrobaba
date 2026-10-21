@@ -4,8 +4,9 @@ Checks, each reported with issues (ids and amounts only):
 1. transactions_balanced: every ledger transaction has entries and debits = credits.
 2. projections: every balance projection and promo lot equals the sum of its entries, every
    user's promo projection equals the sum of their lots, and no projected account is missing.
-3. gateway_payments: each payment the gateway captured on the day (IST) has exactly one recharge
-   credit of the same amount, and each recharge credit of the day has a gateway payment.
+3. gateway_payments: each payment the gateway captured on the day (IST) has exactly one posting
+   into gateway clearing of the same amount (a recharge, or a card-paid purchase such as a
+   report), and each such posting of the day has a gateway payment.
 4. settlements: each gateway settlement of the day has one clearing → bank posting with the same
    net amount and fees, and vice versa.
 5. payouts: every `paid` payout has exactly one `payout:{id}` ledger transaction that
@@ -153,14 +154,21 @@ async def _gateway_payments(
         for ref, amount in (
             await db.execute(
                 text(
+                    # What the gateway owes us per payment: the clearing debit of a recharge
+                    # (credited to the wallet) or of a card-paid purchase (a report).
                     "SELECT t.external_ref, sum(e.amount_paise) FROM ledger_transactions t"
                     " JOIN ledger_entries e ON e.transaction_id = t.id"
-                    " AND e.direction = 'credit' AND e.account_id LIKE 'user:%real'"
-                    " WHERE t.kind = 'recharge' AND (t.external_ref = ANY(:ids)"
+                    " AND e.direction = 'debit' AND e.account_id = :clearing"
+                    " WHERE t.kind IN ('recharge', 'purchase') AND (t.external_ref = ANY(:ids)"
                     " OR (t.occurred_at >= :start AND t.occurred_at < :end))"
                     " GROUP BY t.external_ref"
                 ),
-                {"ids": [p.payment_id for p in captured], "start": start, "end": end},
+                {
+                    "ids": [p.payment_id for p in captured],
+                    "start": start,
+                    "end": end,
+                    "clearing": wallet.CLEARING,
+                },
             )
         ).all()
     }
