@@ -26,13 +26,7 @@
         },
         "source": {
           "type": "enum",
-          "values": [
-            "direct",
-            "search",
-            "social",
-            "referral",
-            "campaign"
-          ]
+          "values": ["direct", "search", "social", "referral", "campaign"]
         },
         "utm_source": {
           "type": "slug"
@@ -107,10 +101,7 @@
       "properties": {
         "session_type": {
           "type": "enum",
-          "values": [
-            "chat",
-            "call"
-          ],
+          "values": ["chat", "call"],
           "required": true
         },
         "is_free_trial": {
@@ -124,10 +115,7 @@
       "properties": {
         "session_type": {
           "type": "enum",
-          "values": [
-            "chat",
-            "call"
-          ],
+          "values": ["chat", "call"],
           "required": true
         },
         "billed_seconds": {

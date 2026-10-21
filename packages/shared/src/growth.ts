@@ -95,7 +95,14 @@ export interface CreatedInvite {
   expires_at: string;
 }
 
-export const CONTENT_KINDS = ["article", "horoscope", "tool_page", "social", "video", "other"] as const;
+export const CONTENT_KINDS = [
+  "article",
+  "horoscope",
+  "tool_page",
+  "social",
+  "video",
+  "other",
+] as const;
 export const CONTENT_STATUSES = ["idea", "drafting", "review", "scheduled", "published"] as const;
 export const CONTENT_LOCALES = ["en", "hi", "both"] as const;
 
