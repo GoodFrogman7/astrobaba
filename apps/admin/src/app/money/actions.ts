@@ -23,14 +23,11 @@ export async function manualRefund(_: ActionResult | null, form: FormData): Prom
     ["/money/refunds"],
     () => api.post("/v1/admin/money/refunds", body, undefined, { "Idempotency-Key": key }),
     `Refund of ${formatRupees(body.amount_paise)} recorded for session ${body.session_id}.`,
+    (code) =>
+      code === "idempotency_conflict"
+        ? "This form was already used for a different refund. Check the list below before trying again."
+        : undefined,
   );
-  if (!result.ok && /idempotency_conflict/.test(result.error)) {
-    return {
-      ok: false,
-      error:
-        "This form was already used for a different refund. Check the list below before trying again.",
-    };
-  }
   return result;
 }
 

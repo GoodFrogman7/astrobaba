@@ -1,7 +1,7 @@
 # Astro engine golden fixtures
 
-Status: **proposal** (Phase 0). Phase 1 fills every `expected` block and wires these files into CI.
-A regression against them blocks merges (PLAN.md §7).
+Status: **in CI**. Expected values come from JPL Horizons and USNO via `reference/` (scripts, never
+hand-typed). A regression blocks merges (PLAN.md §7).
 
 | File | What | Rows |
 |---|---|---|

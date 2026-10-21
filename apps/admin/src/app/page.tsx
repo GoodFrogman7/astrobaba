@@ -55,10 +55,7 @@ export default async function Dashboard() {
           </li>
         ))}
       </ul>
-      <p className="mt-4 text-xs text-muted">
-        Counts above 50 show as 50+ only when the API returns a total. “–” means the list could not
-        be loaded.
-      </p>
+      <p className="mt-4 text-xs text-muted">“–” means the list could not be loaded.</p>
     </main>
   );
 }

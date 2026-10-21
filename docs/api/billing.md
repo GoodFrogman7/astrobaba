@@ -127,7 +127,7 @@ Presence: while an astrologer has an `accepted`/`active` session, `presence:{id}
 
 ## Chat WebSocket
 
-`GET /v1/sessions/{id}/ws?ticket=…` on the API origin (`NEXT_PUBLIC_API_WS_URL`). The ticket is
+`GET /v1/sessions/{id}/ws?ticket=…` on the API origin (`API_WS_URL`, read at request time by web and the astrologer portal). The ticket is
 single-use, 30 s, bound to (user, session, role), stored in Redis. The `Origin` header must be one
 of `CORS_ORIGINS`. Bad ticket → close `4001`; not a participant → `4003`; a newer connection
 for the same role → the older one closes `4009`; session over → `4000` after an `ended` event.

@@ -96,6 +96,16 @@ export default async function ReconciliationPage() {
                           (<Amount paise={c.drift_paise} />)
                         </span>
                       )}
+                      {!!c.issue_count && <span>{c.issue_count} issue(s)</span>}
+                      {c.error && <span className="text-danger">{c.error}</span>}
+                      {!!c.issues?.length && (
+                        <details className="w-full">
+                          <summary className="cursor-pointer text-muted">Show issues</summary>
+                          <pre className="mt-1 overflow-x-auto text-xs">
+                            {JSON.stringify(c.issues, null, 2)}
+                          </pre>
+                        </details>
+                      )}
                     </li>
                   ))}
                 </ul>

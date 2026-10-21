@@ -2,6 +2,7 @@ import "server-only";
 
 import { NextResponse, type NextRequest } from "next/server";
 import { sessionToken } from "@/lib/tools/proxy";
+import { relay } from "@/lib/billing/forward";
 import { API_URL } from "@/lib/upstream";
 import { checkUploadHeaders, limitStream, MAX_BODY_BYTES } from "./upload";
 
@@ -64,20 +65,4 @@ export async function forwardUpload(req: NextRequest, path: string): Promise<Nex
       { status: tooBig ? 413 : 503 },
     );
   }
-}
-
-async function relay(res: Response): Promise<NextResponse> {
-  if (res.status === 204) return new NextResponse(null, { status: 204 });
-  let json: unknown = {};
-  try {
-    json = await res.json();
-  } catch {
-    /* no body */
-  }
-  if (!res.ok) {
-    const d = (json as { detail?: { code?: string } | string }).detail;
-    const code = typeof d === "object" && d?.code ? d.code : "upstream_error";
-    return NextResponse.json({ code, ...(typeof d === "object" ? d : {}) }, { status: res.status });
-  }
-  return NextResponse.json(json, { status: res.status });
 }

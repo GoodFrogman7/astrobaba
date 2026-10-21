@@ -14,6 +14,7 @@ import re
 import sys
 import unicodedata
 from pathlib import Path
+from typing import Any
 
 from astro_engine.cities import CityIndex, normalize
 
@@ -88,7 +89,8 @@ def main() -> int:
         for row in csv.DictReader(f, delimiter="\t", quoting=csv.QUOTE_NONE, escapechar="\\"):
             alt_names[int(row["id"])] = [a for a in row["alt"].split("|") if a]
 
-    out, missing = [], []
+    out: list[dict[str, Any]] = []
+    missing: list[str] = []
     for name, name_hi in CITIES.items():
         exact = [c for c in index.search(name, 25, "IN") if normalize(c.name) == normalize(name)]
         matches = exact or index.search(name, 1, "IN")

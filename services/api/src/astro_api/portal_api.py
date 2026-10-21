@@ -180,7 +180,10 @@ async def get_earnings(
         raise ApiError(422, "invalid_range", "from must not be after to.")
     if (last - first).days + 1 > earnings.MAX_RANGE_DAYS:
         raise ApiError(
-            422, "invalid_range", f"At most {earnings.MAX_RANGE_DAYS} days.", max_days=366
+            422,
+            "invalid_range",
+            f"At most {earnings.MAX_RANGE_DAYS} days.",
+            max_days=earnings.MAX_RANGE_DAYS,
         )
     offset = decode_cursor(cursor)
     start, end = earnings.range_bounds(first, last)

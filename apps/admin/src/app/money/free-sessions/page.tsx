@@ -95,7 +95,8 @@ export default async function FreeSessionsPage({
                 </p>
                 {c.override && (
                   <p className="mt-1 text-sm text-muted">
-                    Override: {c.override.action} on {formatIst(c.override.at)}
+                    Override: {c.override.action}
+                    {c.override.resets ? ` · reset ${c.override.resets}×` : ""}
                     {c.override.note ? ` (${c.override.note})` : ""}
                   </p>
                 )}

@@ -9,11 +9,12 @@ tools. Plan: [docs/PLAN.md](docs/PLAN.md). Architecture and current phase:
 Docker only:
 
 ```sh
-make dev        # Postgres, Redis, API, astro engine, web; waits until healthy
+make dev        # whole stack (Postgres, Redis, API, engine, LiveKit, web, admin, astrologer)
 open http://localhost:3000      # English
 open http://localhost:3000/hi   # Hindi
 make seed       # 30 demo astrologers (development only)
 open http://localhost:3001      # admin (make admin-role PHONE=98xxxxxxxx first)
+open http://localhost:3002      # astrologer portal
 make down
 ```
 

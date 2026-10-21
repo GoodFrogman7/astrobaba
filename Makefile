@@ -23,7 +23,7 @@ data/raw/ephe/sepl_18.se1: data/fetch_ephemeris.py
 data/build/cities.tsv.gz: data/import_cities.py
 	uv run python data/import_cities.py
 
-dev: env ## Boot Postgres, Redis, API, astro engine and web in Docker, wait until healthy
+dev: env ## Boot the whole stack in Docker (db, cache, API, engine, LiveKit, web, admin, astrologer) and wait
 	$(COMPOSE) up --build --detach --wait
 	@echo ""
 	@echo "  web    http://localhost:3000   (Hindi: http://localhost:3000/hi)"

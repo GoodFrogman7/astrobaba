@@ -86,7 +86,9 @@ export default async function ReviewsPage({
                 {r.text ? (
                   <p className="mt-2 whitespace-pre-wrap break-words">{r.text}</p>
                 ) : (
-                  <p className="mt-2 text-sm text-muted">Rating only, no text.</p>
+                  <p className="mt-2 text-sm text-muted">
+                    {st.held ? "Text hidden while the review is checked." : "Rating only, no text."}
+                  </p>
                 )}
                 {r.reply ? (
                   <div className="mt-3 border-l-2 border-primary pl-3">

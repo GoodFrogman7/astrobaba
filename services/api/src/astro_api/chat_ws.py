@@ -25,6 +25,7 @@ from sqlalchemy import select
 from astro_api import chat_bus, ws_tickets
 from astro_api import session_service as svc
 from astro_api.models import ENDED_SESSION_STATUSES, Astrologer, ConsultSession
+from astro_api.ratelimit import incr_window
 
 router = APIRouter()
 log = logging.getLogger("astro_api.chat")
@@ -124,10 +125,7 @@ class Connection:
             await self.error("invalid_message", f"Messages are 1-{MAX_CHARS} characters.")
             return
         key = f"chatrl:{self.session_id}:{self.role}"
-        count = int(await self.redis.incr(key))
-        if count == 1:
-            await self.redis.expire(key, RATE_WINDOW_S)
-        if count > RATE_LIMIT:
+        if await incr_window(self.redis, key, RATE_WINDOW_S) > RATE_LIMIT:
             await self.error("rate_limited", "You are sending messages too fast.")
             return
         try:

@@ -315,3 +315,16 @@ describe("sessions", () => {
     expect(JSON.parse(String(calls[0]!.init.body))).toEqual({ rating: 5, text: "Helpful" });
   });
 });
+
+describe("relay", () => {
+  it("keeps the real status when an error body is JSON null or not an object", async () => {
+    const { relay } = await import("../src/lib/billing/forward");
+    for (const body of ["null", '"oops"', "[]"]) {
+      const res = await relay(
+        new Response(body, { status: 409, headers: { "content-type": "application/json" } }),
+      );
+      expect(res.status).toBe(409);
+      expect(await res.json()).toEqual({ code: "upstream_error" });
+    }
+  });
+});

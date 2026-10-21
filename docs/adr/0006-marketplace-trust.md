@@ -37,7 +37,7 @@ staff need an admin panel.
 
 ## Consequences
 
-- Phase 4 adds a second factor for admin sign-in (TOTP) before launch; phone OTP alone is
+- A second factor for admin sign-in (TOTP) is required before launch; phone OTP alone is
   acceptable only while the admin team is the founder.
 - Retention and deletion rules for KYC documents must be written (DPDP) before real applicants
   upload anything (COMPLIANCE.md).

@@ -194,7 +194,7 @@ export interface FreeSessionClaim {
   abuse_score: number;
   /** Why the score is what it is (codes like shared_device, ip_burst); never raw phone/IP. */
   reasons: string[];
-  override: { action: "allow" | "block" | "reset"; note: string | null; at?: string } | null;
+  override: { action: "allow" | "block"; resets: number; note: string | null } | null;
 }
 
 export type ReconStatus = "ok" | "drift" | "error";
@@ -203,6 +203,11 @@ export interface ReconCheck {
   name: string;
   status: ReconStatus;
   drift_paise?: number;
+  /** Ids and amounts only (first issues of the check). */
+  issues?: Record<string, unknown>[];
+  issue_count?: number;
+  /** Exception class name when the run failed. */
+  error?: string;
 }
 
 export interface ReconRun {

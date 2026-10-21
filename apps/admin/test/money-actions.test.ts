@@ -102,13 +102,18 @@ describe("manual refund action", () => {
   it("treats a 4xx as a definite answer and explains an idempotency conflict", async () => {
     postResponse = () =>
       Response.json(
-        { detail: { code: "idempotency_conflict", message: "idempotency_conflict" } },
+        {
+          detail: {
+            code: "idempotency_conflict",
+            message: "This Idempotency-Key was used for another request.",
+          },
+        },
         { status: 409 },
       );
     const r = await manualRefund(null, form(refund));
     expect(r.ok).toBe(false);
     if (!r.ok) {
-      expect(r.retryable).toBeUndefined();
+      expect(r.retryable).toBe(false);
       expect(r.error).toContain("already used for a different refund");
     }
     postResponse = () =>
