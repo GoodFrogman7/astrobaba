@@ -40,3 +40,12 @@ version is configured (`LEGAL_APPROVED_VERSION`).
 - [ ] Astrologer terms (independent contractor, conduct rules, banned topics) reviewed by a lawyer
 - [ ] Admin second factor (TOTP) before more than one admin exists
 - [x] Reviews only after completed sessions; contact details and outcome claims held for moderation
+
+## Launch and growth (Phase 8)
+
+- [x] First-party analytics only (no third-party tags); closed schema; GPC/DNT and a privacy-page switch turn it off; events deleted with the account and included in the export (ADR-0013)
+- [ ] Lawyer confirms whether the pseudonymous analytics cookie (`aid`, 180 days) needs opt-in consent under DPDP, and the 400-day event retention
+- [x] Staging and preview builds are `noindex`; only `NEXT_PUBLIC_SITE_ENV=production` is indexable
+- [x] Articles publish only with a named reviewer; claims check and SEO check run on them in CI
+- [ ] 30–50 real astrologers vetted through all four steps before marketing (docs/LAUNCH.md §2)
+- [ ] Staging load test: 500 chat sessions, no errors, p95 round trip < 500 ms, ledger invariants hold

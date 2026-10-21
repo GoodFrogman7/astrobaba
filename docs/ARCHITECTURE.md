@@ -1,6 +1,6 @@
 # Architecture
 
-Living document. Updated at the end of every phase (PLAN.md §0.6). Current state: **Phase 7**.
+Living document. Updated at the end of every phase (PLAN.md §0.6). Current state: **Phase 8**.
 
 ## Repo
 
@@ -36,12 +36,14 @@ packages/
 data/
   astro/          Jyotish tables (names en/hi, lords, panchang lists, dasha, dosha rules,
                   Ashtakoota); each cites its source, some await astrologer review
+  growth/         Phase 8 funnel targets and supply goals (assumptions to validate)
   fetch_ephemeris.py, import_cities.py   `make data`: Swiss Ephemeris files, GeoNames index
-docs/             PLAN, ARCHITECTURE, COMPLIANCE, adr/, reference/
+docs/             PLAN, ARCHITECTURE, COMPLIANCE, LAUNCH (runbook), adr/, api/, reference/
 evals/
   astro/          Golden fixtures (inputs), reference/ (JPL Horizons + USNO raw data with
                   provenance), test_golden.py (hard gate in CI)
   safety/         Chat safety fixtures (Phase 7)
+scripts/          claims-check.mjs (CI), loadtest/ (chat load test, uv workspace member)
 .github/workflows/ci.yml
 docker-compose.yml, Makefile, pyproject.toml (uv workspace), pnpm-workspace.yaml
 ```
@@ -256,6 +258,39 @@ launch:   production refuses to start until LEGAL_APPROVED_VERSION == policies.j
           CI fails on banned marketing claims (scripts/claims-check.mjs) and on safety evals
 ```
 
+## Launch and growth (Phase 8)
+
+Contract: [docs/api/growth.md](api/growth.md). Decision: [ADR-0013](adr/0013-first-party-analytics-and-funnel.md)
+(first-party analytics). Targets: `data/growth/targets.json`. Runbook: [docs/LAUNCH.md](LAUNCH.md).
+
+```
+analytics: browser beacon ── web /api/e (drops GPC/DNT/opt-out/bots; HttpOnly aid cookie) ──
+           API /v1/analytics/events (closed schema, user from token only, IP-HMAC rate limit)
+           ── analytics_events (purged after 400 days; deleted with the account; in the export)
+           web OTP verify route ── server-side otp_verified ── links aid to the user
+funnel:    admin /growth ── visitor funnel (first page view cohort, events + source tables) and
+           account funnel (client accounts; staff, astrologers and +910 seed phones left out);
+           free session / recharges always from free_session_claims, consult_sessions,
+           recharge_orders, never from client events
+supply:    admin invite (code shown once, HMAC stored) ── /astrologers/apply?invite= ── single
+           use under a row lock (flag astrologer_invite_only) ── existing vetting ── /supply
+           readiness: pipeline, languages, skills, 7x24 IST schedule coverage
+content:   admin /content calendar items + engine dates (tithi at sunrise and Sun sign changes,
+           New Delhi, cached per day) │ /learn articles: published + reviewed_by only
+search:    noindex unless NEXT_PUBLIC_SITE_ENV=production │ verification meta │ IndexNow key +
+           daily submit script │ sitemap includes published articles
+launch:    admin /launch: 15 live checks (legal, helplines, tables, supply, horoscopes,
+           providers, reconciliation, jobs, analytics, voice, AI)
+load:      scripts/loadtest: N synthetic chat sessions over the public API; latency
+           percentiles; ledger, per-session charge and minutes-started invariants
+```
+
+- Funnel windows are half-open `[t0, t0 + window_days)`. First recharge and repeat are the
+  user's lifetime first and second paid orders, counted when they fall in the window. When one
+  browser signs in as several users, its first `otp_verified` in the window decides the link.
+- Ending a session charges every minute that has started (`billing_meter.charge_started`), so
+  a session ended between meter ticks still pays its partial last minute (billing.md).
+
 ## Cross-cutting rules in code
 
 | Rule (PLAN.md) | Where it lives |
@@ -278,6 +313,9 @@ launch:   production refuses to start until LEGAL_APPROVED_VERSION == policies.j
 | Crisis language never blocked; no selling to a flagged session (§5 P7) | `astro_api.safety`, `safety_events`, `evals/safety` |
 | No legal launch without reviewed texts (§5 P7) | `check_production_settings`: `LEGAL_APPROVED_VERSION` |
 | No banned marketing claims in copy (§5 P7) | `scripts/claims-check.mjs` in CI |
+| Analytics first party, opt-out honoured, no free text (§6, ADR-0013) | `/api/e` (GPC/DNT/aid_off), closed schema v2, `analytics_api` takes user from the token only |
+| Staging never indexed | `robots.ts` + `X-Robots-Tag: noindex` unless `NEXT_PUBLIC_SITE_ENV=production` |
+| Articles only after human review | `/learn` loader routes `published` files with `reviewed_by` only |
 | No billing for audio that is not flowing (§5 P5) | meter confirms LiveKit presence before each call minute; LiveKit down → no charge, `service_unavailable` |
 | Never a negative balance (§5 P4) | prepaid minutes + row locks + `CHECK (balance >= 0)`; 100-way concurrency test |
 | Own design system (§0.1) | `packages/shared/src/tokens.ts` + `tokens/tokens.css`, AA contrast tested |

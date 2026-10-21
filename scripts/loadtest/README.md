@@ -65,9 +65,9 @@ It prints a short report and writes the JSON. The exit code is 0 only when the r
 no errors, every session completed, round-trip p95 under `--p95-target-ms` (default 500) and
 the invariants hold. Message text is a constant and is never logged or stored by the tool.
 
-The default `--end-margin 10` ends sessions 10 s before a minute boundary. Ending right at a
-boundary races the meter, which charges minute n+1 on its first tick after the boundary
-(`meter_tick_seconds`). The report lists those cases under `billing_vs_active_time`.
+The default `--end-margin 10` ends sessions 10 s before a minute boundary. Every session must be
+billed for exactly the minutes it started (`billing_vs_active_time`); `/end` charges a started
+minute the meter has not ticked yet.
 
 **clean**: refused unless `APP_ENV` is `development` or `test`, and while any load-test session
 is still open (the meter ends those; run clean again afterwards). It finds the rows by their tags,

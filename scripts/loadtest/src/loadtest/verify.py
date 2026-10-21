@@ -5,8 +5,8 @@
    the user-side debits of its `consultation` transactions add up to the same amount, and there
    is exactly one charge per minute with keys `session:{id}:minute:1..n` (billing_meter).
 3. The balance projections of the run's clients equal the sum of their ledger entries.
-Also reported (not a failure): billed minutes against the active time (the partial last minute
-is billed as a whole; the meter charges minute n+1 on its first tick after the boundary).
+4. Billed minutes equal the minutes started in the active time (a partial last minute is billed
+   as a whole, also when the session ends before the meter's next tick).
 """
 
 import math
@@ -91,8 +91,6 @@ async def verify(
             started_minutes = max(1, math.ceil(active / minute_seconds))
             if n == started_minutes:
                 timing["billed = minutes started"] += 1
-            elif n == started_minutes - 1:
-                timing["ended before the meter charged the minute in progress"] += 1
             else:
                 problems["billed minutes outside the active time"] += 1
     for account, balance, entries in projections:
