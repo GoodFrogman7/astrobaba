@@ -75,6 +75,48 @@ Then:
 **Updates:** `git pull && deploy/deploy.sh`. **Backups:** `deploy/backup.sh` runs nightly from the
 crontab and keeps 14 dumps in `deploy/backups/`. Copy them off the server.
 
+## 2a. Oracle Cloud Always Free, step by step
+
+1. **Sign up** at <https://signup.cloud.oracle.com>.
+   - Pick **India West (Mumbai)** or **India South (Hyderabad)** as the home region; it can't be
+     changed later.
+   - Stay on the free tier and don't upgrade the account.
+2. **Create the VM:** Compute → Instances → Create instance.
+   - **Image:** Canonical Ubuntu 24.04.
+   - **Shape:** Ampere `VM.Standard.A1.Flex` with **2 OCPU and 12 GB**.
+     - Oracle may reclaim an Always Free VM whose CPU, network *and* memory all stay under 20%
+       for 7 days ([Oracle docs](https://docs.oracle.com/en-us/iaas/Content/FreeTier/resourceref.htm)).
+     - This stack uses about 4 GB, which is over 20% of 12 GB.
+     - Smaller shapes are also easier to get when Oracle says "Out of capacity". If that
+       happens, retry later or pick another availability domain.
+   - **Networking:** a new VCN with a public subnet, and "Assign a public IPv4 address" on.
+   - **SSH keys:** "Generate a key pair for me", then save the private key (for example
+     `C:\Users\<you>\.ssh\oracle-astrobaba.key`).
+   - **Boot volume:** 100 GB (the free allowance is 200 GB in total).
+3. **Open the web ports:**
+   - From the instance page, go to the subnet, then the default security list, then
+     **Add ingress rules**: source `0.0.0.0/0`, TCP, destination port `80`; another for `443`.
+   - For voice calls also add UDP `50000-50100` and TCP `7881`.
+   - Oracle's Ubuntu image keeps its own host firewall rules. `bootstrap.sh` leaves them alone,
+     and Docker's published ports are not blocked by them.
+4. **Connect from Windows PowerShell:**
+   ```powershell
+   icacls "$env:USERPROFILE\.ssh\oracle-astrobaba.key" /inheritance:r /grant:r "$($env:USERNAME):(R)"
+   ssh -i "$env:USERPROFILE\.ssh\oracle-astrobaba.key" ubuntu@<PUBLIC_IP>
+   ```
+5. **On the server**, with the IP written with dashes for sslip.io:
+   ```bash
+   curl -fsSL https://raw.githubusercontent.com/GoodFrogman7/astrobaba/<branch>/deploy/bootstrap.sh -o bootstrap.sh
+   sudo bash bootstrap.sh
+   sudo git clone -b <branch> https://github.com/GoodFrogman7/astrobaba.git /opt/astrobaba
+   sudo chown -R ubuntu:ubuntu /opt/astrobaba && sudo usermod -aG docker ubuntu
+   exit   # reconnect so the docker group applies, then:
+   cd /opt/astrobaba
+   deploy/gen-secrets.sh <1-2-3-4>.sslip.io <your-email> <1.2.3.4>
+   deploy/deploy.sh
+   ```
+6. **Continue with §2:** make yourself admin, then install the crontab.
+
 ## 3. What the preview protects and what it does not
 
 - **Protected:**

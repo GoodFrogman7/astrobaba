@@ -15,7 +15,7 @@ compose=(docker compose --env-file deploy/.env -f docker-compose.yml -f deploy/c
 
 domain=$(grep '^DOMAIN=' deploy/.env | cut -d= -f2-)
 for _ in $(seq 1 60); do
-  if curl -fsS -o /dev/null "https://api.${domain}/healthz"; then
+  if curl -fsS -o /dev/null --resolve "api.${domain}:443:127.0.0.1" "https://api.${domain}/healthz"; then
     echo "Up: https://${domain}  https://portal.${domain}  https://admin.${domain}"
     docker image prune -f >/dev/null
     exit 0
