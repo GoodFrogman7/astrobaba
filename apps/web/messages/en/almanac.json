@@ -1,1 +1,111 @@
-{}
+{
+  "almanac": {
+    "panchang": {
+      "heading": "Panchang for {city}",
+      "summary": "At a glance",
+      "vaara": "Weekday (vaara)",
+      "sunrise": "Sunrise",
+      "sunset": "Sunset",
+      "tithi": "Tithi",
+      "nakshatra": "Nakshatra",
+      "yoga": "Yoga",
+      "karana": "Karana",
+      "until": "until {time}",
+      "rahuKaal": "Rahu Kaal",
+      "choghadiya": "Choghadiya",
+      "dayChoghadiya": "Day (sunrise to sunset)",
+      "nightChoghadiya": "Night (sunset to next sunrise)",
+      "hora": "Hora (planetary hours)",
+      "horaShow": "Show all 24 horas",
+      "part": {
+        "day": "Day",
+        "night": "Night"
+      },
+      "nature": {
+        "good": "Good",
+        "neutral": "Neutral",
+        "bad": "Avoid"
+      },
+      "kshaya": "Kshaya: this {kind} begins and ends between two sunrises.",
+      "vriddhi": "Vriddhi: this {kind} is still current at the next sunrise.",
+      "prevDay": "Previous day",
+      "nextDay": "Next day",
+      "today": "Today",
+      "tomorrow": "Tomorrow",
+      "timesNote": "All times are local time in {city} ({tz}), 24-hour clock. The Hindu day runs from sunrise to the next sunrise.",
+      "period": "Time",
+      "name": "Name",
+      "lord": "Lord",
+      "otherCities": "Panchang for other cities",
+      "paksha": {
+        "shukla": "Shukla paksha",
+        "krishna": "Krishna paksha"
+      },
+      "elements": "Panchang elements",
+      "todayFor": "Today's panchang for {city}",
+      "kind": {
+        "tithi": "tithi",
+        "nakshatra": "nakshatra",
+        "yoga": "yoga",
+        "karana": "karana"
+      }
+    },
+    "horoscope": {
+      "heading": "{sign} {period} horoscope",
+      "areas": {
+        "overall": "Overall",
+        "love": "Love and relationships",
+        "career": "Career",
+        "money": "Money",
+        "health": "Health and energy"
+      },
+      "scores": "Scores for {window}",
+      "scoreScale": "Score on a 5-step scale",
+      "reviewed": "Reviewed by our editors before publishing.",
+      "notPublished": "Written commentary for this period has not been reviewed yet, so this page shows the plain facts behind the scores.",
+      "transits": "Planet positions from {sign}",
+      "graha": "Planet",
+      "sign": "Sign",
+      "house": "House from {sign}",
+      "retrograde": "Retrograde",
+      "yes": "Yes",
+      "no": "No",
+      "moon": "The Moon this period",
+      "lucky": "Lucky day and number",
+      "luckyDay": "Lucky day",
+      "luckyNumber": "Lucky number",
+      "review": "The scoring rules follow classical transit (gochara) tables and are awaiting review by a vetted astrologer.",
+      "moonSign": "Based on your Moon sign (rashi), not your Sun sign.",
+      "periods": {
+        "daily": "Daily",
+        "weekly": "Weekly",
+        "monthly": "Monthly"
+      },
+      "allSigns": "Choose your Moon sign",
+      "otherPeriods": "Other periods for {sign}",
+      "window": {
+        "daily": "{start}",
+        "weekly": "{start} to {end}",
+        "monthly": "{start} to {end}"
+      }
+    },
+    "home": {
+      "todayHeading": "Today in New Delhi",
+      "sunrise": "Sunrise",
+      "tithi": "Tithi",
+      "nakshatra": "Nakshatra",
+      "fullPanchang": "Full panchang",
+      "explore": "Start here",
+      "kundli": "Make your kundli",
+      "kundliBody": "Planets, houses and dasha periods from your exact birth time and place.",
+      "matching": "Match two kundlis",
+      "matchingBody": "All eight kootas scored out of 36, with each one explained.",
+      "panchang": "Daily panchang",
+      "panchangBody": "Tithi, nakshatra, Rahu Kaal and choghadiya for your city.",
+      "tools": "All free tools",
+      "toolsBody": "Nakshatra, dasha, doshas and numerology calculators.",
+      "horoscope": "Horoscope by Moon sign",
+      "horoscopeBody": "Daily, weekly and monthly scores worked out from planetary positions."
+    }
+  }
+}

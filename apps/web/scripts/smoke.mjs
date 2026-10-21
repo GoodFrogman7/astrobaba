@@ -5,9 +5,11 @@ import { setTimeout as sleep } from "node:timers/promises";
 
 const PORT = process.env.SMOKE_PORT ?? "3100";
 const base = `http://127.0.0.1:${PORT}`;
+const SITE = (process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000").replace(/\/$/, "");
 const server = spawn("node_modules/.bin/next", ["start", "--port", PORT], {
   stdio: ["ignore", "inherit", "inherit"],
-  env: { ...process.env, NEXT_PUBLIC_SITE_URL: "https://example.test" },
+  // Canonical URLs are baked in at build time, so check against the URL the build used.
+  env: { ...process.env, NEXT_PUBLIC_SITE_URL: SITE },
 });
 
 const checks = [
@@ -45,7 +47,7 @@ try {
     if (res.status !== 200) problems.push(`status ${res.status}`);
     if (!html.includes(`<html lang="${c.lang}"`)) problems.push(`missing <html lang="${c.lang}">`);
     for (const s of c.must) if (!html.includes(s)) problems.push(`missing text: ${s}`);
-    const canonical = c.lang === "en" ? "https://example.test" : "https://example.test/hi";
+    const canonical = c.lang === "en" ? SITE : `${SITE}/hi`;
     if (!html.includes(`<link rel="canonical" href="${canonical}"`))
       problems.push(`canonical not ${canonical}`);
     for (const l of ["en", "hi", "x-default"])

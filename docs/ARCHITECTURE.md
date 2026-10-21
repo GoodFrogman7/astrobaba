@@ -1,20 +1,23 @@
 # Architecture
 
-Living document. Updated at the end of every phase (PLAN.md §0.6). Current state: **Phase 1**.
+Living document. Updated at the end of every phase (PLAN.md §0.6). Current state: **Phase 2**.
 
 ## Repo
 
 ```
 apps/
-  web/            Next.js 16 App Router: public site + user app (SSR, en + /hi)
+  web/            Next.js 16 App Router: public site + user app (SSR, en + /hi): home, kundli,
+                  kundli matching, 10 free tools, panchang (48 cities), horoscopes (36 pages)
   astrologer/     Astrologer portal (Phase 5), placeholder
   admin/          Ops console (Phase 3), placeholder
 services/
-  api/            FastAPI core API: health, flags; auth/marketplace/wallet/sessions later
-    migrations/   Alembic (baseline: citext, pg_trgm)
+  api/            FastAPI core API: phone OTP sign-in, saved kundlis, horoscope publishing and
+                  review (admin); marketplace/wallet/sessions later
+    migrations/   Alembic: 0001 baseline, 0002 users/sessions/kundlis/horoscopes/audit_log
   astro/          FastAPI astro engine (AGPL-3.0-only, ADR-0001): kundli, panchang, dasha,
                   doshas, matching, transits, city search
-  worker/         Background jobs entry point (queue chosen with the first job)
+  worker/         CLI jobs: horoscope generation (facts → LLM → validator → review queue) and
+                  review; queue library chosen when jobs need scheduling
 packages/
   shared/         TS: brand, locales, disclaimer, IST date source, design tokens,
                   feature flags, analytics schema. JSON parts are read by Python too.
@@ -71,6 +74,25 @@ main.py (routes) ─> kundli / panchang / dasha / doshas / matching / transits
 Transition times (tithi, nakshatra, yoga, karana ends) are solved by Newton iteration on the
 angle and its rate from the ephemeris, to well under a second.
 
+## Web (Phase 2)
+
+| Path | Rendering | Data |
+|---|---|---|
+| `/`, `/tools`, `/tools/<slug>`, `/kundli`, `/kundli-matching` | Static shell; results via Server Actions calling the engine server-to-server | Birth details only in POST bodies, never URLs or logs |
+| `/panchang`, `/panchang/<city>`, `/panchang/<city>/tomorrow` | Dynamic, cached per IST date (rolls over at 00:00 IST) | `/v1/panchang` |
+| `/panchang/<city>/<YYYY-MM-DD>` | Dynamic, canonical to itself, not in sitemap | `/v1/panchang` |
+| `/horoscope`, `/horoscope/<daily\|weekly\|monthly>/<sign>` | Dynamic, cached per IST date | `/v1/horoscope/facts` + published prose from the API (ADR-0005) |
+| `/api/cities`, `/api/auth/*`, `/api/kundlis` | Route handlers proxying engine/API; session in an httpOnly cookie | |
+
+Every indexable page uses `PageShell` (breadcrumbs, FAQs, BreadcrumbList/FAQPage JSON-LD,
+consultation CTA) with copy from `src/content/{en,hi}/<page>.json`. The layout adds
+Organization JSON-LD and the disclaimer. `sitemap.xml` comes from `src/lib/routes`.
+
+Acceptance checks (CI `e2e` job): `scripts/seo-check.mjs` crawls every sitemap URL (status,
+canonical, hreflang, JSON-LD, ≥ 800 characters of body text, one IST date across title,
+description and body, Hindi in Devanagari); `scripts/lighthouse.mjs` requires ≥ 90 in every
+category on mobile for representative pages.
+
 ## Cross-cutting rules in code
 
 | Rule (PLAN.md) | Where it lives |
@@ -83,6 +105,8 @@ angle and its rate from the ephemeris, to well under a second.
 | Feature flags | `packages/shared/flags/flags.json` + `FLAG_<NAME>` env; `/v1/flags` |
 | Astro values only from the engine or static tables (§0.4, §6) | `services/astro`; `data/astro/*.json` with sources; golden fixtures from JPL/USNO |
 | AGPL boundary (ADR-0001) | Only `services/astro` imports `swisseph` (test enforced); `/v1/source` |
+| No unreviewed LLM text on horoscope pages (§6) | `horoscope_entries.status`; public API returns `published` only; pages fall back to template sentences from facts |
+| Phone numbers and OTPs never stored or logged in clear | OTP stored as HMAC in Redis; phones masked in logs; session token stored as SHA-256 |
 | Unreviewed Jyotish tables never public | `/v1/match`, `/v1/doshas` return 503 `tables_not_reviewed` in staging/production |
 | Own design system (§0.1) | `packages/shared/src/tokens.ts` + `tokens/tokens.css`, AA contrast tested |
 

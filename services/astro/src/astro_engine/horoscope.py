@@ -111,15 +111,19 @@ def compute_horoscope_facts(
     def house(graha: str, jd: float) -> int:
         return (_sign_index(backend, jd, graha, ayanamsha) - sign_index) % 12 + 1
 
+    # Positions in `transits` are taken at the same instants the scores use (window midpoint;
+    # 12:00 IST for the daily Moon), so the table and the score reasons always agree.
+    evaluated = {g: (jd_moon if g == "moon" and period == "daily" else jd_mid) for g in GRAHA_ORDER}
     transits = []
     for g in GRAHA_ORDER:
-        pos = backend.body(jd0, g, ayanamsha, "mean")
+        pos = backend.body(evaluated[g], g, ayanamsha, "mean")
         transits.append(
             {
                 "graha": g,
                 "sign": t.signs[math.floor(pos.sidereal / 30.0) % 12]["id"],
-                "house_from_sign": house(g, jd0),
+                "house_from_sign": house(g, evaluated[g]),
                 "retrograde": pos.speed < 0,
+                "evaluated_at": iso_z(utc_from_jd(evaluated[g])),
                 "ingresses": [] if g == "ketu" else ingresses(backend, g, jd0, jd1, ayanamsha),
             }
         )
@@ -132,8 +136,7 @@ def compute_horoscope_facts(
         for i in rahu["ingresses"]
     ]
 
-    evaluated = {g: (jd_moon if g == "moon" else jd_mid) for g in GRAHA_ORDER}
-    houses = {g: house(g, evaluated[g]) for g in GRAHA_ORDER}
+    houses = {x["graha"]: x["house_from_sign"] for x in transits}
     areas: dict[str, Any] = {}
     for area, weights in area_weights(period).items():
         reasons = []

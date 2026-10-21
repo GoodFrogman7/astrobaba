@@ -25,6 +25,7 @@
    "sign": "libra",
    "house_from_sign": 7,
    "retrograde": false,
+   "evaluated_at": "2026-10-22T06:30:00Z",
    "ingresses": []
   },
   {
@@ -32,6 +33,7 @@
    "sign": "aquarius",
    "house_from_sign": 11,
    "retrograde": false,
+   "evaluated_at": "2026-10-22T06:30:00Z",
    "ingresses": []
   },
   {
@@ -39,6 +41,7 @@
    "sign": "cancer",
    "house_from_sign": 4,
    "retrograde": false,
+   "evaluated_at": "2026-10-22T06:30:00Z",
    "ingresses": []
   },
   {
@@ -46,6 +49,7 @@
    "sign": "libra",
    "house_from_sign": 7,
    "retrograde": false,
+   "evaluated_at": "2026-10-22T06:30:00Z",
    "ingresses": []
   },
   {
@@ -53,6 +57,7 @@
    "sign": "cancer",
    "house_from_sign": 4,
    "retrograde": false,
+   "evaluated_at": "2026-10-22T06:30:00Z",
    "ingresses": []
   },
   {
@@ -60,6 +65,7 @@
    "sign": "libra",
    "house_from_sign": 7,
    "retrograde": true,
+   "evaluated_at": "2026-10-22T06:30:00Z",
    "ingresses": []
   },
   {
@@ -67,6 +73,7 @@
    "sign": "pisces",
    "house_from_sign": 12,
    "retrograde": true,
+   "evaluated_at": "2026-10-22T06:30:00Z",
    "ingresses": []
   },
   {
@@ -74,6 +81,7 @@
    "sign": "aquarius",
    "house_from_sign": 11,
    "retrograde": true,
+   "evaluated_at": "2026-10-22T06:30:00Z",
    "ingresses": []
   },
   {
@@ -81,6 +89,7 @@
    "sign": "leo",
    "house_from_sign": 5,
    "retrograde": true,
+   "evaluated_at": "2026-10-22T06:30:00Z",
    "ingresses": []
   }
  ],

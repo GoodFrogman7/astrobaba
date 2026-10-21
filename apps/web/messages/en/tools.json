@@ -1,1 +1,279 @@
-{}
+{
+  "toolsUi": {
+    "form": {
+      "name": "Name (optional)",
+      "fullName": "Full name",
+      "date": "Date of birth",
+      "time": "Time of birth",
+      "unknownTime": "I don't know my birth time",
+      "place": "Place of birth",
+      "placeHint": "Start typing a town or city",
+      "placeSearching": "Searching…",
+      "placeNone": "No matching places",
+      "timeZone": "Time zone: {tz}",
+      "submit": "Calculate",
+      "submitting": "Calculating…",
+      "partner1": "Partner 1",
+      "partner2": "Partner 2",
+      "foldQuestion": "This local time happened twice that night because the clocks went back. Which one?",
+      "foldFirst": "The first time",
+      "foldSecond": "The second time",
+      "numerologyHint": "Use the name as you usually write it, in English letters.",
+      "privacy": "Your birth details are used only to calculate this result. They are not stored unless you choose to save them."
+    },
+    "errors": {
+      "date_invalid": "Please enter a valid date.",
+      "date_out_of_range": "Dates from 1800 to 2399 are supported.",
+      "time_invalid": "Please enter the time as hours and minutes.",
+      "place_required": "Please choose a place from the list.",
+      "name_required": "Please enter a name.",
+      "name_too_long": "Please use 60 characters or fewer.",
+      "latin_letters_required": "Please write the name in English letters (A to Z). Numerology tables here use the Latin alphabet.",
+      "nonexistent_local_time": "That clock time did not exist at this place (the clocks moved forward). Please check the time.",
+      "ambiguous_local_time": "That clock time happened twice at this place. Please choose which one below.",
+      "unknown_time_zone": "We could not read the time zone for this place.",
+      "tables_not_reviewed": "This result will be available after review by a vetted astrologer.",
+      "upstream_unavailable": "The calculation service is not reachable right now. Please try again in a moment.",
+      "generic": "Something went wrong. Please try again."
+    },
+    "result": {
+      "heading": "Your result",
+      "ascendant": "Ascendant (lagna)",
+      "unknownAscendant": "Not available without a birth time",
+      "graha": "Graha",
+      "sign": "Sign",
+      "degree": "Degree",
+      "nakshatraPada": "Nakshatra (pada)",
+      "house": "House",
+      "retro": "Retrograde",
+      "yes": "Yes",
+      "no": "No",
+      "north": "North Indian",
+      "south": "South Indian",
+      "chartStyle": "Chart style",
+      "unknownTimeNote": "Without a birth time there is no ascendant and no houses. Planet positions are calculated for local noon; the Moon can change sign or nakshatra within a day, so both ends of the day are shown.",
+      "moonRange": "Moon during the day: {start} at the start, {end} at the end.",
+      "currentDasha": "Current period (as of today)",
+      "mahadasha": "Mahadasha",
+      "antardasha": "Antardasha",
+      "from": "From",
+      "to": "To",
+      "balance": "At birth, {lord} mahadasha had {years} years remaining.",
+      "doshas": "Dosha checks",
+      "present": "Present",
+      "notPresent": "Not present",
+      "ruleUsed": "Rule used: {rule}",
+      "mangal": "Mangal dosha",
+      "kaalSarp": "Kaal Sarp",
+      "sadeSati": "Sade Sati",
+      "sadeSatiActive": "Active now: {phase} phase, {start} to {end}.",
+      "sadeSatiInactive": "Not active today.",
+      "sadeSatiCycles": "Periods in the 100 years from birth",
+      "phase": {
+        "rising": "Rising",
+        "peak": "Peak",
+        "setting": "Setting"
+      },
+      "marsHouseFrom": "Mars is in house {lagna} from the lagna and house {moon} from the Moon.",
+      "marsHouseFromMoon": "Mars is in house {moon} from the Moon (no lagna without a birth time).",
+      "kaalSarpDirection": {
+        "rahu_to_ketu": "All seven planets lie between Rahu and Ketu.",
+        "ketu_to_rahu": "All seven planets lie between Ketu and Rahu."
+      },
+      "kaalSarpType": "Named type: {type}.",
+      "pendingReview": "These rules are pending review by a vetted astrologer. Treat the result as provisional.",
+      "settings": "Calculated with {ayanamsha} ayanamsha, {node} and whole-sign houses.",
+      "sun": "Sun sign",
+      "moon": "Moon sign (rashi)",
+      "nakshatra": "Birth nakshatra",
+      "pada": "Pada {pada}",
+      "lord": "Ruled by {lord}",
+      "number": "Number",
+      "planet": "Associated planet",
+      "steps": "How it is calculated",
+      "mulank": "Mulank (root number)",
+      "bhagyank": "Bhagyank (destiny number)",
+      "nameNumber": "Name number",
+      "compound": "Compound total {compound}, reduced to {number}.",
+      "letters": "Letter values (Chaldean)",
+      "dashaTable": "Mahadasha sequence",
+      "startedBeforeBirth": "started before birth",
+      "nodeName": {
+        "mean": "mean node",
+        "true": "true node"
+      },
+      "ayanamshaName": {
+        "lahiri": "Lahiri",
+        "raman": "Raman",
+        "krishnamurti": "Krishnamurti",
+        "true_chitra": "True Chitra"
+      },
+      "retroMark": "(R)",
+      "retroLegend": "(R) = retrograde. Rahu and Ketu always move backwards."
+    },
+    "match": {
+      "total": "{total} of {max} points",
+      "summary": "Summary",
+      "koota": "Koota",
+      "points": "Points",
+      "measures": "What it looks at",
+      "bands": {
+        "low": "A lower score. Traditionally this is where families look more closely at the individual kootas and the full charts before deciding anything.",
+        "mid": "A moderate score. Traditionally this range is considered workable, with attention to the kootas that scored low.",
+        "high": "A higher score. Traditionally this range is considered a good basis, though the full charts still matter."
+      },
+      "kootaInfo": {
+        "varna": "Temperament and outlook",
+        "vashya": "Mutual attraction and influence",
+        "tara": "Birth star compatibility and wellbeing",
+        "yoni": "Physical and instinctive compatibility",
+        "graha_maitri": "Friendship between the Moon sign lords",
+        "gana": "Nature (deva, manushya, rakshasa)",
+        "bhakoot": "Relative Moon sign positions",
+        "nadi": "Constitution (nadi)"
+      },
+      "nadiDosha": "Nadi dosha: both partners share the same nadi.",
+      "bhakootDosha": "Bhakoot dosha: the Moon signs are in a 2/12, 5/9 or 6/8 relation.",
+      "noDosha": "No nadi or bhakoot dosha.",
+      "partnerMangal": "{partner}: Mangal dosha {state}.",
+      "convention": "The traditional Ashtakoota system is defined for a groom and a bride. Here partner 1 takes the groom's role and partner 2 the bride's.",
+      "remediesHeading": "If a dosha or a low score shows up",
+      "remedies": [
+        "A score is one input, not a verdict. Many families read it together with both full charts and with how the two people get along.",
+        "Classical texts list conditions under which a dosha is considered cancelled. Those checks need the full charts and are best discussed with an astrologer.",
+        "We do not sell remedies, rituals or stones, and no remedy can promise an outcome."
+      ],
+      "kootaName": {
+        "varna": "Varna",
+        "vashya": "Vashya",
+        "tara": "Tara",
+        "yoni": "Yoni",
+        "graha_maitri": "Graha maitri",
+        "gana": "Gana",
+        "bhakoot": "Bhakoot",
+        "nadi": "Nadi"
+      }
+    },
+    "save": {
+      "button": "Save my kundli",
+      "title": "Save this kundli",
+      "nameLabel": "Name for this kundli",
+      "phone": "Mobile number",
+      "consent": "We'll text a one-time code. We use your number only to sign you in.",
+      "sendCode": "Send code",
+      "code": "6-digit code",
+      "verify": "Verify and save",
+      "saved": "Saved. You can find it in your account.",
+      "close": "Close",
+      "errors": {
+        "unsupported_phone": "Please enter an Indian mobile number.",
+        "rate_limited": "Too many attempts. Please wait and try again.",
+        "invalid_code": "That code is not right.",
+        "challenge_expired": "That code has expired. Please request a new one.",
+        "limit_reached": "You have reached the limit of saved kundlis.",
+        "generic": "We couldn't save it right now. Please try again."
+      }
+    },
+    "hub": {
+      "open": "Open tool"
+    }
+  },
+  "toolNames": {
+    "kundli": {
+      "title": "Kundli (birth chart)",
+      "blurb": "Your full birth chart with planets, houses, dasha and dosha checks."
+    },
+    "sun-moon-ascendant": {
+      "title": "Sun, Moon and ascendant",
+      "blurb": "The three most-asked placements in your sidereal chart."
+    },
+    "nakshatra": {
+      "title": "Nakshatra finder",
+      "blurb": "Your birth nakshatra, its pada and its ruling planet."
+    },
+    "vimshottari-dasha": {
+      "title": "Vimshottari dasha",
+      "blurb": "Your planetary periods from birth, and the one running today."
+    },
+    "mangal-dosha": {
+      "title": "Mangal dosha check",
+      "blurb": "Where Mars sits from your lagna and Moon, with the rule used."
+    },
+    "sade-sati": {
+      "title": "Sade Sati check",
+      "blurb": "When Saturn passes your Moon sign, now and across your life."
+    },
+    "kaal-sarp-dosha": {
+      "title": "Kaal Sarp check",
+      "blurb": "Whether all seven planets fall on one side of the Rahu-Ketu axis."
+    },
+    "mulank": {
+      "title": "Mulank (root number)",
+      "blurb": "Your root number from the day you were born."
+    },
+    "destiny-number": {
+      "title": "Destiny number (bhagyank)",
+      "blurb": "Your destiny number from your full date of birth."
+    },
+    "name-numerology": {
+      "title": "Name numerology",
+      "blurb": "The number of your name using Chaldean letter values."
+    }
+  },
+  "toolAstro": {
+    "graha": {
+      "sun": "Sun",
+      "moon": "Moon",
+      "mars": "Mars",
+      "mercury": "Mercury",
+      "jupiter": "Jupiter",
+      "venus": "Venus",
+      "saturn": "Saturn",
+      "rahu": "Rahu",
+      "ketu": "Ketu"
+    },
+    "sign": {
+      "aries": "Aries",
+      "taurus": "Taurus",
+      "gemini": "Gemini",
+      "cancer": "Cancer",
+      "leo": "Leo",
+      "virgo": "Virgo",
+      "libra": "Libra",
+      "scorpio": "Scorpio",
+      "sagittarius": "Sagittarius",
+      "capricorn": "Capricorn",
+      "aquarius": "Aquarius",
+      "pisces": "Pisces"
+    },
+    "nakshatra": {
+      "ashwini": "Ashwini",
+      "bharani": "Bharani",
+      "krittika": "Krittika",
+      "rohini": "Rohini",
+      "mrigashira": "Mrigashira",
+      "ardra": "Ardra",
+      "punarvasu": "Punarvasu",
+      "pushya": "Pushya",
+      "ashlesha": "Ashlesha",
+      "magha": "Magha",
+      "purva_phalguni": "Purva Phalguni",
+      "uttara_phalguni": "Uttara Phalguni",
+      "hasta": "Hasta",
+      "chitra": "Chitra",
+      "swati": "Swati",
+      "vishakha": "Vishakha",
+      "anuradha": "Anuradha",
+      "jyeshtha": "Jyeshtha",
+      "mula": "Mula",
+      "purva_ashadha": "Purva Ashadha",
+      "uttara_ashadha": "Uttara Ashadha",
+      "shravana": "Shravana",
+      "dhanishta": "Dhanishta",
+      "shatabhisha": "Shatabhisha",
+      "purva_bhadrapada": "Purva Bhadrapada",
+      "uttara_bhadrapada": "Uttara Bhadrapada",
+      "revati": "Revati"
+    }
+  }
+}

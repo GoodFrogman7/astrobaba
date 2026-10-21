@@ -7,6 +7,9 @@ COPY apps/web/package.json apps/web/
 COPY packages/shared/package.json packages/shared/
 RUN pnpm install --frozen-lockfile --filter @astro/web...
 COPY packages/shared packages/shared
+# Static Jyotish tables and the panchang city list are bundled into the build.
+COPY data/astro data/astro
+COPY data/seo data/seo
 COPY apps/web apps/web
 ENV NEXT_OUTPUT=standalone NEXT_TELEMETRY_DISABLED=1
 RUN pnpm --filter @astro/web build

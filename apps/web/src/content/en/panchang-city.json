@@ -1,0 +1,50 @@
+{
+  "title": "{city} Panchang, {date}: tithi, nakshatra, Rahu Kaal",
+  "description": "Panchang for {city} on {date}: sunrise, sunset, tithi, nakshatra, yoga, karana, Rahu Kaal, choghadiya and hora in local time.",
+  "h1": "Panchang for {city}",
+  "intro": "Sunrise and sunset, the five panchang elements, Rahu Kaal, choghadiya and hora for {city} on {date}, each calculated for the city's exact position and shown in local time.",
+  "sections": [
+    {
+      "heading": "The five parts of the panchang",
+      "body": [
+        "A panchang describes a day through five elements. The tithi is the lunar day: each one lasts while the Moon gains 12 degrees on the Sun, so it can be shorter or longer than a solar day. The nakshatra is the lunar mansion the Moon is passing through, one of 27 equal arcs of the sidereal zodiac. The yoga comes from the combined motion of the Sun and the Moon, the karana is half a tithi, and the vaara is the weekday.",
+        "The element that is current at sunrise traditionally names the day, which is why this page also lists any element that begins or ends before the next sunrise."
+      ]
+    },
+    {
+      "heading": "Rahu Kaal, choghadiya and hora",
+      "body": [
+        "Rahu Kaal is one of eight equal parts of the daytime between sunrise and sunset; which part it is depends on the weekday. Choghadiya divides the day and the night into eight periods each and labels them good, neutral or best avoided, following a fixed weekday sequence. Hora divides the day and night into 24 planetary hours, starting with the lord of the weekday at sunrise.",
+        "Because all three depend on the exact sunrise and sunset at {city}, they are calculated for the city itself and shown in its local time."
+      ]
+    },
+    {
+      "heading": "How this panchang for {city} is calculated",
+      "body": [
+        "Sunrise and sunset use the upper edge of the Sun's disc on the horizon with standard atmospheric refraction, the same convention as the US Naval Observatory. Tithi, nakshatra, yoga and karana changes are solved from the positions of the Sun and Moon to well under a second, using the Lahiri ayanamsha. The date in the address is the calendar date in India; change it to see any day."
+      ]
+    }
+  ],
+  "faqs": [
+    {
+      "q": "Why does the tithi change in the middle of the day?",
+      "a": "A tithi ends whenever the Moon has moved another 12 degrees ahead of the Sun, which can happen at any time of day or night. The tithi current at sunrise is the one the day is named after."
+    },
+    {
+      "q": "What does kshaya or vriddhi mean?",
+      "a": "A kshaya tithi starts and ends between two sunrises, so no sunrise falls in it. A vriddhi tithi is current at two consecutive sunrises. Both happen naturally because tithis vary in length."
+    },
+    {
+      "q": "Is Rahu Kaal the same in every city?",
+      "a": "No. It is a fixed part of the daytime, so it moves with the local sunrise and sunset. That is why each city has its own panchang page."
+    },
+    {
+      "q": "Which time zone are the times in?",
+      "a": "All times are in the local time of {city}, shown on a 24-hour clock."
+    },
+    {
+      "q": "Can I see the panchang for another date?",
+      "a": "Yes. Use the previous and next day links, or open the tomorrow page. Any date from 1800 to 2399 can be shown."
+    }
+  ]
+}

@@ -1,0 +1,39 @@
+{
+  "title": "Mulank calculator: your root number from date of birth",
+  "description": "Find your mulank (root or psychic number) from the day of the month you were born, with each step of the reduction and the associated planet.",
+  "h1": "Mulank (root number) calculator",
+  "intro": "In Indian numerology your mulank, or root number, comes from the day of the month on which you were born. Enter your date of birth to see the number, how it was reduced and the planet traditionally associated with it.",
+  "sections": [
+    {
+      "heading": "How mulank is calculated",
+      "body": [
+        "Take the day of the month and add its digits until one digit remains. Someone born on the 1st to the 9th has that day as their mulank; someone born on a two-digit day adds the two digits, and adds again if the result still has two digits. We show each step so you can check it.",
+        "Each number from 1 to 9 is traditionally paired with a planet: 1 Sun, 2 Moon, 3 Jupiter, 4 Rahu, 5 Mercury, 6 Venus, 7 Ketu, 8 Saturn and 9 Mars."
+      ]
+    },
+    {
+      "heading": "Mulank and bhagyank",
+      "body": [
+        "The mulank uses only the day. The bhagyank, or destiny number, uses the whole date. Numerology readings usually look at both, together with the name number. Numerology is a separate tradition from jyotish and does not use planet positions."
+      ]
+    }
+  ],
+  "faqs": [
+    {
+      "q": "Is mulank the same as the psychic number?",
+      "a": "Yes. Mulank, root number and psychic number are names for the same value."
+    },
+    {
+      "q": "Does the birth time matter?",
+      "a": "No. Only the calendar date is used. If you were born just after midnight, use that date."
+    },
+    {
+      "q": "Can two people with different birthdays share a mulank?",
+      "a": "Yes. For example, days that reduce to the same digit share a mulank."
+    },
+    {
+      "q": "Why is the result marked provisional?",
+      "a": "The number-to-planet table follows the common Indian convention and is waiting for review, like our other tables."
+    }
+  ]
+}

@@ -1,0 +1,74 @@
+// Lighthouse mobile audit (PLAN.md §5 Phase 2 acceptance: Lighthouse >= 90 on mobile).
+// Usage: BASE_URL=http://localhost:3000 CHROME_PATH=/path/to/chrome node scripts/lighthouse.mjs
+// Pages that 404 (not built yet) are skipped with a warning; anything else below 90 fails.
+import { execFileSync } from "node:child_process";
+import { mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import path from "node:path";
+
+const LIGHTHOUSE = "lighthouse@12.8.2";
+const BASE = (process.env.BASE_URL ?? "http://localhost:3000").replace(/\/$/, "");
+const MIN = Number(process.env.LIGHTHOUSE_MIN ?? 90);
+const CATEGORIES = ["performance", "accessibility", "best-practices", "seo"];
+const PAGES = (
+  process.env.LIGHTHOUSE_PAGES ??
+  "/,/hi,/kundli,/tools/nakshatra,/kundli-matching,/panchang/new-delhi,/horoscope/daily/aries,/hi/horoscope/daily/aries"
+)
+  .split(",")
+  .map((p) => p.trim())
+  .filter(Boolean);
+
+const out = mkdtempSync(path.join(tmpdir(), "lh-"));
+let failed = false;
+const rows = [];
+try {
+  for (const page of PAGES) {
+    const url = BASE + page;
+    const status = (await fetch(url, { redirect: "manual" }).catch(() => ({ status: 0 }))).status;
+    if (status === 404) {
+      console.warn(`SKIP ${page} (404, not built yet)`);
+      continue;
+    }
+    if (status !== 200) {
+      console.error(`FAIL ${page}: status ${status}`);
+      failed = true;
+      continue;
+    }
+    const file = path.join(out, `${page.replace(/\W+/g, "_") || "home"}.json`);
+    execFileSync(
+      "npx",
+      [
+        "--yes",
+        LIGHTHOUSE,
+        url,
+        "--quiet",
+        "--output=json",
+        `--output-path=${file}`,
+        `--only-categories=${CATEGORIES.join(",")}`,
+        "--form-factor=mobile",
+        "--chrome-flags=--headless=new --no-sandbox --disable-gpu",
+      ],
+      { stdio: ["ignore", "ignore", "inherit"], env: process.env },
+    );
+    const report = JSON.parse(readFileSync(file, "utf8"));
+    const scores = Object.fromEntries(
+      CATEGORIES.map((c) => [c, Math.round((report.categories[c]?.score ?? 0) * 100)]),
+    );
+    const low = Object.entries(scores).filter(([, s]) => s < MIN);
+    rows.push({ page, ...scores });
+    if (low.length) {
+      failed = true;
+      const audits = Object.values(report.audits)
+        .filter((a) => a.score !== null && a.score < 0.9 && a.scoreDisplayMode !== "informative")
+        .map((a) => `${a.id} (${a.displayValue ?? a.score})`)
+        .slice(0, 8);
+      console.error(
+        `FAIL ${page}: ${low.map(([c, s]) => `${c} ${s}`).join(", ")}; check: ${audits.join("; ")}`,
+      );
+    }
+  }
+} finally {
+  rmSync(out, { recursive: true, force: true });
+}
+console.table(rows);
+process.exit(failed ? 1 : 0);

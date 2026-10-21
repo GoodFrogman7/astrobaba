@@ -1,0 +1,50 @@
+{
+  "title": "Kundli matching: Ashtakoota guna milan out of 36",
+  "description": "Free kundli matching for two people: all eight Ashtakoota kootas scored out of 36, nadi and bhakoot checks and Mangal dosha for both charts.",
+  "h1": "Kundli matching (Ashtakoota guna milan)",
+  "intro": "Enter the birth details of both people to see the traditional Ashtakoota score out of 36, how each of the eight kootas scored, and whether nadi, bhakoot or Mangal dosha appear. The result is a starting point for a conversation, not a verdict.",
+  "sections": [
+    {
+      "heading": "How Ashtakoota matching works",
+      "body": [
+        "Ashtakoota compares the Moon of one chart with the Moon of the other. Eight factors, called kootas, look at the Moon signs and the birth nakshatras: varna, vashya, tara, yoni, graha maitri, gana, bhakoot and nadi. They carry 1 to 8 points each, for a total of 36.",
+        "The traditional system is defined for a groom and a bride. In the form, partner 1 takes the groom's role and partner 2 the bride's, because a few kootas are scored differently in each direction."
+      ]
+    },
+    {
+      "heading": "Reading the score",
+      "body": [
+        "Many families treat scores of 18 and above as workable and look more closely at any koota that scored low. A score is a summary of eight Moon-based comparisons. It does not describe two people's character, choices or how they treat each other, and many astrologers also read both full charts before giving advice.",
+        "Nadi and bhakoot doshas and Mangal dosha are shown separately because they are often discussed on their own. Classical texts describe conditions in which these are considered cancelled; those checks need the full charts and are best done with an astrologer."
+      ]
+    },
+    {
+      "heading": "How we calculate it",
+      "body": [
+        "Moon positions come from the Swiss Ephemeris with the Lahiri ayanamsha. The koota tables follow the commonly published North Indian conventions. Some tables differ between sources, so they are marked as pending review until a vetted astrologer signs them off."
+      ]
+    }
+  ],
+  "faqs": [
+    {
+      "q": "What is a good guna milan score?",
+      "a": "Traditionally, 18 or more out of 36 is considered acceptable and higher scores are considered a better basis. Families usually also look at individual kootas and the full charts."
+    },
+    {
+      "q": "What is nadi dosha?",
+      "a": "Nadi dosha is noted when both people's birth nakshatras belong to the same nadi group. It is one of the eight kootas and scores zero in that case. Classical texts list several exceptions."
+    },
+    {
+      "q": "Is Mangal dosha a problem?",
+      "a": "Mangal dosha simply describes where Mars sits in a chart. It is very common, and traditional practice often looks at whether both charts have it and at cancellation rules. It is not a reason for fear."
+    },
+    {
+      "q": "Why do I need birth times for matching?",
+      "a": "The Moon moves quickly, so the time can change the birth nakshatra and sometimes the Moon sign. Mangal dosha from the lagna also needs the birth time."
+    },
+    {
+      "q": "Can you match by name only?",
+      "a": "Not with this tool. Ashtakoota needs both Moon positions, which come from the date, time and place of birth."
+    }
+  ]
+}

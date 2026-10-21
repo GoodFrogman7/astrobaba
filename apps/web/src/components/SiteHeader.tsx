@@ -16,14 +16,17 @@ export async function SiteHeader({ locale }: { locale: Locale }) {
   return (
     <header className="border-b border-border">
       <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-3 px-4 py-3">
-        <Link href="/" className="text-lg font-semibold tracking-tight">
+        <Link href="/" className="inline-block py-2 text-lg font-semibold tracking-tight">
           {BRAND_NAME}
         </Link>
         <nav aria-label={t("main")} className="order-3 w-full sm:order-2 sm:w-auto">
-          <ul className="flex flex-wrap gap-x-4 gap-y-1 text-sm">
+          <ul className="flex flex-wrap gap-x-4 text-sm">
             {NAV.map((n) => (
               <li key={n.key}>
-                <Link href={n.href} className="underline-offset-4 hover:underline">
+                <Link
+                  href={n.href}
+                  className="inline-block py-1.5 underline-offset-4 hover:underline"
+                >
                   {t(n.key)}
                 </Link>
               </li>

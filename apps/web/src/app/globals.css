@@ -11,6 +11,8 @@
   --color-primary-fg: var(--color-primary-fg);
   --color-accent: var(--color-accent);
   --color-accent-fg: var(--color-accent-fg);
+  --color-success: var(--color-success);
+  --color-danger: var(--color-danger);
   --radius-sm: var(--radius-sm);
   --radius-md: var(--radius-md);
   --radius-lg: var(--radius-lg);

@@ -95,3 +95,14 @@ def test_fast_enough_for_all_signs(period: str) -> None:
 def test_window_start_utc_parses() -> None:
     f = compute_horoscope_facts(get_backend(), "pisces", "weekly", date(2026, 10, 21))
     assert datetime.fromisoformat(f["window"]["start"]).utcoffset() is not None
+
+
+@pytest.mark.parametrize("period", ["daily", "weekly", "monthly"])
+def test_transit_table_and_score_reasons_agree(period: str) -> None:
+    """A page shows both; they must never place a graha in two different houses."""
+    for sign in ("aries", "leo", "pisces"):
+        f = compute_horoscope_facts(get_backend(), sign, period, date(2026, 10, 21))  # type: ignore[arg-type]
+        houses = {t["graha"]: t["house_from_sign"] for t in f["transits"]}
+        for area in f["areas"].values():
+            for r in area["reasons"]:
+                assert r["house_from_sign"] == houses[r["graha"]], (sign, r)

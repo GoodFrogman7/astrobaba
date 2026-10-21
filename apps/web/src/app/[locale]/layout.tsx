@@ -13,10 +13,13 @@ import { SITE_URL } from "@/site";
 import "../globals.css";
 
 const latin = Noto_Sans({ subsets: ["latin"], variable: "--font-latin", display: "swap" });
+// Not preloaded, and used only when already available: the Devanagari font is ~120 KB, and
+// Android ships Noto Devanagari as a system font, so text never waits for it (Lighthouse LCP).
 const devanagari = Noto_Sans_Devanagari({
   subsets: ["devanagari"],
   variable: "--font-devanagari",
-  display: "swap",
+  display: "optional",
+  preload: false,
 });
 
 export function generateStaticParams() {

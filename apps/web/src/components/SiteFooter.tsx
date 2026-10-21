@@ -9,10 +9,10 @@ export async function SiteFooter({ locale }: { locale: Locale }) {
   return (
     <footer className="mt-16 border-t border-border">
       <div className="mx-auto max-w-5xl space-y-3 px-4 py-8 text-sm text-muted">
-        <ul className="flex flex-wrap gap-x-4 gap-y-1">
+        <ul className="flex flex-wrap gap-x-4">
           {NAV.map((n) => (
             <li key={n.key}>
-              <Link href={n.href} className="hover:underline">
+              <Link href={n.href} className="inline-block py-1.5 hover:underline">
                 {tn(n.key)}
               </Link>
             </li>

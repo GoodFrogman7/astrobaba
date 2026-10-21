@@ -1,0 +1,39 @@
+{
+  "title": "Kaal Sarp dosha calculator",
+  "description": "Check Kaal Sarp in your chart: whether all seven planets sit on one side of the Rahu-Ketu axis, with the named type and the rule used.",
+  "h1": "Kaal Sarp check",
+  "intro": "Kaal Sarp describes a chart in which all seven visible planets lie on one side of the axis formed by Rahu and Ketu. This tool checks your chart, names the type when there is one, and states the rule used.",
+  "sections": [
+    {
+      "heading": "The rule we use",
+      "body": [
+        "Rahu and Ketu are the two points where the Moon's path crosses the Sun's path; they are always opposite each other. We mark Kaal Sarp when the Sun, Moon, Mars, Mercury, Jupiter, Venus and Saturn all lie strictly between Rahu and Ketu on one side. The twelve named types depend on the house Rahu occupies from the lagna.",
+        "Some traditions also describe partial forms, or treat the direction from Rahu to Ketu differently. We do not report partial forms, and we show the rule with every result."
+      ]
+    },
+    {
+      "heading": "How we calculate it",
+      "body": [
+        "Positions are computed with the Swiss Ephemeris in the sidereal zodiac with the Lahiri ayanamsha and the mean node. The type needs the lagna, so it is only shown when the birth time is known."
+      ]
+    }
+  ],
+  "faqs": [
+    {
+      "q": "How common is Kaal Sarp?",
+      "a": "It appears in a minority of charts, because it needs all seven planets within one half of the zodiac."
+    },
+    {
+      "q": "Why is there no type shown?",
+      "a": "The type is named by Rahu's house from the lagna, which needs a birth time."
+    },
+    {
+      "q": "Do all astrologers use this concept?",
+      "a": "No. It is not described in the oldest classical texts and views on it differ, which is one reason we mark the rules as pending review."
+    },
+    {
+      "q": "What should I do with the result?",
+      "a": "Treat it as one observation about the chart. If it concerns you, discuss the whole chart with an astrologer rather than acting on one factor."
+    }
+  ]
+}

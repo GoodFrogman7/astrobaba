@@ -1,0 +1,39 @@
+{
+  "title": "Name numerology calculator (Chaldean)",
+  "description": "Find the number of your name with Chaldean letter values: each letter's value, the compound total and the single-digit name number with its planet.",
+  "h1": "Name numerology calculator",
+  "intro": "Name numerology gives each letter a number and adds them up. Enter your name as you usually write it to see every letter's value, the compound total, the single-digit name number and the planet traditionally associated with it.",
+  "sections": [
+    {
+      "heading": "The Chaldean system",
+      "body": [
+        "Indian name numerology usually follows the Chaldean system, in which letters take values from 1 to 8 according to their sound. The number 9 is not assigned to any letter. We add the values of all letters, show the compound total, and then reduce it to one digit.",
+        "Spaces, hyphens, dots and apostrophes are ignored. The tables use the Latin alphabet, so names written in Devanagari need to be typed in English letters for now."
+      ]
+    },
+    {
+      "heading": "How it is used",
+      "body": [
+        "Numerologists compare the name number with the mulank and bhagyank from the date of birth. Spelling changes alter the total, which is why people sometimes compare a few spellings. We calculate; we do not recommend spelling changes."
+      ]
+    }
+  ],
+  "faqs": [
+    {
+      "q": "Should I enter my full name?",
+      "a": "Use the name you use most, for example the name you sign with. Results differ between spellings."
+    },
+    {
+      "q": "Can I enter a Hindi name in Devanagari?",
+      "a": "Not yet. Please type it in English letters. Letter tables for Devanagari would need their own tradition and review."
+    },
+    {
+      "q": "What is the compound number?",
+      "a": "The total of all letter values before it is reduced to a single digit."
+    },
+    {
+      "q": "Why does the letter Q have value 1?",
+      "a": "Chaldean values group letters by sound, not alphabet order, so the pattern looks irregular. The full table is shown in the result."
+    }
+  ]
+}

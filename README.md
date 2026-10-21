@@ -4,7 +4,7 @@ Two-sided astrology marketplace (users ↔ vetted astrologers) fed by free, accu
 tools. Plan: [docs/PLAN.md](docs/PLAN.md). Architecture: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 Decisions: [docs/adr/](docs/adr/README.md).
 
-Status: **Phase 1 (astro engine)** complete: see `services/astro` and `evals/astro`. Phase 2 (free-tools SEO funnel) waits on the go-ahead.
+Status: **Phase 2 (free-tools SEO funnel)** complete. Phase 3 (marketplace core) waits on the go-ahead.
 
 ## Quick start
 

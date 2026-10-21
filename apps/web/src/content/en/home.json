@@ -1,0 +1,44 @@
+{
+  "title": "Vedic astrology tools, panchang and horoscopes",
+  "description": "Free kundli, matchmaking, daily panchang and Moon-sign horoscopes, calculated from an astronomical ephemeris for your exact place and time.",
+  "h1": "Clear answers from your birth chart",
+  "intro": "Every planetary position, tithi and nakshatra on this site is calculated from astronomical data for your exact place and time. We explain what it means in plain language, and you can talk to a vetted astrologer whenever you want more depth.",
+  "sections": [
+    {
+      "heading": "How we work",
+      "body": [
+        "Astrological values come from the calculation engine, never from guesswork or AI. The engine uses the Swiss Ephemeris and is checked against public reference data from NASA's Jet Propulsion Laboratory and the US Naval Observatory, so planet positions, sunrise times and tithi changes match the sky.",
+        "Anything written by AI is labelled as AI and is reviewed by a person before it is published. It is never presented as an astrologer. There are no countdown timers, no invented counts of people online and no fear-based offers anywhere on the site."
+      ]
+    },
+    {
+      "heading": "What you can do here",
+      "body": [
+        "Make a kundli from your date, time and place of birth and see it in North or South Indian style. Match two kundlis with the traditional eight kootas. Check today's panchang for your city, with Rahu Kaal, choghadiya and hora in local time. Read daily, weekly and monthly horoscopes for your Moon sign, scored by fixed rules you can inspect.",
+        "Every page explains how its numbers are worked out, so you can understand the reasoning rather than take it on trust."
+      ]
+    }
+  ],
+  "faqs": [
+    {
+      "q": "Are the tools free?",
+      "a": "Yes. The kundli, matchmaking, panchang, horoscope and calculator pages are free to use without signing in."
+    },
+    {
+      "q": "Where do the calculations come from?",
+      "a": "From an astronomical ephemeris (Swiss Ephemeris) using the Lahiri ayanamsha by default. Results are tested against JPL Horizons and US Naval Observatory data."
+    },
+    {
+      "q": "Why do you use the Moon sign for horoscopes?",
+      "a": "Vedic astrology reads transits from the Moon sign (rashi), so our horoscopes are grouped by Moon sign rather than the Western Sun sign."
+    },
+    {
+      "q": "Is this advice?",
+      "a": "No. The site is for guidance and entertainment. It is not medical, legal or financial advice."
+    },
+    {
+      "q": "Do you store my birth details?",
+      "a": "Only if you choose to save a kundli after signing in with your phone. Otherwise your details are used for the calculation and not kept."
+    }
+  ]
+}

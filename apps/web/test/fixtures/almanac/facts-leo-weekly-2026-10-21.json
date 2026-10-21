@@ -1,0 +1,309 @@
+{
+  "sign": "leo",
+  "sign_index": 4,
+  "period": "weekly",
+  "settings": {
+    "engine": "swiss_ephemeris",
+    "engine_version": "2.10.03",
+    "ayanamsha": "lahiri",
+    "reference": "moon_sign",
+    "evaluated_at": {
+      "slow_grahas": "2026-10-22T06:30:00Z",
+      "moon": null
+    },
+    "rules_review_status": "needs_astrologer_review"
+  },
+  "window": {
+    "start_ist_date": "2026-10-19",
+    "end_ist_date": "2026-10-25",
+    "start": "2026-10-18T18:30:00Z",
+    "end": "2026-10-25T18:30:00Z"
+  },
+  "transits": [
+    {
+      "graha": "sun",
+      "sign": "libra",
+      "house_from_sign": 3,
+      "retrograde": false,
+      "evaluated_at": "2026-10-22T06:30:00Z",
+      "ingresses": []
+    },
+    {
+      "graha": "moon",
+      "sign": "aquarius",
+      "house_from_sign": 7,
+      "retrograde": false,
+      "evaluated_at": "2026-10-22T06:30:00Z",
+      "ingresses": [
+        {
+          "at": "2026-10-21T01:31:10Z",
+          "to_sign": "aquarius"
+        },
+        {
+          "at": "2026-10-23T09:34:13Z",
+          "to_sign": "pisces"
+        },
+        {
+          "at": "2026-10-25T13:52:58Z",
+          "to_sign": "aries"
+        }
+      ]
+    },
+    {
+      "graha": "mars",
+      "sign": "cancer",
+      "house_from_sign": 12,
+      "retrograde": false,
+      "evaluated_at": "2026-10-22T06:30:00Z",
+      "ingresses": []
+    },
+    {
+      "graha": "mercury",
+      "sign": "libra",
+      "house_from_sign": 3,
+      "retrograde": false,
+      "evaluated_at": "2026-10-22T06:30:00Z",
+      "ingresses": []
+    },
+    {
+      "graha": "jupiter",
+      "sign": "cancer",
+      "house_from_sign": 12,
+      "retrograde": false,
+      "evaluated_at": "2026-10-22T06:30:00Z",
+      "ingresses": []
+    },
+    {
+      "graha": "venus",
+      "sign": "libra",
+      "house_from_sign": 3,
+      "retrograde": true,
+      "evaluated_at": "2026-10-22T06:30:00Z",
+      "ingresses": []
+    },
+    {
+      "graha": "saturn",
+      "sign": "pisces",
+      "house_from_sign": 8,
+      "retrograde": true,
+      "evaluated_at": "2026-10-22T06:30:00Z",
+      "ingresses": []
+    },
+    {
+      "graha": "rahu",
+      "sign": "aquarius",
+      "house_from_sign": 7,
+      "retrograde": true,
+      "evaluated_at": "2026-10-22T06:30:00Z",
+      "ingresses": []
+    },
+    {
+      "graha": "ketu",
+      "sign": "leo",
+      "house_from_sign": 1,
+      "retrograde": true,
+      "evaluated_at": "2026-10-22T06:30:00Z",
+      "ingresses": []
+    }
+  ],
+  "moon": {
+    "start": {
+      "sign": "capricorn",
+      "nakshatra": "uttara_ashadha"
+    },
+    "ingresses": [
+      {
+        "at": "2026-10-21T01:31:10Z",
+        "to_sign": "aquarius"
+      },
+      {
+        "at": "2026-10-23T09:34:13Z",
+        "to_sign": "pisces"
+      },
+      {
+        "at": "2026-10-25T13:52:58Z",
+        "to_sign": "aries"
+      }
+    ]
+  },
+  "areas": {
+    "overall": {
+      "score": 2,
+      "label": "mixed",
+      "reasons": [
+        {
+          "graha": "sun",
+          "house_from_sign": 3,
+          "effect": "favourable",
+          "weight": 1.0
+        },
+        {
+          "graha": "mars",
+          "house_from_sign": 12,
+          "effect": "challenging",
+          "weight": 1.0
+        },
+        {
+          "graha": "mercury",
+          "house_from_sign": 3,
+          "effect": "challenging",
+          "weight": 1.0
+        },
+        {
+          "graha": "jupiter",
+          "house_from_sign": 12,
+          "effect": "challenging",
+          "weight": 1.0
+        },
+        {
+          "graha": "venus",
+          "house_from_sign": 3,
+          "effect": "favourable",
+          "weight": 1.0
+        },
+        {
+          "graha": "saturn",
+          "house_from_sign": 8,
+          "effect": "challenging",
+          "weight": 1.0
+        },
+        {
+          "graha": "rahu",
+          "house_from_sign": 7,
+          "effect": "challenging",
+          "weight": 1.0
+        },
+        {
+          "graha": "ketu",
+          "house_from_sign": 1,
+          "effect": "challenging",
+          "weight": 1.0
+        }
+      ]
+    },
+    "love": {
+      "score": 3,
+      "label": "steady",
+      "reasons": [
+        {
+          "graha": "venus",
+          "house_from_sign": 3,
+          "effect": "favourable",
+          "weight": 2.0
+        },
+        {
+          "graha": "mars",
+          "house_from_sign": 12,
+          "effect": "challenging",
+          "weight": 1.0
+        },
+        {
+          "graha": "jupiter",
+          "house_from_sign": 12,
+          "effect": "challenging",
+          "weight": 1.0
+        }
+      ]
+    },
+    "career": {
+      "score": 2,
+      "label": "mixed",
+      "reasons": [
+        {
+          "graha": "sun",
+          "house_from_sign": 3,
+          "effect": "favourable",
+          "weight": 2.0
+        },
+        {
+          "graha": "saturn",
+          "house_from_sign": 8,
+          "effect": "challenging",
+          "weight": 2.0
+        },
+        {
+          "graha": "jupiter",
+          "house_from_sign": 12,
+          "effect": "challenging",
+          "weight": 1.0
+        },
+        {
+          "graha": "mercury",
+          "house_from_sign": 3,
+          "effect": "challenging",
+          "weight": 1.0
+        },
+        {
+          "graha": "mars",
+          "house_from_sign": 12,
+          "effect": "challenging",
+          "weight": 1.0
+        }
+      ]
+    },
+    "money": {
+      "score": 1,
+      "label": "challenging",
+      "reasons": [
+        {
+          "graha": "jupiter",
+          "house_from_sign": 12,
+          "effect": "challenging",
+          "weight": 2.0
+        },
+        {
+          "graha": "venus",
+          "house_from_sign": 3,
+          "effect": "favourable",
+          "weight": 1.0
+        },
+        {
+          "graha": "mercury",
+          "house_from_sign": 3,
+          "effect": "challenging",
+          "weight": 1.0
+        },
+        {
+          "graha": "saturn",
+          "house_from_sign": 8,
+          "effect": "challenging",
+          "weight": 1.0
+        }
+      ]
+    },
+    "health": {
+      "score": 2,
+      "label": "mixed",
+      "reasons": [
+        {
+          "graha": "sun",
+          "house_from_sign": 3,
+          "effect": "favourable",
+          "weight": 1.0
+        },
+        {
+          "graha": "mars",
+          "house_from_sign": 12,
+          "effect": "challenging",
+          "weight": 1.0
+        },
+        {
+          "graha": "saturn",
+          "house_from_sign": 8,
+          "effect": "challenging",
+          "weight": 1.0
+        },
+        {
+          "graha": "rahu",
+          "house_from_sign": 7,
+          "effect": "challenging",
+          "weight": 1.0
+        }
+      ]
+    }
+  },
+  "lucky": {
+    "day": "sunday",
+    "number": 1
+  }
+}

@@ -1,0 +1,39 @@
+{
+  "title": "Mangal dosha calculator (Manglik check)",
+  "description": "Check Mangal dosha from your birth chart: where Mars sits from the lagna and the Moon, with the exact rule used and its limitations.",
+  "h1": "Mangal dosha check",
+  "intro": "Mangal dosha, often called being manglik, describes Mars in certain houses of the chart. This tool shows where Mars sits counted from your lagna and from your Moon, and whether the rule we use marks it as present.",
+  "sections": [
+    {
+      "heading": "The rule we use",
+      "body": [
+        "We mark Mangal dosha when Mars is in the 1st, 2nd, 4th, 7th, 8th or 12th house counted from the lagna or from the Moon, using whole-sign houses. Traditions differ: some count only from the lagna, some leave out the 2nd house, and many apply cancellation rules. We show the rule with every result so you know exactly what was checked.",
+        "Because the rule covers six of twelve houses from two reference points, a large share of people meet it. It describes a placement, not a fate, and it is one of many factors astrologers look at."
+      ]
+    },
+    {
+      "heading": "How we calculate it",
+      "body": [
+        "Mars and the Moon are computed with the Swiss Ephemeris in the sidereal zodiac (Lahiri). Without a birth time there is no lagna, so only the check from the Moon is made. Cancellation rules are not applied yet; they need a full reading by an astrologer."
+      ]
+    }
+  ],
+  "faqs": [
+    {
+      "q": "What does manglik mean?",
+      "a": "It is the everyday word for a chart with Mangal dosha under the rule being used."
+    },
+    {
+      "q": "Is Mangal dosha common?",
+      "a": "Yes. Under the broad rule used here, many charts have it. That is one reason astrologers also look at cancellation conditions and at both partners' charts."
+    },
+    {
+      "q": "Does it matter if both partners have it?",
+      "a": "Traditionally, when both charts have Mangal dosha it is often treated as balanced. Our matching tool shows the check for both people."
+    },
+    {
+      "q": "Why is the result marked provisional?",
+      "a": "Dosha rules vary between traditions. Our rule set is waiting for review by a vetted astrologer, and we label results until then."
+    }
+  ]
+}
