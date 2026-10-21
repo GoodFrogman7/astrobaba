@@ -1,0 +1,109 @@
+{
+  "$comment": "Remedies and pujas catalogue (docs/api/revenue.md §4). Describes WHAT a partner's service is (who performs it, what happens, duration). No outcome claims, no gemstones, no products, no prices: partners set prices. Every entry needs editorial (and legal, PLAN.md Phase 7) review before launch. Partners marked dev_only are never shown in staging/production.",
+  "review": "needs_editorial_review",
+  "notice": {
+    "en": "A partner will contact you. We don't sell remedies ourselves and no outcome is promised.",
+    "hi": "एक पार्टनर आपसे संपर्क करेगा। हम ख़ुद उपाय नहीं बेचते और किसी परिणाम का वादा नहीं किया जाता।"
+  },
+  "partners": [
+    {
+      "id": "demo-partner",
+      "name": "Demo partner (development only)",
+      "contact": { "channel": "console", "address": "demo-partner@example.invalid" },
+      "active": true,
+      "dev_only": true
+    }
+  ],
+  "remedies": [
+    {
+      "id": "ganesh-puja",
+      "kind": "puja",
+      "name": { "en": "Ganesh puja", "hi": "गणेश पूजा" },
+      "description": {
+        "en": "A traditional worship of Lord Ganesh performed by a priest from the partner's team, with mantras, offerings of flowers and sweets, and an aarti. It can be done at the partner's venue, and some partners offer it on a video call you can join. Usually about one hour; the partner confirms the duration before booking.",
+        "hi": "पार्टनर की टीम के पुरोहित द्वारा भगवान गणेश की पारंपरिक पूजा, जिसमें मंत्र, फूल और मिठाई का भोग और आरती होती है। यह पार्टनर के स्थान पर की जा सकती है, और कुछ पार्टनर वीडियो कॉल पर भी करवाते हैं जिसमें आप जुड़ सकते हैं। आम तौर पर लगभग एक घंटा; अवधि पार्टनर बुकिंग से पहले बताते हैं।"
+      },
+      "partner_id": "demo-partner",
+      "price_note": {
+        "en": "Price is set by the partner and shared before booking",
+        "hi": "कीमत पार्टनर तय करते हैं और बुकिंग से पहले बताते हैं"
+      },
+      "review": "needs_editorial_review"
+    },
+    {
+      "id": "satyanarayan-katha",
+      "kind": "puja",
+      "name": { "en": "Satyanarayan katha and puja", "hi": "सत्यनारायण कथा और पूजा" },
+      "description": {
+        "en": "A priest from the partner's team recites the Satyanarayan katha (a traditional story told in five chapters) and performs the puja with offerings and an aarti, often for a family gathering. It can be held at your home or at the partner's venue. Usually two to three hours; the partner confirms the duration before booking.",
+        "hi": "पार्टनर की टीम के पुरोहित सत्यनारायण कथा (पाँच अध्यायों में कही जाने वाली पारंपरिक कथा) सुनाते हैं और भोग व आरती के साथ पूजा करते हैं, अक्सर परिवार के साथ। यह आपके घर पर या पार्टनर के स्थान पर हो सकती है। आम तौर पर दो से तीन घंटे; अवधि पार्टनर बुकिंग से पहले बताते हैं।"
+      },
+      "partner_id": "demo-partner",
+      "price_note": {
+        "en": "Price is set by the partner and shared before booking",
+        "hi": "कीमत पार्टनर तय करते हैं और बुकिंग से पहले बताते हैं"
+      },
+      "review": "needs_editorial_review"
+    },
+    {
+      "id": "rudrabhishek",
+      "kind": "puja",
+      "name": { "en": "Rudrabhishek", "hi": "रुद्राभिषेक" },
+      "description": {
+        "en": "A worship of Lord Shiva in which a priest from the partner's team bathes the Shiva linga with water, milk and other traditional offerings while chanting the Rudram. It is usually performed at a temple or the partner's venue; some partners let you watch on a video call. Usually one to two hours; the partner confirms the duration before booking.",
+        "hi": "भगवान शिव की पूजा, जिसमें पार्टनर की टीम के पुरोहित रुद्रम का पाठ करते हुए शिवलिंग का जल, दूध और अन्य पारंपरिक सामग्री से अभिषेक करते हैं। यह आम तौर पर मंदिर या पार्टनर के स्थान पर होता है; कुछ पार्टनर वीडियो कॉल पर दिखाते भी हैं। आम तौर पर एक से दो घंटे; अवधि पार्टनर बुकिंग से पहले बताते हैं।"
+      },
+      "partner_id": "demo-partner",
+      "price_note": {
+        "en": "Price is set by the partner and shared before booking",
+        "hi": "कीमत पार्टनर तय करते हैं और बुकिंग से पहले बताते हैं"
+      },
+      "review": "needs_editorial_review"
+    },
+    {
+      "id": "navagraha-puja",
+      "kind": "puja",
+      "name": { "en": "Navagraha puja", "hi": "नवग्रह पूजा" },
+      "description": {
+        "en": "A traditional worship of the nine grahas (Sun, Moon, Mars, Mercury, Jupiter, Venus, Saturn, Rahu and Ketu) performed by a priest from the partner's team, with a mantra and an offering for each graha. It is done at the partner's venue, and some partners offer it on a video call you can join. Usually one to two hours; the partner confirms the duration before booking.",
+        "hi": "नौ ग्रहों (सूर्य, चंद्र, मंगल, बुध, गुरु, शुक्र, शनि, राहु और केतु) की पारंपरिक पूजा, जो पार्टनर की टीम के पुरोहित हर ग्रह के मंत्र और भोग के साथ करते हैं। यह पार्टनर के स्थान पर होती है, और कुछ पार्टनर वीडियो कॉल पर भी करवाते हैं जिसमें आप जुड़ सकते हैं। आम तौर पर एक से दो घंटे; अवधि पार्टनर बुकिंग से पहले बताते हैं।"
+      },
+      "partner_id": "demo-partner",
+      "price_note": {
+        "en": "Price is set by the partner and shared before booking",
+        "hi": "कीमत पार्टनर तय करते हैं और बुकिंग से पहले बताते हैं"
+      },
+      "review": "needs_editorial_review"
+    },
+    {
+      "id": "griha-pravesh-puja",
+      "kind": "puja",
+      "name": { "en": "Griha pravesh puja", "hi": "गृह प्रवेश पूजा" },
+      "description": {
+        "en": "The traditional ceremony for moving into a new home. A priest from the partner's team comes to the home and performs a Ganesh puja, a kalash sthapana and a small havan with the family. Usually two to three hours; the partner confirms the duration and what you need to arrange before booking.",
+        "hi": "नए घर में प्रवेश की पारंपरिक विधि। पार्टनर की टीम के पुरोहित घर आकर परिवार के साथ गणेश पूजा, कलश स्थापना और एक छोटा हवन करते हैं। आम तौर पर दो से तीन घंटे; अवधि और आपको क्या तैयारी करनी है, यह पार्टनर बुकिंग से पहले बताते हैं।"
+      },
+      "partner_id": "demo-partner",
+      "price_note": {
+        "en": "Price is set by the partner and shared before booking",
+        "hi": "कीमत पार्टनर तय करते हैं और बुकिंग से पहले बताते हैं"
+      },
+      "review": "needs_editorial_review"
+    },
+    {
+      "id": "puja-enquiry-call",
+      "kind": "consultation_followup",
+      "name": { "en": "Call with a puja partner", "hi": "पूजा पार्टनर से बातचीत" },
+      "description": {
+        "en": "If a puja came up in your consultation and you want to know more, someone from the partner's team calls you to explain how that puja is performed, who performs it, where, how long it takes and what it costs. There is no obligation to book. The call usually takes 10 to 15 minutes.",
+        "hi": "अगर आपकी परामर्श में किसी पूजा की बात हुई और आप उसके बारे में और जानना चाहते हैं, तो पार्टनर की टीम से कोई आपको कॉल करके बताएगा कि वह पूजा कैसे होती है, कौन करता है, कहाँ होती है, कितना समय लगता है और कितना ख़र्च आता है। बुकिंग करना ज़रूरी नहीं है। कॉल आम तौर पर 10 से 15 मिनट की होती है।"
+      },
+      "partner_id": "demo-partner",
+      "price_note": {
+        "en": "Price is set by the partner and shared before booking",
+        "hi": "कीमत पार्टनर तय करते हैं और बुकिंग से पहले बताते हैं"
+      },
+      "review": "needs_editorial_review"
+    }
+  ]
+}
