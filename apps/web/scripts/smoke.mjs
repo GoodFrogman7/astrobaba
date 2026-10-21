@@ -58,6 +58,14 @@ try {
     for (const p of problems) console.log(`  - ${p}`);
     failed += problems.length ? 1 : 0;
   }
+  // Personal pages: rendered, but never indexable.
+  for (const path of ["/wallet", "/hi/wallet", "/chat/example-session"]) {
+    const res = await fetch(base + path, { redirect: "manual" });
+    const html = await res.text();
+    const ok = res.status === 200 && /<meta name="robots" content="noindex, nofollow"/.test(html);
+    console.log(`${ok ? "PASS" : "FAIL"} ${path} is noindex (${res.status})`);
+    if (!ok) failed++;
+  }
   const nf = await fetch(base + "/xx-not-a-page");
   console.log(`${nf.status === 404 ? "PASS" : "FAIL"} unknown path returns 404 (${nf.status})`);
   if (nf.status !== 404) failed++;

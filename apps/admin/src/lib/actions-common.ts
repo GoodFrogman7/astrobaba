@@ -17,8 +17,15 @@ export async function adminAction(
   try {
     await run();
   } catch (e) {
-    if (e instanceof ApiError) return { ok: false, error: e.message || e.code, errors: e.errors };
-    return { ok: false, error: "Unexpected error." };
+    if (e instanceof ApiError) {
+      return {
+        ok: false,
+        error: e.message || e.code,
+        errors: e.errors,
+        retryable: e.status >= 500,
+      };
+    }
+    return { ok: false, error: "Unexpected error.", retryable: true };
   }
   for (const p of paths) revalidatePath(p);
   return { ok: true, message };

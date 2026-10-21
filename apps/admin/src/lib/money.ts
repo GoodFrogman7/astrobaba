@@ -12,10 +12,18 @@ export function rupeesToPaise(input: string): number | null {
   return whole * 100 + frac;
 }
 
+/** Display only: integer paise → "₹1,500" / "₹25.50" / "−₹25" (negative = debit). */
 export function formatRupees(paise: number): string {
-  const rupees = Math.floor(paise / 100);
-  const rest = paise % 100;
-  return `₹${rupees.toLocaleString("en-IN")}${rest ? `.${String(rest).padStart(2, "0")}` : ""}`;
+  const sign = paise < 0 ? "−" : "";
+  const abs = Math.abs(Math.trunc(paise));
+  const rupees = Math.floor(abs / 100);
+  const rest = abs % 100;
+  return `${sign}₹${rupees.toLocaleString("en-IN")}${rest ? `.${String(rest).padStart(2, "0")}` : ""}`;
+}
+
+/** Signed amount with an explicit "+" for credits, for ledger-style lists. */
+export function formatSignedRupees(paise: number): string {
+  return paise > 0 ? `+${formatRupees(paise)}` : formatRupees(paise);
 }
 
 export type PriceCheck = { ok: true; paise: number } | { ok: false; error: string };

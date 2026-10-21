@@ -85,6 +85,12 @@ export type ServerEvent =
 export type ClientEvent =
   { type: "message"; client_id: string; text: string } | { type: "typing" } | { type: "ping" };
 
+/**
+ * `text` of a `sender: "system"` message is a code, never personal data: `session_started`,
+ * `low_balance`, or `session_ended:<EndReason>`.
+ */
+export const SYSTEM_MESSAGE_CODES = ["session_started", "low_balance", "session_ended"] as const;
+
 /** Limits mirrored by the server. */
 export const CHAT_LIMITS = {
   maxMessageChars: 2000,

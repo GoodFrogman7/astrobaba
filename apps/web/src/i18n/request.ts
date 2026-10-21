@@ -3,7 +3,7 @@ import { getRequestConfig } from "next-intl/server";
 import { routing } from "./routing";
 
 /** Core messages plus one file per area (tools, almanac) so areas never edit the same file. */
-export const MESSAGE_AREAS = ["tools", "almanac", "marketplace"] as const;
+export const MESSAGE_AREAS = ["tools", "almanac", "marketplace", "billing"] as const;
 
 export default getRequestConfig(async ({ requestLocale }) => {
   const requested = await requestLocale;

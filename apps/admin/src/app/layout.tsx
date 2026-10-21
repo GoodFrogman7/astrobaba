@@ -14,6 +14,8 @@ const NAV = [
   { href: "/astrologers", label: "Astrologers" },
   { href: "/reviews", label: "Reviews" },
   { href: "/horoscopes", label: "Horoscopes" },
+  { href: "/sessions", label: "Sessions" },
+  { href: "/money/refunds", label: "Money" },
 ];
 
 export default function RootLayout({ children }: { children: ReactNode }) {

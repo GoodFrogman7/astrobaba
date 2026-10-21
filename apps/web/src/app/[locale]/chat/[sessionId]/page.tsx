@@ -1,0 +1,36 @@
+import type { Locale } from "@astro/shared";
+import type { Metadata } from "next";
+import { hasLocale } from "next-intl";
+import { getTranslations, setRequestLocale } from "next-intl/server";
+import { notFound } from "next/navigation";
+import { ChatRoom } from "@/components/chat/ChatRoom";
+import { routing } from "@/i18n/routing";
+import { privateMetadata } from "@/lib/seo";
+
+type Props = { params: Promise<{ locale: string; sessionId: string }> };
+
+const ID = /^[A-Za-z0-9_-]{1,64}$/;
+
+/** Personal page: noindex, not in the sitemap. The chat itself loads in the browser. */
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { locale } = await params;
+  if (!hasLocale(routing.locales, locale)) return {};
+  const t = await getTranslations({ locale, namespace: "billing.chat" });
+  return privateMetadata(t("title"));
+}
+
+export default async function ChatPage({ params }: Props) {
+  const { locale: raw, sessionId } = await params;
+  if (!hasLocale(routing.locales, raw) || !ID.test(sessionId)) notFound();
+  const locale: Locale = raw;
+  setRequestLocale(locale);
+  const t = await getTranslations({ locale, namespace: "billing.chat" });
+  return (
+    <main id="main" className="mx-auto max-w-3xl px-4 py-8">
+      <h1 className="text-2xl font-semibold tracking-tight">{t("title")}</h1>
+      <div className="mt-4">
+        <ChatRoom sessionId={sessionId} />
+      </div>
+    </main>
+  );
+}

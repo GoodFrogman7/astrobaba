@@ -76,11 +76,15 @@ async function parse<T>(res: Response): Promise<T> {
 
 export const api = {
   get: async <T>(path: string) => parse<T>(await apiFetch(path)),
-  post: async <T>(path: string, body?: unknown, auth?: string) =>
+  post: async <T>(path: string, body?: unknown, auth?: string, headers?: Record<string, string>) =>
     parse<T>(
       await apiFetch(
         path,
-        { method: "POST", body: body === undefined ? undefined : JSON.stringify(body) },
+        {
+          method: "POST",
+          body: body === undefined ? undefined : JSON.stringify(body),
+          ...(headers ? { headers } : {}),
+        },
         auth,
       ),
     ),

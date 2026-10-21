@@ -78,7 +78,7 @@
       "title": "Consult {name}",
       "chat": "Chat",
       "call": "Call",
-      "soon": "Consultations open in the next release.",
+      "callSoon": "Voice calls open in a later release.",
       "perMin": "per minute",
       "billing": "You pay per minute from your wallet. You can end anytime."
     },

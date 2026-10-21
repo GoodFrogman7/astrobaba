@@ -5,6 +5,7 @@ import { describe, expect, it, vi } from "vitest";
 
 // next-intl's Link needs the Next router; a plain anchor is enough for markup assertions.
 vi.mock("@/i18n/navigation", () => ({
+  useRouter: () => ({ push: () => undefined }),
   Link: ({
     href,
     children,
@@ -26,8 +27,10 @@ vi.mock("@/i18n/navigation", () => ({
 }));
 import enCore from "../messages/en.json" with { type: "json" };
 import enMarket from "../messages/en/marketplace.json" with { type: "json" };
+import enBilling from "../messages/en/billing.json" with { type: "json" };
 import hiCore from "../messages/hi.json" with { type: "json" };
 import hiMarket from "../messages/hi/marketplace.json" with { type: "json" };
+import hiBilling from "../messages/hi/billing.json" with { type: "json" };
 import { AstrologerCard } from "../src/components/marketplace/AstrologerCard";
 import { ConsultCard } from "../src/components/marketplace/ConsultCard";
 import { EmptyState } from "../src/components/marketplace/EmptyState";
@@ -49,7 +52,10 @@ const profile = profileFx as unknown as AstrologerProfile;
 const reviews = reviewsFx as unknown as ReviewsResponse;
 
 function render(node: ReactNode, locale: "en" | "hi" = "en") {
-  const messages = locale === "en" ? { ...enCore, ...enMarket } : { ...hiCore, ...hiMarket };
+  const messages =
+    locale === "en"
+      ? { ...enCore, ...enMarket, ...enBilling }
+      : { ...hiCore, ...hiMarket, ...hiBilling };
   return renderToStaticMarkup(
     <NextIntlClientProvider locale={locale} messages={messages} timeZone="Asia/Kolkata">
       {node}
@@ -137,9 +143,23 @@ describe("profile", () => {
     expect(html).toContain("Online");
     expect(html).toContain("₹12.50/min");
     expect(html).toContain("September 2026");
-    expect(html).toContain("Consultations open in the next release.");
-    expect(html).toMatch(/<button[^>]*disabled=""/);
     expect(html).not.toContain("demo profile for development");
+  });
+
+  it("chat starts from the card; calls stay disabled and say so", () => {
+    const html = render(<ConsultCard p={profile} />);
+    // Chat button is live, with the minimum balance spelled out (2 min × ₹12.50).
+    expect(html).toMatch(/<button type="button" class="[^"]*w-full[^"]*">Chat<\/button>/);
+    expect(html).toContain("You need at least ₹25 in your wallet to start (2 minutes).");
+    expect(html).toContain("Voice calls open in a later release.");
+    expect(html).toMatch(/<button[^>]*disabled=""[^>]*>Call<\/button>/);
+    // No free offer until the wallet (client-side) says the user is eligible.
+    expect(html).not.toContain("Free chat");
+    const off = render(
+      <ConsultCard p={{ ...profile, consult: { chat_enabled: false, call_enabled: false } }} />,
+    );
+    expect(off).toContain("Chat is not available with this astrologer right now.");
+    expect(off).toMatch(/<button[^>]*disabled=""[^>]*>Chat<\/button>/);
   });
 
   it("Hindi page notes when the bio is only in English", () => {

@@ -142,3 +142,114 @@ export interface Me {
   phone: string;
   roles?: string[];
 }
+
+/* ---- Money and sessions (Phase 4, docs/api/billing.md "Admin") ---- */
+
+export interface PromoLot {
+  id: string;
+  remaining_paise: number;
+  expires_at: string;
+  campaign: string | null;
+}
+
+export interface Wallet {
+  real_paise: number;
+  promo_paise: number;
+  total_paise: number;
+  promo_lots: PromoLot[];
+  free_session: { enabled: boolean; eligible: boolean; minutes: number; reason: string | null };
+}
+
+export type WalletTxnKind =
+  | "recharge"
+  | "recharge_bonus"
+  | "consultation"
+  | "refund"
+  | "free_session_grant"
+  | "promo_expiry"
+  | "adjustment";
+
+export interface WalletTxn {
+  id: string;
+  kind: WalletTxnKind | string;
+  /** Signed from the user's view: credit positive. */
+  amount_paise: number;
+  real_paise: number;
+  promo_paise: number;
+  created_at: string;
+  session_id: string | null;
+  astrologer: { slug: string; display_name: string } | null;
+}
+
+export interface AdminWalletView {
+  wallet: Wallet;
+  transactions: WalletTxn[];
+}
+
+export interface AdminRefund {
+  id: string;
+  /** Rule name (failed_connect, astrologer_drop, low_rating, …) or "manual". */
+  rule: string;
+  session_id: string | null;
+  user_id?: string | null;
+  amount_paise: number;
+  /** "system" for rules, else the admin who issued it (masked or id, never a phone in clear). */
+  actor: string | null;
+  note?: string | null;
+  created_at: string;
+}
+
+export interface FreeSessionClaim {
+  user_id: string;
+  session_id: string | null;
+  claimed_at: string | null;
+  abuse_score: number;
+  /** Why the score is what it is (codes like shared_device, ip_burst); never raw phone/IP. */
+  reason: string | null;
+  reasons?: string[];
+  flagged: boolean;
+  status?: string | null;
+  override?: {
+    action: "allow" | "block" | "reset";
+    note: string | null;
+    actor: string | null;
+    at: string;
+  } | null;
+}
+
+export type ReconStatus = "ok" | "drift" | "error";
+
+export interface ReconCheck {
+  name: string;
+  status: ReconStatus | string;
+  drift_paise?: number | null;
+  detail?: string | null;
+}
+
+export interface ReconRun {
+  id?: string;
+  date: string;
+  status: ReconStatus;
+  drift_paise: number;
+  checks: (ReconCheck | string)[];
+  started_at?: string | null;
+  finished_at?: string | null;
+}
+
+/** `GET /v1/admin/sessions`: like SessionView, never any message content. */
+export interface AdminSession {
+  id: string;
+  kind: string;
+  status: string;
+  end_reason: string | null;
+  user_id?: string | null;
+  client_label?: string | null;
+  astrologer: { id: string; slug: string | null; display_name: string } | null;
+  price_per_min_paise: number;
+  is_free: boolean;
+  created_at: string;
+  started_at: string | null;
+  ended_at: string | null;
+  billed_minutes: number;
+  billed_paise: number;
+}

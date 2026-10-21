@@ -1,6 +1,7 @@
 import { BRAND_NAME, type Locale } from "@astro/shared";
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
+import { WalletNavLink } from "./billing/WalletNavLink";
 
 export const NAV = [
   { key: "kundli", href: "/kundli" },
@@ -33,14 +34,17 @@ export async function SiteHeader({ locale }: { locale: Locale }) {
             ))}
           </ul>
         </nav>
-        <Link
-          href="/"
-          locale={other}
-          hrefLang={other}
-          className="order-2 rounded-sm border border-border px-3 py-1.5 text-sm hover:bg-surface sm:order-3"
-        >
-          {t("switchTo")}
-        </Link>
+        <div className="order-2 flex items-center gap-2 sm:order-3">
+          <WalletNavLink />
+          <Link
+            href="/"
+            locale={other}
+            hrefLang={other}
+            className="rounded-sm border border-border px-3 py-1.5 text-sm hover:bg-surface"
+          >
+            {t("switchTo")}
+          </Link>
+        </div>
       </div>
     </header>
   );
