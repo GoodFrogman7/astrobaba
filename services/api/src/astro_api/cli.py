@@ -1,7 +1,8 @@
 """Operator commands. `python -m astro_api.cli grant-role <phone> admin` / `revoke-role`;
 `reconcile [--date YYYY-MM-DD]` (default: yesterday IST; exit 1 on drift or error);
 `expire-promo` (expire promo lots past their expiry); `payouts generate [--period YYYY-MM]`
-(default: the previous IST month; run from cron on the 1st)."""
+(default: the previous IST month; run from cron on the 1st); `analytics-purge` (delete analytics
+events older than ANALYTICS_RETENTION_DAYS; run daily)."""
 
 import argparse
 import asyncio
@@ -11,7 +12,7 @@ from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
 from redis.asyncio import Redis
-from sqlalchemy import select
+from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from astro_api import earnings, payments, payouts, reconciliation, wallet
@@ -19,6 +20,7 @@ from astro_api.config import get_settings
 from astro_api.db import make_engine, make_sessionmaker
 from astro_api.errors import ApiError
 from astro_api.models import User
+from astro_api.models_analytics import AnalyticsEvent
 from astro_api.phone import mask_phone, normalize_phone
 from astro_api.roles import ROLES
 
@@ -80,6 +82,16 @@ async def generate_payouts(period: str) -> payouts.GenerateResult:
         return result
 
 
+async def analytics_purge(now: dt.datetime | None = None) -> int:
+    """Delete analytics events that occurred more than `analytics_retention_days` ago."""
+    days = get_settings().analytics_retention_days
+    cutoff = (now or dt.datetime.now(dt.UTC)) - dt.timedelta(days=days)
+    async with _db() as db:
+        result = await db.execute(delete(AnalyticsEvent).where(AnalyticsEvent.occurred_at < cutoff))
+        await db.commit()
+        return int(result.rowcount or 0)  # type: ignore[attr-defined]
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(prog="python -m astro_api.cli")
     sub = ap.add_subparsers(dest="command", required=True)
@@ -90,6 +102,7 @@ def main(argv: list[str] | None = None) -> int:
     rec = sub.add_parser("reconcile", help="ledger vs gateway for one IST day")
     rec.add_argument("--date", type=dt.date.fromisoformat, default=None)
     sub.add_parser("expire-promo", help="expire promo lots past their expiry")
+    sub.add_parser("analytics-purge", help="delete analytics events past the retention period")
     pay = sub.add_parser("payouts", help="monthly astrologer payouts")
     pay_sub = pay.add_subparsers(dest="payouts_command", required=True)
     gen = pay_sub.add_parser("generate", help="generate payouts for an ended IST month")
@@ -115,6 +128,9 @@ def main(argv: list[str] | None = None) -> int:
         return 0 if status == "ok" else 1
     if args.command == "expire-promo":
         print(f"expired_paise={asyncio.run(expire_promo())}")
+        return 0
+    if args.command == "analytics-purge":
+        print(f"analytics_events_purged={asyncio.run(analytics_purge())}")
         return 0
     try:
         phone = normalize_phone(args.phone)

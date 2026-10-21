@@ -20,6 +20,7 @@ from astro_api import privacy
 from astro_api.config import get_settings
 from astro_api.db import make_sessionmaker
 from astro_api.models import SavedKundli, User
+from astro_api.models_analytics import AnalyticsEvent
 from astro_api.models_jobs import Job
 from astro_api.models_privacy import DataExport, DeletionRequest
 from astro_api.storage import LocalStorage, new_key
@@ -30,6 +31,7 @@ from astro_worker.handlers import privacy as privacy_handlers
 pytestmark = pytest.mark.integration
 
 PHONE = "+919855500001"
+LINKED_AT = dt.datetime(2026, 10, 1, 4, 30, tzinfo=dt.UTC)
 
 
 def run(db_url: str, storage: LocalStorage, fn: Any) -> Any:
@@ -74,6 +76,21 @@ async def _user_with_export(maker: async_sessionmaker[AsyncSession]) -> uuid.UUI
                 lon=77.2,
             )
         )
+        # Analytics: one event with the user's id (exported), one anonymous (not exported).
+        for uid, event, props in (
+            (None, "page_view", {"path": "/kundli"}),
+            (user.id, "otp_verified", {"is_new_user": True}),
+        ):
+            db.add(
+                AnalyticsEvent(
+                    event=event,
+                    occurred_at=LINKED_AT,
+                    anonymous_id="anon_worker_0001",
+                    user_id=uid,
+                    locale="en",
+                    properties=props,
+                )
+            )
         export = await privacy.request_export(db, user)
         await db.commit()
         return export.id
@@ -108,6 +125,13 @@ def test_export_job_builds_and_stores_once(db_url: str, tmp_path: Path) -> None:
     data = json.loads(files[0].read_text())
     assert data["profile"]["phone"] == PHONE
     assert data["saved_kundlis"][0]["name"] == "Meera"
+    assert data["analytics_events"] == [
+        {
+            "event": "otp_verified",
+            "occurred_at": LINKED_AT.isoformat(),
+            "properties": {"is_new_user": True},
+        }
+    ]
     assert export.size_bytes == files[0].stat().st_size
 
 

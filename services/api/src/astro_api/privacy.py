@@ -45,6 +45,7 @@ from astro_api.models import (
     User,
 )
 from astro_api.models_ai import AiConversation, AiQuestion
+from astro_api.models_analytics import AnalyticsEvent
 from astro_api.models_jobs import Job
 from astro_api.models_ledger import (
     FreeSessionClaim,
@@ -593,6 +594,21 @@ async def _privacy(db: AsyncSession, user_id: uuid.UUID) -> dict[str, Any]:
     }
 
 
+async def _analytics(db: AsyncSession, user_id: uuid.UUID) -> list[dict[str, Any]]:
+    """Product analytics events recorded with the user's id (docs/api/growth.md §1.2)."""
+    rows = (
+        await db.execute(
+            select(AnalyticsEvent.event, AnalyticsEvent.occurred_at, AnalyticsEvent.properties)
+            .where(AnalyticsEvent.user_id == user_id)
+            .order_by(AnalyticsEvent.occurred_at, AnalyticsEvent.id)
+        )
+    ).all()
+    return [
+        {"event": event, "occurred_at": _iso(at), "properties": properties}
+        for event, at, properties in rows
+    ]
+
+
 async def _astrologer(db: AsyncSession, user_id: uuid.UUID) -> dict[str, Any] | None:
     """The astrologer's own records. Clients appear in none of them (no ids, no messages)."""
     a = (
@@ -738,6 +754,7 @@ async def build_export(db: AsyncSession, settings: Settings, user_id: uuid.UUID)
         "remedy_leads": await _remedy_leads(db, cipher, user_id),
         "astrologer_reports_filed": await _reports_filed(db, cipher, user_id),
         "privacy": await _privacy(db, user_id),
+        "analytics_events": await _analytics(db, user_id),
         "astrologer": await _astrologer(db, user_id),
     }
 
@@ -977,7 +994,8 @@ async def execute_deletion(
     user), report orders/reports without their personal parts, recharge orders, payouts,
     free-session claims (HMACs), audit entries, KYC documents (flagged for review).
     Deleted: saved kundlis (with their AI conversations), AI questions, chat messages of the
-    user's own consultations, remedy leads; report and export files via `account_cleanup`.
+    user's own consultations, remedy leads, analytics events (with the user's id, or with an
+    anonymous id ever linked to the user); report and export files via `account_cleanup`.
     """
     d = (
         await db.execute(
@@ -1023,6 +1041,15 @@ async def execute_deletion(
     await db.execute(delete(AiConversation).where(AiConversation.user_id == uid))
     kundlis = await _count(db, delete(SavedKundli).where(SavedKundli.user_id == uid))
     leads = await _count(db, delete(RemedyLead).where(RemedyLead.user_id == uid))
+    # Analytics: the user's events, and every event of an anonymous id ever linked to the user
+    # (any row carrying both), so the pre-sign-in browsing goes too (growth.md §1.2).
+    linked = select(AnalyticsEvent.anonymous_id).where(AnalyticsEvent.user_id == uid)
+    analytics_events = await _count(
+        db,
+        delete(AnalyticsEvent).where(
+            (AnalyticsEvent.user_id == uid) | AnalyticsEvent.anonymous_id.in_(linked)
+        ),
+    )
     # Reports the user filed stay in the moderation record (reason, status), without the note.
     report_notes = await _count(
         db,
@@ -1039,6 +1066,7 @@ async def execute_deletion(
         saved_kundlis=kundlis,
         remedy_leads=leads,
         report_notes=report_notes,
+        analytics_events=analytics_events,
     )
 
     # 4. Reports and exports: rows kept (purchase record), personal parts erased, files queued.
