@@ -13,7 +13,6 @@ os.environ.setdefault("APP_ENV", "test")
 
 API_DIR = Path(__file__).resolve().parents[2] / "api"
 FACTS_FILE = API_DIR / "tests" / "fixtures" / "facts_aries_daily.json"
-TABLES = ("audit_log", "horoscope_entries", "saved_kundlis", "auth_sessions", "users")
 
 
 def load_facts(sign: str = "aries") -> dict[str, Any]:
@@ -42,7 +41,15 @@ async def _truncate(url: str) -> None:
 
     engine = create_async_engine(url)
     async with engine.begin() as conn:
-        await conn.execute(text(f"TRUNCATE {', '.join(TABLES)} RESTART IDENTITY CASCADE"))
+        tables = (
+            await conn.execute(
+                text(
+                    "SELECT quote_ident(tablename) FROM pg_tables WHERE schemaname = 'public' "
+                    "AND tablename <> 'alembic_version'"
+                )
+            )
+        ).scalars()
+        await conn.execute(text(f"TRUNCATE {', '.join(tables)} RESTART IDENTITY CASCADE"))
     await engine.dispose()
 
 

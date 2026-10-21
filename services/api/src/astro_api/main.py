@@ -13,6 +13,7 @@ from astro_api import (
     __version__,
     admin_marketplace,
     admin_money,
+    ai_api,
     applicant,
     auth,
     billing_meter,
@@ -24,6 +25,8 @@ from astro_api import (
     payments_webhooks,
     payouts_api,
     portal_api,
+    remedies_api,
+    reports_api,
     reviews,
     sessions_api,
     wallet_api,
@@ -90,6 +93,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         calls_api.router,
         portal_api.router,
         payouts_api.router,
+        reports_api.router,
+        ai_api.router,
+        remedies_api.router,
     ):
         app.include_router(router)
     app.add_middleware(

@@ -6,6 +6,7 @@ python -m astro_worker horoscopes review list [--status pending_review]
 python -m astro_worker horoscopes review show ID
 python -m astro_worker horoscopes review approve ID --reviewer NAME [--edit-file sections.json]
 python -m astro_worker horoscopes review reject ID --reviewer NAME --reason TEXT
+python -m astro_worker jobs run [--once]
 """
 
 import argparse
@@ -18,11 +19,12 @@ from pathlib import Path
 from zoneinfo import ZoneInfo
 
 import httpx
+from redis.asyncio import Redis
 
 from astro_api.config import get_settings
 from astro_api.db import make_engine, make_sessionmaker
 from astro_api.horoscopes import SIGNS
-from astro_worker import horoscopes
+from astro_worker import horoscopes, jobs
 from astro_worker.config import get_worker_settings
 from astro_worker.llm import ProviderError, make_provider
 
@@ -56,6 +58,10 @@ def _parser() -> argparse.ArgumentParser:
     rj.add_argument("id", type=uuid.UUID)
     rj.add_argument("--reviewer", required=True)
     rj.add_argument("--reason", required=True)
+
+    j = sub.add_parser("jobs").add_subparsers(dest="command", required=True)
+    run = j.add_parser("run", help="run background jobs (reports, AI answers, partner leads)")
+    run.add_argument("--once", action="store_true", help="run at most one job, then exit")
     return p
 
 
@@ -67,7 +73,30 @@ def _split(value: str, allowed: tuple[str, ...]) -> list[str]:
     return items
 
 
+async def _jobs(args: argparse.Namespace) -> int:
+    import astro_worker.handlers  # noqa: F401 - registers the handlers
+
+    settings = get_settings()
+    engine = make_engine(settings.database_url.get_secret_value())
+    redis = Redis.from_url(settings.redis_url.get_secret_value())
+    try:
+        async with httpx.AsyncClient(timeout=60) as http:
+            ctx = jobs.Context(
+                make_sessionmaker(engine), settings, get_worker_settings(), http, redis
+            )
+            if args.once:
+                await jobs.run_once(ctx)
+            else:
+                await jobs.run_forever(ctx)
+        return 0
+    finally:
+        await redis.aclose()
+        await engine.dispose()
+
+
 async def _run(args: argparse.Namespace) -> int:
+    if args.group == "jobs":
+        return await _jobs(args)
     engine = make_engine(get_settings().database_url.get_secret_value())
     maker = make_sessionmaker(engine)
     try:

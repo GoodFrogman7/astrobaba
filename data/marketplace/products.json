@@ -1,0 +1,33 @@
+{
+  "$comment": "One-time products (Phase 6). Integer paise. Prices are defaults for the founder to confirm.",
+  "reports": {
+    "kundli_report": {
+      "price_paise": 49900,
+      "kundlis": 1,
+      "languages": ["en", "hi"],
+      "pages_estimate": 18,
+      "founder_decision": true
+    },
+    "matching_report": {
+      "price_paise": 39900,
+      "kundlis": 2,
+      "languages": ["en", "hi"],
+      "pages_estimate": 15,
+      "founder_decision": true
+    }
+  },
+  "report_download_ttl_s": 600,
+  "report_render_ttl_s": 300,
+  "sample_birth": {
+    "label": "Sample chart (a fictional person)",
+    "date": "1990-08-15",
+    "time": "06:30",
+    "city_slug": "new-delhi"
+  },
+  "ai_question": {
+    "flag": "ai_assistant",
+    "price_paise": 1000,
+    "max_chars": 500,
+    "founder_decision": true
+  }
+}
