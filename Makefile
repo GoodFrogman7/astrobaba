@@ -55,9 +55,10 @@ reconcile: ## Daily money reconciliation (production: cron daily): make reconcil
 expire-promo: ## Expire lapsed promo credit (production: cron hourly)
 	$(COMPOSE) exec api /app/.venv/bin/python -m astro_api.cli expire-promo
 
-lint: ## Lint JS/TS and Python
+lint: ## Lint JS/TS and Python, and check copy for banned marketing claims
 	pnpm lint
 	pnpm format:check
+	pnpm claims-check
 	uv run ruff check .
 	uv run ruff format --check .
 

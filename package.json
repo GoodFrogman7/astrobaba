@@ -11,7 +11,8 @@
     "test": "pnpm -r --if-present test",
     "build": "pnpm -r --if-present build",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "claims-check": "node scripts/claims-check.mjs"
   },
   "devDependencies": {
     "prettier": "^3.6.2"

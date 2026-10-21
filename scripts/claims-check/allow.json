@@ -1,0 +1,53 @@
+{
+  "$comment": "Legitimate uses of words the claims check bans (scripts/claims-check.mjs). Each entry needs a reason. `phrase` must surround the hit; `file` and `key` narrow it to one place. Unused entries are reported as warnings.",
+  "allow": [
+    {
+      "phrase": "no guaranteed outcomes",
+      "file": "apps/web/messages/en/marketplace.json",
+      "key": "market.apply.form.terms",
+      "reason": "Astrologer applicants agree to the code of conduct, which forbids guaranteed outcomes (negation, not a claim)."
+    },
+    {
+      "phrase": "परिणाम की गारंटी नहीं",
+      "file": "apps/web/messages/hi/marketplace.json",
+      "key": "market.apply.form.terms",
+      "reason": "Hindi of the code-of-conduct line above: forbids guaranteed outcomes (negation)."
+    },
+    {
+      "phrase": "none can guarantee an outcome",
+      "file": "apps/web/messages/en/report.json",
+      "key": "printReport.disclaimer.body[3]",
+      "reason": "Report disclaimer stating that no remedy can guarantee an outcome (negation)."
+    },
+    {
+      "phrase": "किसी परिणाम की गारंटी नहीं दे सकता",
+      "file": "apps/web/messages/hi/report.json",
+      "key": "printReport.disclaimer.body[3]",
+      "reason": "Hindi of the report disclaimer above (negation)."
+    },
+    {
+      "file": "apps/astrologer/src/lib/trust.ts",
+      "reason": "Describes banned claims on purpose (conduct rules, moderation labels or safety classifier test data); not marketing copy."
+    },
+    {
+      "file": "apps/astrologer/src/components/SafetyPanel.tsx",
+      "reason": "Describes banned claims on purpose (conduct rules, moderation labels or safety classifier test data); not marketing copy."
+    },
+    {
+      "file": "apps/admin/src/lib/trust-admin.ts",
+      "reason": "Describes banned claims on purpose (conduct rules, moderation labels or safety classifier test data); not marketing copy."
+    },
+    {
+      "file": "data/safety/conduct.json",
+      "reason": "Describes banned claims on purpose (conduct rules, moderation labels or safety classifier test data); not marketing copy."
+    },
+    {
+      "file": "evals/safety/fixtures/*",
+      "reason": "Describes banned claims on purpose (conduct rules, moderation labels or safety classifier test data); not marketing copy."
+    },
+    {
+      "file": "services/api/src/astro_api/safety.py",
+      "reason": "Describes banned claims on purpose (conduct rules, moderation labels or safety classifier test data); not marketing copy."
+    }
+  ]
+}

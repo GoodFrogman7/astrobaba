@@ -1,6 +1,6 @@
 # Architecture
 
-Living document. Updated at the end of every phase (PLAN.md §0.6). Current state: **Phase 6**.
+Living document. Updated at the end of every phase (PLAN.md §0.6). Current state: **Phase 7**.
 
 ## Repo
 
@@ -236,6 +236,26 @@ account/reports,ai,remedies},app/api/{reports,ai,remedies},components/revenue,li
 - Wallet history labels `purchase` rows "Report"/"AI question" when the row carries
   `product`, else "Purchase".
 
+## Trust, safety and compliance (Phase 7)
+
+Contract: [docs/api/trust.md](api/trust.md). Decisions: [ADR-0011](adr/0011-privacy-export-deletion.md)
+(consents, export, deletion), [ADR-0012](adr/0012-chat-safety-and-moderation.md) (chat safety,
+moderation). Data: `data/legal/policies.json`, `data/safety/{helplines,conduct}.json`.
+
+```
+consent:  sign-in ── consent step (18+, terms, privacy; astrologers + conduct terms) ── append-only
+          consents (version, hashed ip/device) ── require_consent on every money/consult write
+data:     /account ── export job (JSON, signed link, 7 days) │ deletion request ── admin executes:
+          anonymise in one transaction (phone tombstone, personal data deleted, ledger kept)
+          ── account_cleanup job removes files
+safety:   every chat message ── astro_api.safety ── client self-harm: deliver, flag session,
+          crisis panel both sides, no upsell │ astrologer contact/claims: refused, queued
+moderate: reports + safety + refused ── admin queue (reveal one message, audited) ── dismiss |
+          warn (strike shown to the astrologer) | suspend
+launch:   production refuses to start until LEGAL_APPROVED_VERSION == policies.json version;
+          CI fails on banned marketing claims (scripts/claims-check.mjs) and on safety evals
+```
+
 ## Cross-cutting rules in code
 
 | Rule (PLAN.md) | Where it lives |
@@ -255,6 +275,9 @@ account/reports,ai,remedies},app/api/{reports,ai,remedies},components/revenue,li
 | Unreviewed Jyotish tables never public | `/v1/match`, `/v1/doshas` return 503 `tables_not_reviewed` in staging/production |
 | No money movement without a ledger entry and an idempotency key (§6) | `astro_api.wallet` is the only writer; unique keys; append-only triggers; reconciliation |
 | No chat content in logs or analytics (§6) | `packages/shared/analytics/events.json`: closed property types, no free text; validators in TS and Python share `cases.json`. Messages stored encrypted; system messages carry codes; admin session list has no content |
+| Crisis language never blocked; no selling to a flagged session (§5 P7) | `astro_api.safety`, `safety_events`, `evals/safety` |
+| No legal launch without reviewed texts (§5 P7) | `check_production_settings`: `LEGAL_APPROVED_VERSION` |
+| No banned marketing claims in copy (§5 P7) | `scripts/claims-check.mjs` in CI |
 | No billing for audio that is not flowing (§5 P5) | meter confirms LiveKit presence before each call minute; LiveKit down → no charge, `service_unavailable` |
 | Never a negative balance (§5 P4) | prepaid minutes + row locks + `CHECK (balance >= 0)`; 100-way concurrency test |
 | Own design system (§0.1) | `packages/shared/src/tokens.ts` + `tokens/tokens.css`, AA contrast tested |

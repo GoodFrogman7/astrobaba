@@ -15,5 +15,7 @@ accepts it, then Accepted (or Superseded by NNNN).
 | [0008](0008-voice-calls.md) | Voice calls: in-app VoIP with LiveKit (not masked PSTN), billing and presence checks | Proposed | §2 ADR-4, Phase 5 |
 | [0009](0009-reports-and-jobs.md) | Paid reports: engine snapshot, Chromium print of a web page, Postgres job queue, refunds | Proposed | Phase 6 |
 | [0010](0010-ai-assistant.md) | AI assistant: pre-LLM safety block, grounded answers, validator, per-question billing | Proposed | §9.4, Phase 6 |
+| [0011](0011-privacy-export-deletion.md) | Consent records, DPDP export and deletion (anonymise, keep the ledger) | Proposed | Phase 7 |
+| [0012](0012-chat-safety-and-moderation.md) | Chat safety (crisis flag, no upsell), astrologer message rules, moderation queue | Proposed | Phase 7 |
 
 All ADRs listed in PLAN.md §2 are written.

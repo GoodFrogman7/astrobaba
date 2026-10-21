@@ -1,21 +1,29 @@
 # Compliance
 
-Placeholder until Phase 7, which is the gate for public launch. Items already enforced in code
-are marked.
+The gate for public launch (PLAN.md Phase 7). `[x]` = enforced in code; `[ ]` = needs a person
+(founder, lawyer, CA) before launch. Production refuses to start until a lawyer-approved policies
+version is configured (`LEGAL_APPROVED_VERSION`).
 
 - [x] Entertainment disclaimer on every page (web layout footer)
 - [x] Analytics cannot carry chat content or contact details (closed schema)
 - [x] Logs redact phones, emails, tokens and URL credentials
 - [x] OTP sign-in: codes stored only as HMACs, single use, attempt limit, rate limits, no account enumeration
 - [ ] SMS provider chosen (MSG91 or similar) with DLT template registration (TRAI) before launch
-- [ ] Consent text and privacy notice for phone numbers and saved birth details (DPDP); encryption at rest for saved_kundlis
+- [x] Consent records (18+, terms, privacy; astrologer conduct terms), versioned and append-only; required before any payment, consultation, report, AI question or remedy request
+- [ ] Lawyer approves the consent wording and privacy notice; encryption at rest for saved_kundlis (decide)
 - [ ] Editorial review of all page copy (English and Hindi) and of the curated Hindi city names
-- [ ] 18+ gate, consent flow, privacy notice listing processors, grievance contact
-- [ ] Refund and credit-expiry policy pages
-- [ ] DPDP-aligned data export and deletion endpoints
-- [ ] Chat safety: self-harm detection, crisis resources (verify current helplines), "not a helpline" notice
-- [ ] Banned-topic list and moderation tooling; astrologer reporting and suspension
-- [ ] Lawyer review of copy: consumer protection, Drugs and Magic Remedies (Objectionable Advertisements) Act, ASCI
+- [x] 18+ gate and consent flow; privacy notice lists processors (`data/legal/policies.json`)
+- [ ] Operator legal name/address and grievance officer name/contact filled in `policies.json`
+- [x] Refund and credit-expiry policy pages generated from the configured rules (drafts)
+- [ ] Lawyer approves every policy text (terms, privacy, refunds, credit, grievance) and sets `LEGAL_APPROVED_VERSION`
+- [x] DPDP data export (JSON, signed link) and account deletion (anonymisation; ledger kept for tax law) (ADR-0011)
+- [ ] Retention periods (KYC, transcripts with deleted astrologers, tombstones), deletion timelines and promo forfeiture confirmed with the lawyer
+- [x] Chat safety: self-harm detection (en/hi/Hinglish), crisis panel both sides, upsell paused, "not a helpline" notice; AI questions blocked for free (ADR-0012, `evals/safety` in CI)
+- [ ] Founder calls Tele-MANAS 14416 and 112 and sets `verified_by_founder` in `data/safety/helplines.json`
+- [ ] Native-speaker review of the Hindi/Hinglish safety rules and conduct text
+- [x] Banned-topic rules for astrologer messages (contact details, off-platform payment, cures, guarantees, fear selling, remedy sales) enforced; reports, moderation queue, strikes and suspension
+- [x] CI blocks banned marketing claims in user-facing copy (`scripts/claims-check.mjs`)
+- [ ] Lawyer review of copy: consumer protection, Drugs and Magic Remedies (Objectionable Advertisements) Act, ASCI; remedies catalogue reviewed
 - [ ] CA/lawyer: closed-loop wallet vs RBI prepaid-instrument rules; GST on commission vs gross
 - [x] Ephemeris licence chosen: option C, AGPL-3.0 (ADR-0001)
 - [ ] Lawyer confirms the AGPL engine as a separate network service keeps the rest of the platform outside its scope
