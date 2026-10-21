@@ -47,7 +47,9 @@ price_per_min_paise, experience_years, rating: {average: float|null, count}, pre
 "online"|"busy"|"offline", wait_minutes: int|null, is_demo: bool}`.
 
 `Profile`: Card + `{bio, bio_hi: str|null, verified: {identity, qualification, interview: true},
-on_platform_since: "YYYY-MM", consult: {chat_enabled, call_enabled}}`.
+on_platform_since: "YYYY-MM", consult: {chat_enabled, call_enabled}, availability: {timezone:
+"Asia/Kolkata", slots: [{weekday, start, end}]}}` (weekly schedule, Phase 5, portal.md §2.1;
+no schedule → `slots: []`, which the UI does not show).
 
 `Review`: `{id, rating, text, created_at, author_label ("Verified client"), reply: {text, at}|null}`.
 

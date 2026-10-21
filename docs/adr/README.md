@@ -12,5 +12,6 @@ accepts it, then Accepted (or Superseded by NNNN).
 | [0005](0005-horoscope-pipeline.md) | Horoscope generation pipeline (facts → LLM → validator → human QA → publish) | Accepted | §2 ADR-5 |
 | [0006](0006-marketplace-trust.md) | Marketplace visibility rule, KYC document handling, role-based admin | Accepted | Phase 3 |
 | [0007](0007-sessions-and-metering.md) | Consultation sessions, prepaid per-minute metering, chat transport | Proposed | Phase 4 |
+| [0008](0008-voice-calls.md) | Voice calls: in-app VoIP with LiveKit (not masked PSTN), billing and presence checks | Proposed | §2 ADR-4, Phase 5 |
 
-Still to write, in the phase that needs them: in-app VoIP vs masked PSTN (Phase 5).
+All ADRs listed in PLAN.md §2 are written.

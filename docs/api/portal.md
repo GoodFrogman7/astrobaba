@@ -22,7 +22,7 @@ reviews. Differences:
 | Control socket | the chat socket | the **same** socket (ticket, Origin check, `hello`/`state`/`low_balance`/`ended`, `ping`). Text `message` frames are refused on calls (`error call_has_no_text`). It is the heartbeat for the meter, so both apps keep it open during the call. |
 | Audio | none | LiveKit room `session-{id}`; join with a token from `POST /v1/sessions/{id}/call-token` |
 | Becomes `active` | both sockets connected | both sockets connected **and** both participants joined the LiveKit room (LiveKit webhook `participant_joined`) |
-| Side gone | socket silent > `heartbeat_grace_s` | the same, **or** LiveKit `participant_left` / `participant_connection_aborted` and not back within `heartbeat_grace_s`; ends `user_dropped`/`astrologer_dropped` at the time it left |
+| Side gone | socket silent > `heartbeat_grace_s` | the same, **or** LiveKit `participant_left` / `participant_connection_aborted` and not back within `heartbeat_grace_s`; ends `user_dropped`/`astrologer_dropped` at the time it left. Before each minute the meter also asks LiveKit who is in the room; if LiveKit cannot answer, nothing is charged and after `heartbeat_grace_s` the call ends `service_unavailable` at the first failed check |
 | On end | `ended` event, sockets close | the same, and the server deletes the LiveKit room, which disconnects both sides at once (no unbilled audio after funds run out) |
 
 `POST /v1/sessions/{id}/call-token` (participant, `kind=call`, status `accepted` or `active`) →
@@ -33,11 +33,13 @@ publishing, no room admin, TTL 10 minutes (only needed to join; a rejoin gets a 
 `409 session_not_joinable` otherwise.
 
 New control-socket event: `{type: "call", joined: {user: bool, astrologer: bool}}`, sent
-whenever either side joins or leaves the audio room.
+right after `hello` on a call socket and whenever either side joins or leaves the audio room.
 
 `POST /v1/calls/livekit/webhook`: LiveKit's signed webhook (JWT in `Authorization`, checked
-with the API secret, body SHA-256 must match). Unknown rooms and events are ignored with 200.
-Events are idempotent by LiveKit event id (Redis, 24 h).
+with the API secret, body SHA-256 must match; bad or missing → `401 bad_signature`, nothing
+changes). Unknown rooms and events are ignored with 200. Events are idempotent by LiveKit event
+id (Redis, 24 h); a repeat → `200 {"status": "duplicate"}`. A join into a call that has already
+ended deletes the room again.
 
 No recording. Audio never passes through or is stored by our servers beyond LiveKit's SFU.
 
@@ -96,6 +98,17 @@ identity). Reply: existing `POST /v1/reviews/{id}/reply` (once; moderated like r
 `Payout`: `{id, period: "YYYY-MM", status: draft|approved|paid|void, gross_paise,
 commission_paise, refunds_paise, net_paise, carried_forward_paise, sessions, minutes,
 generated_at, approved_at, paid_at, reference (bank UTR, paid only)}`.
+
+Fields added by the implementation: `carried_in_paise` (earned before the period and not yet
+paid out: every earlier void payout plus earnings before the first statement, minus refunds
+after a payout, so it can be negative), `void_reason` (`below_minimum` | `admin`), `paid_on`,
+`tax_note`. `net = gross − commission − refunds + carried_in`. Detail `adjustments`:
+`{kind: carried_forward_in | carried_forward_out, amount_paise, period}`. Generate returns
+`{period, generated, updated, skipped, carried_forward}`; only ended IST months
+(`422 period_open`). Wrong-status approve / mark-paid / void → `409 invalid_transition`. A UTR is
+`[A-Za-z0-9-]{6,40}` (`422 invalid_reference`); `paid_on` cannot be in the future. Held reviews
+in the portal list show rating and status with `text: null`. CSV cells that start with
+`= + - @`, tab or CR are prefixed with `'`.
 
 Generation: `python -m astro_api.cli payouts generate --period YYYY-MM` (worker cron on the 1st,
 for the previous IST month) and `POST /v1/admin/payouts/generate {period}`. One payout per

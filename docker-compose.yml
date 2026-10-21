@@ -90,6 +90,8 @@ services:
           api_key: ${LIVEKIT_API_KEY:-devkey}
           urls: ["http://api:8000/v1/calls/livekit/webhook"]
         room:
+          # Only the API creates rooms, so a still-valid token cannot reopen an ended call.
+          auto_create: false
           empty_timeout: 60
     ports:
       - "127.0.0.1:7880:7880"

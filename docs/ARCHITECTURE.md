@@ -1,6 +1,6 @@
 # Architecture
 
-Living document. Updated at the end of every phase (PLAN.md §0.6). Current state: **Phase 4**.
+Living document. Updated at the end of every phase (PLAN.md §0.6). Current state: **Phase 5**.
 
 ## Repo
 
@@ -9,11 +9,13 @@ apps/
   web/            Next.js 16 App Router: public site + user app (SSR, en + /hi): home, kundli,
                   kundli matching, 10 free tools, panchang (48 cities), horoscopes (36 pages),
                   directory, wallet + recharge, chat (private pages noindex)
-  astrologer/     Astrologer console (Next.js, port 3002): online toggle, incoming requests,
-                  accept/decline, chat, history. Full portal in Phase 5
+  astrologer/     Astrologer portal (Next.js, port 3002): online toggle, incoming chat and
+                  call requests, chat and voice call rooms, weekly schedule, consult
+                  settings, earnings, payout statements (CSV), reviews and replies, history
   admin/          Ops console (Next.js, port 3001): astrologer KYC review and decisions,
                   review moderation, horoscope QA queue, money (refunds, free-session
-                  overrides, reconciliation, wallet lookup), sessions; admin role required
+                  overrides, reconciliation, wallet lookup, monthly payouts), sessions;
+                  admin role required
 services/
   api/            FastAPI core API: phone OTP sign-in, saved kundlis, horoscope publishing,
                   marketplace (applications, KYC documents, directory, profiles, reviews,
@@ -22,7 +24,8 @@ services/
     migrations/   Alembic: 0001 baseline, 0002 users/sessions/kundlis/horoscopes/audit_log,
                   0003 roles/astrologers/verifications/kyc_documents/consult_sessions/reviews,
                   0004 ledger/balances/promo lots/orders/payment events/free-session claims/
-                  reconciliation, 0005 session lifecycle + encrypted chat_messages
+                  reconciliation, 0005 session lifecycle + encrypted chat_messages,
+                  0006 astrologer_availability + payouts, 0007 end reason service_unavailable
   astro/          FastAPI astro engine (AGPL-3.0-only, ADR-0001): kundli, panchang, dasha,
                   doshas, matching, transits, city search
   worker/         CLI jobs: horoscope generation (facts → LLM → validator → review queue) and
@@ -146,6 +149,32 @@ nightly:   cli reconcile (ledger balanced, projections = entries, payments = cre
 - Development uses the fake gateway (`PAYMENTS_PROVIDER=fake`, simulate button) and a chat
   key derived from `SECRET_KEY`; production refuses both (`check_production_settings`).
 
+## Voice calls, portal and payouts (Phase 5)
+
+Contract: [docs/api/portal.md](api/portal.md). Decision: [ADR-0008](adr/0008-voice-calls.md).
+
+```
+call:      profile Call ── POST /v1/sessions {kind: call} ── accept ── both control sockets
+           + POST …/call-token ──> LiveKit room session-{id} (identity = role, mic only)
+           LiveKit ── signed webhooks (joined/left) ──> API; both joined ──> active
+           meter, each minute: LiveKit list_participants confirms both ──> charge
+                                missing side ──> left (grace) │ LiveKit down ──> no charge,
+                                ends service_unavailable after grace
+           any end ──> API deletes the room (both sides cut off at once)
+portal:    schedule (IST slots, shown on the profile) · consult toggles · earnings from the
+           ledger · reviews + reply · payout statements (CSV, formula-safe)
+payouts:   cli payouts generate (1st of month, previous IST month) ──> draft per astrologer
+           admin approve ──> mark paid (UTR) ──> ledger payout:{id} (payable → bank:payouts)
+           net < ₹500 carried forward; reconciliation checks every paid payout is posted once
+```
+
+- Calls use the same session state machine, prepaid meter, refunds and reviews as chat; only
+  activation and presence differ. Nothing is recorded.
+- The browser apps ask for the microphone before joining, and leave the room on `ended`.
+  Permissions-Policy allows `microphone=(self)` on web and the astrologer portal only.
+- Development runs LiveKit in docker-compose (`livekit`, dev keys, rooms created only by the
+  API); production needs its own LiveKit (cloud or self-hosted), keys and a `wss://` URL.
+
 ## Cross-cutting rules in code
 
 | Rule (PLAN.md) | Where it lives |
@@ -166,6 +195,7 @@ nightly:   cli reconcile (ledger balanced, projections = entries, payments = cre
 | Unreviewed Jyotish tables never public | `/v1/match`, `/v1/doshas` return 503 `tables_not_reviewed` in staging/production |
 | No money movement without a ledger entry and an idempotency key (§6) | `astro_api.wallet` is the only writer; unique keys; append-only triggers; reconciliation |
 | No chat content in logs or analytics (§6) | messages stored encrypted; system messages carry codes; admin session list has no content |
+| No billing for audio that is not flowing (§5 P5) | meter confirms LiveKit presence before each call minute; LiveKit down → no charge, `service_unavailable` |
 | Never a negative balance (§5 P4) | prepaid minutes + row locks + `CHECK (balance >= 0)`; 100-way concurrency test |
 | Own design system (§0.1) | `packages/shared/src/tokens.ts` + `tokens/tokens.css`, AA contrast tested |
 
