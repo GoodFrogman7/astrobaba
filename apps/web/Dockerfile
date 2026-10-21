@@ -18,10 +18,12 @@ COPY apps/web apps/web
 ENV NEXT_OUTPUT=standalone NEXT_TELEMETRY_DISABLED=1
 # Read at build time (docs/api/growth.md §3): only NEXT_PUBLIC_SITE_ENV=production is indexable;
 # the verification values become <meta> tags. Pass them with --build-arg.
+ARG NEXT_PUBLIC_SITE_URL="http://localhost:3000"
 ARG NEXT_PUBLIC_SITE_ENV=""
 ARG GOOGLE_SITE_VERIFICATION=""
 ARG BING_SITE_VERIFICATION=""
-ENV NEXT_PUBLIC_SITE_ENV=$NEXT_PUBLIC_SITE_ENV \
+ENV NEXT_PUBLIC_SITE_URL=$NEXT_PUBLIC_SITE_URL \
+    NEXT_PUBLIC_SITE_ENV=$NEXT_PUBLIC_SITE_ENV \
     GOOGLE_SITE_VERIFICATION=$GOOGLE_SITE_VERIFICATION \
     BING_SITE_VERIFICATION=$BING_SITE_VERIFICATION
 RUN pnpm --filter @astro/web build

@@ -1,0 +1,63 @@
+# Private preview (docs/DEPLOY.md). Caddy gets free Let's Encrypt certificates for each host.
+# Every page needs the preview password; the API host only serves the chat WebSocket.
+# No access log: request lines can carry socket tickets.
+{
+	email {$ACME_EMAIL}
+}
+
+(common) {
+	encode zstd gzip
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		X-Content-Type-Options nosniff
+		Referrer-Policy strict-origin-when-cross-origin
+		X-Robots-Tag "noindex, nofollow"
+		-Server
+	}
+}
+
+(preview_auth) {
+	basic_auth {
+		{$PREVIEW_USER} {$PREVIEW_PASSWORD_HASH}
+	}
+}
+
+{$DOMAIN} {
+	import common
+	import preview_auth
+	reverse_proxy web:3000
+}
+
+portal.{$DOMAIN} {
+	import common
+	import preview_auth
+	reverse_proxy astrologer:3002
+}
+
+admin.{$DOMAIN} {
+	import common
+	import preview_auth
+	reverse_proxy admin:3001
+}
+
+# Browsers reach the API only for the chat socket (everything else goes through the apps on
+# the internal network). Ticket-authenticated, so no password prompt in front of it.
+api.{$DOMAIN} {
+	import common
+	@socket path_regexp ^/v1/sessions/[0-9a-f-]+/ws$
+	handle @socket {
+		reverse_proxy api:8000
+	}
+	handle /healthz {
+		reverse_proxy api:8000
+	}
+	handle {
+		respond 404
+	}
+}
+
+# Voice calls (only with `--profile voice`).
+lk.{$DOMAIN} {
+	import common
+	reverse_proxy livekit:7880
+}

@@ -1,0 +1,97 @@
+# Private preview on one Linux server (docs/DEPLOY.md). Layered on the dev stack:
+#   docker compose --env-file deploy/.env -f docker-compose.yml -f deploy/compose.preview.yml up -d
+# Development providers (console SMS, simulated payments, local KYC files) behind HTTPS and a
+# password on every page. Not a public launch: production refuses these providers by design.
+
+services:
+  caddy:
+    image: caddy:2.10.2-alpine
+    restart: unless-stopped
+    environment:
+      DOMAIN: ${DOMAIN:?set DOMAIN in deploy/.env}
+      ACME_EMAIL: ${ACME_EMAIL:?set ACME_EMAIL in deploy/.env}
+      PREVIEW_USER: ${PREVIEW_USER:?set PREVIEW_USER in deploy/.env}
+      PREVIEW_PASSWORD_HASH: ${PREVIEW_PASSWORD_HASH:?run deploy/gen-secrets.sh}
+    ports: ["80:80", "443:443", "443:443/udp"]
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddydata:/data
+      - caddyconfig:/config
+    depends_on: [web, admin, astrologer, api]
+
+  postgres:
+    restart: unless-stopped
+    ports: !reset []
+
+  redis:
+    restart: unless-stopped
+    ports: !reset []
+
+  api:
+    restart: unless-stopped
+    ports: !reset []
+    environment:
+      CORS_ORIGINS: '["https://${DOMAIN}", "https://portal.${DOMAIN}"]'
+      PUBLIC_SITE_URL: https://${DOMAIN}
+      LIVEKIT_PUBLIC_URL: wss://lk.${DOMAIN}
+      FLAG_VOICE_CALLS: ${FLAG_VOICE_CALLS:-false}
+      FLAG_FIRST_FREE_SESSION: ${FLAG_FIRST_FREE_SESSION:-true}
+
+  astro:
+    restart: unless-stopped
+    ports: !reset []
+
+  web:
+    restart: unless-stopped
+    ports: !reset []
+    build:
+      args:
+        NEXT_PUBLIC_SITE_URL: https://${DOMAIN}
+        NEXT_PUBLIC_SITE_ENV: preview
+    environment:
+      NEXT_PUBLIC_SITE_URL: https://${DOMAIN}
+      API_WS_URL: wss://api.${DOMAIN}
+
+  admin:
+    restart: unless-stopped
+    ports: !reset []
+
+  astrologer:
+    restart: unless-stopped
+    ports: !reset []
+    environment:
+      API_WS_URL: wss://api.${DOMAIN}
+      PUBLIC_SITE_URL: https://${DOMAIN}
+
+  worker:
+    restart: unless-stopped
+    environment:
+      PUBLIC_SITE_URL: https://${DOMAIN}
+
+  # Voice calls are optional (FLAG_VOICE_CALLS=true and `--profile voice`); they need UDP
+  # 50000-50100 open in the firewall and PUBLIC_IP set.
+  livekit:
+    profiles: ["voice"]
+    restart: unless-stopped
+    ports: !override
+      - "50000-50100:50000-50100/udp"
+      - "7881:7881"
+    environment:
+      LIVEKIT_CONFIG: |
+        port: 7880
+        rtc:
+          tcp_port: 7881
+          port_range_start: 50000
+          port_range_end: 50100
+          use_external_ip: false
+          node_ip: ${PUBLIC_IP:-127.0.0.1}
+        webhook:
+          api_key: ${LIVEKIT_API_KEY:-devkey}
+          urls: ["http://api:8000/v1/calls/livekit/webhook"]
+        room:
+          auto_create: false
+          empty_timeout: 60
+
+volumes:
+  caddydata:
+  caddyconfig:

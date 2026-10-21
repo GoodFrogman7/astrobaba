@@ -1,0 +1,20 @@
+# Scheduled jobs for the preview server (docs/LAUNCH.md §3). Times are UTC (IST = UTC+5:30).
+# Install: replace /opt/astrobaba with the checkout path, then `crontab deploy/crontab`.
+SHELL=/bin/bash
+C=docker compose --env-file /opt/astrobaba/deploy/.env -f /opt/astrobaba/docker-compose.yml -f /opt/astrobaba/deploy/compose.preview.yml
+PY=/app/.venv/bin/python
+
+# 02:00 IST ledger reconciliation; promo expiry hourly; analytics purge 03:30 IST.
+30 20 * * * $C exec -T api $PY -m astro_api.cli reconcile
+5 * * * *   $C exec -T api $PY -m astro_api.cli expire-promo
+0 22 * * *  $C exec -T api $PY -m astro_api.cli analytics-purge
+# 06:00 IST on the 1st: astrologer payouts for the month that ended.
+30 0 1 * *  $C exec -T api $PY -m astro_api.cli payouts generate
+# 04:00 IST database backup.
+30 22 * * * /opt/astrobaba/deploy/backup.sh
+
+# Horoscope prose needs a paid, no-training LLM tier (PLAN.md §6), so it is off in the free
+# preview; pages show template sentences built from engine facts instead. With an LLM key:
+# 0 19 * * * $C exec -T worker $PY -m astro_worker horoscopes generate --period daily
+# 0 19 * * 0 $C exec -T worker $PY -m astro_worker horoscopes generate --period weekly
+# 0 19 28-31 * * [ "$(date -d tomorrow +\%d)" = 01 ] && $C exec -T worker $PY -m astro_worker horoscopes generate --period monthly
