@@ -40,6 +40,9 @@ GATEWAY_FEES = "platform:gateway_fees"
 CLEARING = "gateway:razorpay:clearing"
 BANK = "bank:settlement"
 BANK_PAYOUTS = "bank:payouts"  # asset: the account astrologer payouts are sent from
+REPORT_REVENUE = "platform:report_revenue"
+AI_REVENUE = "platform:ai_revenue"
+PURCHASE_REVENUE = {"report": REPORT_REVENUE, "ai_question": AI_REVENUE}
 DEBIT_NORMAL = frozenset({PROMO_EXPENSE, REFUNDS, GATEWAY_FEES, CLEARING, BANK, BANK_PAYOUTS})
 
 FREE_SESSION_LOT_TTL = dt.timedelta(days=1)  # safety net; the lot is closed when the session ends
@@ -114,6 +117,14 @@ class Charge:
     real_paise: int
     commission_paise: int
     astrologer_paise: int
+    created: bool
+
+
+@dataclass(frozen=True)
+class Purchase:
+    transaction_id: uuid.UUID
+    promo_paise: int
+    real_paise: int
     created: bool
 
 
@@ -244,6 +255,7 @@ async def _insert_txn(
     astrologer_id: uuid.UUID | None = None,
     external_ref: str | None = None,
     occurred_at: dt.datetime | None = None,
+    reverses_id: uuid.UUID | None = None,
 ) -> uuid.UUID | None:
     """Insert the transaction row; None when the key already exists (a concurrent winner)."""
     values: dict[str, Any] = {
@@ -255,6 +267,7 @@ async def _insert_txn(
         "session_id": session_id,
         "astrologer_id": astrologer_id,
         "external_ref": external_ref,
+        "reverses_id": reverses_id,
     }
     if occurred_at is not None:
         values["occurred_at"] = occurred_at
@@ -980,6 +993,133 @@ async def post_refund(
     )
 
 
+# ------------------------------------------------------------------ one-time purchases
+
+
+async def _purchase_from(db: AsyncSession, tx: LedgerTransaction, side: str) -> Purchase:
+    by = _by_bucket(await _sums(db, tx.id), side)
+    return Purchase(tx.id, by["promo"], by["real"], created=False)
+
+
+async def charge_purchase(
+    db: AsyncSession,
+    *,
+    user_id: uuid.UUID,
+    key: str,
+    product: str,
+    ref_id: str,
+    amount_paise: int,
+) -> Purchase:
+    """Pay for a one-time product (`report`, `ai_question`) from the wallet: general promo by
+    earliest expiry, then real (spend order as for minutes); session-restricted lots are never
+    used. Credits the product's revenue account. Locks the user's rows; raises
+    InsufficientFunds rather than going negative. Caller commits."""
+    if amount_paise <= 0:
+        raise ValueError("amount_paise must be positive")
+    revenue = PURCHASE_REVENUE[product]
+    payload_hash = _hash(
+        {"user_id": user_id, "product": product, "ref": ref_id, "amount": amount_paise}
+    )
+    if (tx := await _existing(db, key, payload_hash)) is not None:
+        return await _purchase_from(db, tx, "debit")
+    real_balance, _ = await lock_user(db, user_id)
+    if (tx := await _existing(db, key, payload_hash)) is not None:
+        return await _purchase_from(db, tx, "debit")
+    lots = list(
+        (await db.execute(_usable_lots_query(user_id, None, _now()).with_for_update())).scalars()
+    )
+    if sum(lot.remaining_paise for lot in lots) + real_balance < amount_paise:
+        raise InsufficientFunds(f"{product} {ref_id}")
+    remaining = amount_paise
+    from_lots: list[tuple[PromoLot, int]] = []
+    real_part = 0
+    for bucket in billing_config.spend_order():
+        if bucket == "promo":
+            for lot in lots:
+                part = min(lot.remaining_paise, remaining)
+                if part > 0:
+                    from_lots.append((lot, part))
+                    remaining -= part
+        else:
+            real_part = min(real_balance, remaining)
+            remaining -= real_part
+    tid = await _insert_txn(
+        db,
+        key=key,
+        payload_hash=payload_hash,
+        kind="purchase",
+        user_id=user_id,
+        external_ref=f"{product}:{ref_id}",
+    )
+    assert tid is not None  # we hold the user's lock and checked the key under it
+    postings = [_Posting(real_account(user_id), "debit", real_part)]
+    postings += [_Posting(promo_account(user_id), "debit", part, lot.id) for lot, part in from_lots]
+    postings.append(_Posting(revenue, "credit", amount_paise))
+    await _write(db, tid, postings)
+    for lot, part in from_lots:
+        lot.remaining_paise -= part
+    await db.flush()
+    return Purchase(tid, amount_paise - real_part, real_part, created=True)
+
+
+async def refund_purchase(
+    db: AsyncSession, *, user_id: uuid.UUID, key: str, original_key: str
+) -> Purchase:
+    """Refund a purchase in full, back to the buckets it came from: real as real, promo as a new
+    general promo lot (promo_expiry_days). LookupError if there is no such purchase."""
+    original = (
+        await db.execute(
+            select(LedgerTransaction).where(LedgerTransaction.idempotency_key == original_key)
+        )
+    ).scalar_one_or_none()
+    if original is None or original.kind != "purchase" or original.user_id != user_id:
+        raise LookupError(original_key)
+    payload_hash = _hash({"refunds": original.id})
+    if (tx := await _existing(db, key, payload_hash)) is not None:
+        return await _purchase_from(db, tx, "credit")
+    await lock_user(db, user_id)
+    if (tx := await _existing(db, key, payload_hash)) is not None:
+        return await _purchase_from(db, tx, "credit")
+    sums = await _sums(db, original.id)
+    paid = _by_bucket(sums, "debit")
+    revenue = next(a for (a, side) in sums if side == "credit")
+    tid = await _insert_txn(
+        db,
+        key=key,
+        payload_hash=payload_hash,
+        kind="purchase_refund",
+        user_id=user_id,
+        external_ref=original.external_ref,
+        reverses_id=original.id,
+    )
+    assert tid is not None
+    lot_id: uuid.UUID | None = None
+    if paid["promo"] > 0:
+        lot = PromoLot(
+            id=uuid.uuid4(),
+            user_id=user_id,
+            campaign="refund",
+            amount_paise=paid["promo"],
+            remaining_paise=paid["promo"],
+            expires_at=_now() + dt.timedelta(days=billing_config.promo_expiry_days()),
+            session_id=None,
+            source_transaction_id=tid,
+        )
+        db.add(lot)
+        await db.flush()
+        lot_id = lot.id
+    await _write(
+        db,
+        tid,
+        [
+            _Posting(real_account(user_id), "credit", paid["real"]),
+            _Posting(promo_account(user_id), "credit", paid["promo"], lot_id),
+            _Posting(revenue, "debit", paid["real"] + paid["promo"]),
+        ],
+    )
+    return Purchase(tid, paid["promo"], paid["real"], created=True)
+
+
 # ------------------------------------------------------------------ astrologer payouts
 
 
@@ -1052,6 +1192,8 @@ API_KINDS = {
     "promo_expiry": "promo_expiry",
     "promo_grant": "adjustment",
     "adjustment": "adjustment",
+    "purchase": "purchase",
+    "purchase_refund": "refund",
 }
 
 

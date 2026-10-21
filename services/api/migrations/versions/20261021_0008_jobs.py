@@ -1,4 +1,4 @@
-"""Background jobs table (ADR-0009).
+"""Background jobs table (ADR-0009) and ledger kinds for one-time purchases.
 
 Revision ID: 0008
 Revises: 0007
@@ -17,6 +17,19 @@ branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 
 KINDS = ("report_render", "ai_answer", "remedy_lead_notify", "report_email")
+LEDGER_KINDS_BEFORE = (
+    "recharge",
+    "recharge_bonus",
+    "consultation",
+    "refund",
+    "free_session_grant",
+    "promo_grant",
+    "promo_expiry",
+    "settlement",
+    "adjustment",
+    "payout",
+)
+LEDGER_KINDS = (*LEDGER_KINDS_BEFORE, "purchase", "purchase_refund")
 STATUSES = ("queued", "running", "done", "failed")
 
 
@@ -25,6 +38,8 @@ def _in(column: str, values: tuple[str, ...]) -> str:
 
 
 def upgrade() -> None:
+    op.drop_constraint("kind_known", "ledger_transactions", type_="check")
+    op.create_check_constraint("kind_known", "ledger_transactions", _in("kind", LEDGER_KINDS))
     op.create_table(
         "jobs",
         sa.Column("id", pg.UUID(as_uuid=True), primary_key=True),
@@ -51,3 +66,9 @@ def upgrade() -> None:
 
 def downgrade() -> None:
     op.drop_table("jobs")
+    op.drop_constraint("kind_known", "ledger_transactions", type_="check")
+    # NOT VALID: posted purchases stay (append-only ledger); new ones are refused.
+    kinds = _in("kind", LEDGER_KINDS_BEFORE)
+    op.execute(
+        f"ALTER TABLE ledger_transactions ADD CONSTRAINT kind_known CHECK ({kinds}) NOT VALID"
+    )

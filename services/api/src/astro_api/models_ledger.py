@@ -42,6 +42,9 @@ TXN_KINDS = (
     "settlement",
     "adjustment",
     "payout",
+    # One-time products bought from the wallet (reports, AI questions) and their refunds.
+    "purchase",
+    "purchase_refund",
 )
 ORDER_STATUSES = ("created", "paid", "failed")
 OVERRIDE_ACTIONS = ("allow", "block")

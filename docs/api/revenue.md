@@ -27,8 +27,10 @@ per product in paise, languages `en`/`hi`.
 (1 for kundli, 2 for matching, from the user's saved kundlis), pay_with: "wallet" | "razorpay",
 email?: string}` → 201 `ReportOrder`.
 
-- `wallet`: charged at once from the wallet (promo first, then real; ADR-0002 order), ledger
-  key `report:{order_id}:paid` (debit user promo/real, credit `platform:report_revenue`).
+- `wallet`: charged at once with `wallet.charge_purchase(product="report")` (general promo by
+  earliest expiry, then real; never a session's free lot), ledger key `report:{order_id}:paid`
+  (debit user promo/real, credit `platform:report_revenue`). Refunds use
+  `wallet.refund_purchase` (same buckets back, key `refund:report:{report_id}`).
   `402 insufficient_funds` with `required_paise`, `available_paise`.
 - `razorpay`: a Razorpay order (same gateway code as recharges). The webhook marks it paid and
   posts `razorpay:payment:{payment_id}:captured` (debit gateway clearing, credit
@@ -98,8 +100,9 @@ avatar that looks human; every answer offers "Talk to a human astrologer".
 - `POST /v1/ai/conversations` (signed in) `{kundli_id}` → `{id, kundli_id, created_at}`.
 - `POST /v1/ai/conversations/{id}/questions` (`Idempotency-Key`) `{text: 1–500 chars}` →
   202 `AiQuestion` (status `queued`). Price per question from `products.json` (`ai_question`),
-  charged when queued (ledger `ai:{question_id}:charge`, promo first), refunded automatically
-  (`refund:ai:{question_id}`) when the answer fails or is blocked. 402 when unfunded.
+  charged when queued (`wallet.charge_purchase(product="ai_question")`, key
+  `ai:{question_id}:charge`), refunded automatically (`wallet.refund_purchase`, key
+  `refund:ai:{question_id}`) when the answer fails or is blocked. 402 when unfunded.
 - `GET /v1/ai/conversations/{id}` → `{id, kundli: {...label}, questions: [AiQuestion]}`.
 - `AiQuestion`: `{id, text, status: queued|answered|blocked|failed, answer: string|null,
   blocked_reason: string|null, created_at, answered_at, price_paise, refunded: bool}`.
