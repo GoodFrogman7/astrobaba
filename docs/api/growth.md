@@ -109,7 +109,7 @@ shown publicly.
 
 - `POST /v1/admin/astrologer-invites {note?, expires_days 1-60 (default 14)}` → 201 `{id, code,
   url, expires_at}`.
-  - `url` is `{ASTROLOGER_PORTAL_URL}/apply?invite={code}`.
+  - `url` is `{PUBLIC_SITE_URL}/astrologers/apply?invite={code}` (the public application form).
   - The code is returned only in this response.
 - `GET /v1/admin/astrologer-invites?status=open|used|expired|revoked` → `{items: [{id, note,
   status, created_at, expires_at, used_at, astrologer_id}]}`, with no codes.
