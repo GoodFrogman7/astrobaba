@@ -10,18 +10,20 @@ package = false
 exclude-newer = "2026-10-06T00:00:00Z"
 
 [tool.uv.workspace]
-members = ["services/api", "services/astro", "services/worker"]
+members = ["services/api", "services/astro", "services/worker", "scripts/loadtest"]
 
 [tool.uv.sources]
 astro-api = { workspace = true }
 astro-engine = { workspace = true }
 astro-worker = { workspace = true }
+astro-loadtest = { workspace = true }
 
 [dependency-groups]
 dev = [
   "astro-api",
   "astro-engine",
   "astro-worker",
+  "astro-loadtest",
   "pytest>=8.3",
   "pytest-asyncio>=0.24",
   "hypothesis>=6.100",
@@ -54,8 +56,8 @@ strict = true
 plugins = ["pydantic.mypy"]
 # Each service has a tests/conftest.py; name modules by path so they do not collide.
 explicit_package_bases = true
-mypy_path = ["services/api/src", "services/astro/src", "services/worker/src"]
-files = ["services/api/src", "services/astro/src", "services/worker/src", "services/api/tests", "services/astro/tests", "services/worker/tests", "evals/astro", "evals/safety"]
+mypy_path = ["services/api/src", "services/astro/src", "services/worker/src", "scripts/loadtest/src"]
+files = ["services/api/src", "services/astro/src", "services/worker/src", "services/api/tests", "services/astro/tests", "services/worker/tests", "evals/astro", "evals/safety", "scripts/loadtest/src", "scripts/loadtest/tests"]
 
 [[tool.mypy.overrides]]
 module = ["swisseph", "geonamescache", "skyfield.*"]
