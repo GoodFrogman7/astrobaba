@@ -141,8 +141,10 @@ jobs:
         run: |
           (cd services/api && uv run alembic upgrade head)
           uv run python -m astro_api.seed demo-astrologers
-          nohup uv run uvicorn astro_engine.main:app --port 8001 > astro.log 2>&1 &
-          nohup uv run uvicorn astro_api.main:app --port 8000 > api.log 2>&1 &
+          # Straight from the venv, not `uv run`: a long-lived uv process holds the uv cache lock
+          # and makes setup-uv's post-job cache prune time out.
+          nohup .venv/bin/uvicorn astro_engine.main:app --port 8001 > astro.log 2>&1 &
+          nohup .venv/bin/uvicorn astro_api.main:app --port 8000 > api.log 2>&1 &
           (cd apps/web && nohup node_modules/.bin/next start --port 3000 > ../../web.log 2>&1 &)
           for url in http://localhost:8001/healthz http://localhost:8000/readyz http://localhost:3000/; do
             for i in $(seq 1 60); do curl -fsS -o /dev/null "$url" && break; sleep 1; done
@@ -155,3 +157,6 @@ jobs:
       - name: Service logs
         if: always()
         run: tail -n 80 astro.log api.log web.log
+      - name: Stop services
+        if: always()
+        run: pkill -f "uvicorn astro_" || true; pkill -f "next start" || true
