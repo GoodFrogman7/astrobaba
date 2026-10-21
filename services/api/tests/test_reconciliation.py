@@ -17,8 +17,8 @@ from sqlalchemy.ext.asyncio import create_async_engine
 from astro_api import cli, payments, wallet
 from astro_api.config import Settings, get_settings
 from astro_api.db import make_sessionmaker
+from astro_api.earnings import ist_today
 from astro_api.models import User
-from astro_api.reconciliation import ist_today
 
 pytestmark = pytest.mark.integration
 
@@ -243,7 +243,7 @@ def test_cli_reconcile(client: TestClient, login, monkeypatch, capsys) -> None: 
         get_settings.cache_clear()
 
 
-# ---------------------------------------------------------------- payouts (Phase 5)
+# ---------------------------------------------------------------- payouts
 
 
 def test_payouts_check(  # type: ignore[no-untyped-def]

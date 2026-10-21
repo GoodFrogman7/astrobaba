@@ -1,5 +1,4 @@
 /** Types for the astrologer console, from docs/api/marketplace.md and docs/api/billing.md. */
-import type { SessionView } from "@astro/shared";
 
 export type AstrologerStatus =
   "applied" | "kyc_submitted" | "interview" | "probation" | "approved" | "suspended" | "rejected";
@@ -17,10 +16,6 @@ export interface Page<T> {
   items: T[];
   next_cursor: string | null;
 }
-
-export type SessionPage = Page<SessionView>;
-
-/* ---- Portal (Phase 5, docs/api/portal.md §2) ---- */
 
 /** `GET /v1/astrologer/me`: only the fields the portal shows (price and tier are admin-set). */
 export interface AstrologerProfile {
@@ -40,20 +35,11 @@ export interface Balance {
 export interface PortalReview {
   id: string;
   rating: number;
-  text: string;
+  /** Null while held: held text may contain contact details. */
+  text: string | null;
   created_at: string;
-  author_label?: string;
+  author_label: string;
   reply: { text: string; at: string } | null;
-  session_id: string | null;
-  /** "published", or a held state ("flagged", "held", "pending_moderation"). */
-  status: string;
-}
-
-/** A payout adjustment line. Its shape is not fixed by the contract yet, so read tolerantly. */
-export interface PayoutAdjustment {
-  amount_paise?: number;
-  kind?: string;
-  note?: string | null;
-  description?: string | null;
-  reason?: string | null;
+  session_id: string;
+  status: "published" | "held";
 }

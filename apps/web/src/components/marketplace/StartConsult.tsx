@@ -83,38 +83,27 @@ export function StartConsult({
   const minAmount = formatPaise(minStartPaise(pricePerMinPaise), locale);
   const isBusy = (k: SessionKind, f: boolean) => busy === `${k}:${f}`;
 
-  const chatButton = (
+  const paidButton = (k: SessionKind, enabled: boolean, style: string) => (
     <button
       type="button"
-      disabled={!chat || busy !== null}
-      aria-describedby={chat || compact ? undefined : "chat-off"}
-      onClick={() => void start("chat", false)}
-      className={`${primary} ${compact ? "" : "w-full"} ${chat ? "" : off}`.trim()}
+      disabled={!enabled || busy !== null}
+      aria-describedby={enabled || compact ? undefined : `${k}-off`}
+      onClick={() => void start(k, false)}
+      className={`${style} ${compact ? "" : "w-full"} ${enabled ? "" : off}`.trim()}
     >
-      {isBusy("chat", false) ? t("starting") : t("chat")}
-    </button>
-  );
-  const callButton = (
-    <button
-      type="button"
-      disabled={!voice || busy !== null}
-      aria-describedby={voice || compact ? undefined : "call-off"}
-      onClick={() => void start("call", false)}
-      className={`${outline} ${compact ? "" : "w-full"} ${voice ? "" : off}`.trim()}
-    >
-      {isBusy("call", false) ? t("starting") : t("call")}
+      {isBusy(k, false) ? t("starting") : t(k)}
     </button>
   );
 
   return (
     <div className={compact ? "flex flex-wrap justify-end gap-2" : "space-y-3"}>
-      {chatButton}
+      {paidButton("chat", chat, primary)}
       {!compact && !chat && (
         <p id="chat-off" className="text-sm text-muted">
           {t("chatOff")}
         </p>
       )}
-      {callButton}
+      {paidButton("call", voice, outline)}
       {!compact && !voice && (
         <p id="call-off" className="text-sm text-muted">
           {t("callOff")}

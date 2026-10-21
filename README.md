@@ -1,10 +1,8 @@
 # AstroPlatform (working title)
 
 Two-sided astrology marketplace (users ↔ vetted astrologers) fed by free, accurately computed
-tools. Plan: [docs/PLAN.md](docs/PLAN.md). Architecture: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
-Decisions: [docs/adr/](docs/adr/README.md).
-
-Status: **Phase 3 (marketplace core)** complete. Phase 4 (wallet, billing, chat sessions) waits on the go-ahead.
+tools. Plan: [docs/PLAN.md](docs/PLAN.md). Architecture and current phase:
+[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md). Decisions: [docs/adr/](docs/adr/README.md).
 
 ## Quick start
 

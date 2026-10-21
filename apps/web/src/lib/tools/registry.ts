@@ -17,20 +17,19 @@ export type ToolKind =
 
 export interface ToolDef {
   slug: ToolKind;
-  contentKey: string;
   form: ToolForm;
 }
 
 export const TOOLS: ToolDef[] = [
-  { slug: "sun-moon-ascendant", contentKey: "sun-moon-ascendant", form: "birth" },
-  { slug: "nakshatra", contentKey: "nakshatra", form: "birth" },
-  { slug: "vimshottari-dasha", contentKey: "vimshottari-dasha", form: "birth" },
-  { slug: "mangal-dosha", contentKey: "mangal-dosha", form: "birth" },
-  { slug: "sade-sati", contentKey: "sade-sati", form: "birth" },
-  { slug: "kaal-sarp-dosha", contentKey: "kaal-sarp-dosha", form: "birth" },
-  { slug: "mulank", contentKey: "mulank", form: "dob" },
-  { slug: "destiny-number", contentKey: "destiny-number", form: "dob" },
-  { slug: "name-numerology", contentKey: "name-numerology", form: "numerology" },
+  { slug: "sun-moon-ascendant", form: "birth" },
+  { slug: "nakshatra", form: "birth" },
+  { slug: "vimshottari-dasha", form: "birth" },
+  { slug: "mangal-dosha", form: "birth" },
+  { slug: "sade-sati", form: "birth" },
+  { slug: "kaal-sarp-dosha", form: "birth" },
+  { slug: "mulank", form: "dob" },
+  { slug: "destiny-number", form: "dob" },
+  { slug: "name-numerology", form: "numerology" },
 ];
 
 /** Every launch tool, including the birth chart (/kundli), for the hub page. */

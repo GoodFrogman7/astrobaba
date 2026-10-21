@@ -2,7 +2,7 @@ import { requireLocale } from "@/lib/almanac/locale";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { PageShell } from "@/components/PageShell";
 import { Link } from "@/i18n/navigation";
-import { cityName, DEFAULT_CITY_SLUG } from "@/lib/almanac/cities";
+import { cityName, DEFAULT_CITY_SLUG, type SeoCity } from "@/lib/almanac/cities";
 import { getCity, loadPanchang, requestIstDays } from "@/lib/almanac/data";
 import { formatClock, formatIstDate } from "@/lib/almanac/dates";
 import { SIGNS } from "@/lib/almanac/names";
@@ -21,11 +21,11 @@ export async function generateMetadata({ params }: Props) {
   return pageMetadata(locale, "/", await getContent(locale, "home"));
 }
 
-async function todaySummary(today: string): Promise<{ data: Panchang; slug: string } | null> {
+async function todaySummary(today: string): Promise<{ data: Panchang; city: SeoCity } | null> {
   try {
     const city = await getCity(DEFAULT_CITY_SLUG);
     if (!city) return null;
-    return { data: await loadPanchang(city, today), slug: city.slug };
+    return { data: await loadPanchang(city, today), city };
   } catch {
     return null; // the landing page still renders if the engine is unreachable
   }
@@ -40,7 +40,6 @@ export default async function HomePage({ params }: Props) {
   const { today } = requestIstDays();
   const dateText = formatIstDate(today, locale);
   const summary = await todaySummary(today);
-  const city = await getCity(DEFAULT_CITY_SLUG).catch(() => null);
   const name = (s: { en: string; hi: string }) => (locale === "hi" ? s.hi : s.en);
 
   const cards = [
@@ -85,11 +84,11 @@ export default async function HomePage({ params }: Props) {
             </div>
           </dl>
           <Link
-            href={`/panchang/${summary.slug}`}
+            href={`/panchang/${summary.city.slug}`}
             className="mt-3 inline-block text-sm underline underline-offset-4"
           >
             {t("fullPanchang")}
-            {city ? ` · ${cityName(city, locale)}` : ""}
+            {` · ${cityName(summary.city, locale)}`}
           </Link>
         </section>
       )}

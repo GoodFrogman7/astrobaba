@@ -2,15 +2,15 @@
 
 import datetime as dt
 import uuid
-from typing import Annotated, Literal
+from typing import Literal
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter
 from pydantic import BaseModel, Field
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from astro_api.auth import current_user
-from astro_api.db import get_db
+from astro_api.auth import CurrentUser
+from astro_api.db import Db
 from astro_api.errors import ApiError
 from astro_api.models import SavedKundli, User
 from astro_api.timeresolve import resolve
@@ -70,11 +70,7 @@ def _out(k: SavedKundli) -> KundliOut:
 
 
 @router.post("", status_code=201, response_model=KundliOut)
-async def create_kundli(
-    body: KundliIn,
-    user: Annotated[User, Depends(current_user)],
-    db: Annotated[AsyncSession, Depends(get_db)],
-) -> KundliOut:
+async def create_kundli(body: KundliIn, user: CurrentUser, db: Db) -> KundliOut:
     b = body.birth
     resolved = resolve(b.date, b.time, b.place.tz, b.utc_offset, b.fold)
     count = (
@@ -104,9 +100,7 @@ async def create_kundli(
 
 
 @router.get("", response_model=list[KundliOut])
-async def list_kundlis(
-    user: Annotated[User, Depends(current_user)], db: Annotated[AsyncSession, Depends(get_db)]
-) -> list[KundliOut]:
+async def list_kundlis(user: CurrentUser, db: Db) -> list[KundliOut]:
     rows = await db.execute(
         select(SavedKundli).where(SavedKundli.user_id == user.id).order_by(SavedKundli.created_at)
     )
@@ -121,19 +115,11 @@ async def _own(db: AsyncSession, user: User, kundli_id: uuid.UUID) -> SavedKundl
 
 
 @router.get("/{kundli_id}", response_model=KundliOut)
-async def get_kundli(
-    kundli_id: uuid.UUID,
-    user: Annotated[User, Depends(current_user)],
-    db: Annotated[AsyncSession, Depends(get_db)],
-) -> KundliOut:
+async def get_kundli(kundli_id: uuid.UUID, user: CurrentUser, db: Db) -> KundliOut:
     return _out(await _own(db, user, kundli_id))
 
 
 @router.delete("/{kundli_id}", status_code=204)
-async def delete_kundli(
-    kundli_id: uuid.UUID,
-    user: Annotated[User, Depends(current_user)],
-    db: Annotated[AsyncSession, Depends(get_db)],
-) -> None:
+async def delete_kundli(kundli_id: uuid.UUID, user: CurrentUser, db: Db) -> None:
     await db.delete(await _own(db, user, kundli_id))
     await db.commit()

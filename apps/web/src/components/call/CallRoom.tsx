@@ -3,10 +3,17 @@
 import { DISCLAIMER, type ParticipantRole, type SessionView } from "@astro/shared";
 import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
-import { Dialog } from "@/components/billing/Dialog";
-import { ConnBanner, Ended, useNow, Waiting } from "@/components/chat/ChatRoom";
+import {
+  balanceWarning,
+  CancelButton,
+  ConnBanner,
+  EndDialog,
+  Ended,
+  LowBalance,
+  useNow,
+  Waiting,
+} from "@/components/chat/ChatRoom";
 import type { EventTap, useChat } from "@/components/chat/useChat";
-import { Link } from "@/i18n/navigation";
 import { BILLING } from "@/lib/billing/config";
 import { callScreen, joinedMap, type CallScreen, type CallState } from "@/lib/call/state";
 import { elapsedSeconds } from "@/lib/chat/reducer";
@@ -103,30 +110,6 @@ function statusText(
   }
 }
 
-function CancelButton({ chat }: { chat: Chat }) {
-  const t = useTranslations("billing.chat");
-  const tc = useTranslations("billing.call");
-  const [busy, setBusy] = useState(false);
-  const [failed, setFailed] = useState(false);
-  return (
-    <>
-      <button
-        type="button"
-        disabled={busy}
-        onClick={async () => {
-          setBusy(true);
-          setFailed(!(await chat.act("cancel")));
-          setBusy(false);
-        }}
-        className="rounded-sm border border-border px-4 py-2 text-sm"
-      >
-        {tc("cancel")}
-      </button>
-      {failed && <p role="alert">{t("cancelError")}</p>}
-    </>
-  );
-}
-
 /** Before the room: what the microphone is for, then a tap to join (or to try again). */
 function JoinPanel({
   chat,
@@ -190,7 +173,9 @@ function JoinPanel({
         >
           {screen !== "join" ? t("retry") : active || dropped ? t("mic.rejoin") : t("mic.join")}
         </button>
-        {s.status === "accepted" && <CancelButton chat={chat} />}
+        {s.status === "accepted" && (
+          <CancelButton label={t("cancel")} onCancel={() => chat.act("cancel")} />
+        )}
       </div>
       <ConnBanner conn={chat.conn} onUseHere={chat.reconnect} />
     </section>
@@ -218,7 +203,6 @@ function CallPanel({
   const { state } = chat;
   const call = media.state;
   const [confirm, setConfirm] = useState(false);
-  const [endFailed, setEndFailed] = useState(false);
   const muteRef = useRef<HTMLButtonElement>(null);
   const heading = useRef<HTMLHeadingElement>(null);
   const name = s.astrologer.display_name;
@@ -229,31 +213,14 @@ function CallPanel({
     else heading.current?.focus();
   }, [inCall]);
 
-  const minutesLeft = s.minutes_left ?? state.lowBalanceMinutes;
-  const low =
-    inCall &&
-    !s.is_free &&
-    (state.lowBalanceMinutes !== null ||
-      (minutesLeft !== null && minutesLeft <= BILLING.lowBalanceWarningMinutes));
-  const line =
-    screen === "connecting"
-      ? t("state.connecting")
-      : screen === "waiting_astrologer"
-        ? t("state.waitingAstrologer", { name })
-        : screen === "starting"
-          ? t("state.starting", { name })
-          : call.media === "reconnecting"
-            ? t("state.reconnecting")
-            : !joined.astrologer
-              ? t("state.astrologerAway", { name })
-              : t("state.inCall", { name });
+  const { minutesLeft, low } = balanceWarning(s, state);
 
   return (
     <section aria-labelledby="call-panel" className="space-y-3">
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-border bg-surface p-4">
         <div>
           <h2 id="call-panel" ref={heading} tabIndex={-1} className="font-semibold">
-            {line}
+            {statusText(t, screen, call, joined, name)}
           </h2>
           <p className="text-sm text-muted">
             {s.is_free && s.free_minutes !== null
@@ -290,19 +257,7 @@ function CallPanel({
         </div>
       )}
 
-      {low && (
-        <div role="status" className="rounded-sm border border-border bg-surface px-3 py-2 text-sm">
-          {t("lowBalance", { minutes: minutesLeft ?? 0 })}{" "}
-          <Link
-            href="/wallet"
-            target="_blank"
-            rel="noopener"
-            className="font-medium text-accent underline"
-          >
-            {tchat("rechargeNewTab")}
-          </Link>
-        </div>
-      )}
+      {inCall && low && <LowBalance text={t("lowBalance", { minutes: minutesLeft ?? 0 })} />}
 
       <div className="flex flex-wrap items-center gap-3">
         <button
@@ -325,7 +280,9 @@ function CallPanel({
             {t("end")}
           </button>
         ) : (
-          s.status === "accepted" && <CancelButton chat={chat} />
+          s.status === "accepted" && (
+            <CancelButton label={t("cancel")} onCancel={() => chat.act("cancel")} />
+          )
         )}
         {call.outputs.length > 1 && (
           <label className="flex items-center gap-2 text-sm">
@@ -347,27 +304,12 @@ function CallPanel({
       </div>
       {call.muted && <p className="text-sm">{t("muted")}</p>}
 
-      <Dialog
+      <EndDialog
+        ns="billing.call"
         open={confirm}
         onClose={() => setConfirm(false)}
-        title={t("endTitle")}
-        closeLabel={t("keep")}
-      >
-        <p>{t("endBody")}</p>
-        {endFailed && <p role="alert">{t("endError")}</p>}
-        <button
-          type="button"
-          onClick={async () => {
-            const ok = await chat.act("end");
-            setEndFailed(!ok);
-            if (ok) setConfirm(false);
-          }}
-          className="mr-2 rounded-sm px-4 py-2 text-sm font-medium text-primary-fg"
-          style={{ background: "var(--color-danger)" }}
-        >
-          {t("endConfirm")}
-        </button>
-      </Dialog>
+        onEnd={() => chat.act("end")}
+      />
     </section>
   );
 }

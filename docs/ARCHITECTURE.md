@@ -31,8 +31,8 @@ services/
   worker/         CLI jobs: horoscope generation (facts → LLM → validator → review queue) and
                   review; queue library chosen when jobs need scheduling
 packages/
-  shared/         TS: brand, locales, disclaimer, IST date source, design tokens,
-                  feature flags, analytics schema. JSON parts are read by Python too.
+  shared/         TS: brand, locales, disclaimer, IST date source, design tokens, feature
+                  flags, analytics schema, chat and portal shapes. JSON parts are read by Python.
 data/
   astro/          Jyotish tables (names en/hi, lords, panchang lists, dasha, dosha rules,
                   Ashtakoota); each cites its source, some await astrologer review
@@ -182,7 +182,6 @@ payouts:   cli payouts generate (1st of month, previous IST month) ──> draft
 | One IST date source; never format in the browser's zone (§5 P2, §8) | `packages/shared/src/time.ts` |
 | Disclaimer on every page (§5 P2, §6) | `packages/shared/src/disclaimer.ts`, rendered in the web layout footer |
 | AI always labelled (§6) | `AI_LABEL` in `packages/shared/src/disclaimer.ts` |
-| No chat content in analytics (§6) | `packages/shared/analytics/events.json`: closed property types, no free text; validators in TS and Python share `cases.json` |
 | Secrets only in `.env`; redact PII in logs (§0.5) | `.gitignore`, `SecretStr` settings, `services/api/src/astro_api/logs.py`, CI hygiene job |
 | Feature flags | `packages/shared/flags/flags.json` + `FLAG_<NAME>` env; `/v1/flags` |
 | Astro values only from the engine or static tables (§0.4, §6) | `services/astro`; `data/astro/*.json` with sources; golden fixtures from JPL/USNO |
@@ -194,7 +193,7 @@ payouts:   cli payouts generate (1st of month, previous IST month) ──> draft
 | No fake online counts or scarcity (§6) | presence and wait time only from Redis state; empty directory says so |
 | Unreviewed Jyotish tables never public | `/v1/match`, `/v1/doshas` return 503 `tables_not_reviewed` in staging/production |
 | No money movement without a ledger entry and an idempotency key (§6) | `astro_api.wallet` is the only writer; unique keys; append-only triggers; reconciliation |
-| No chat content in logs or analytics (§6) | messages stored encrypted; system messages carry codes; admin session list has no content |
+| No chat content in logs or analytics (§6) | `packages/shared/analytics/events.json`: closed property types, no free text; validators in TS and Python share `cases.json`. Messages stored encrypted; system messages carry codes; admin session list has no content |
 | No billing for audio that is not flowing (§5 P5) | meter confirms LiveKit presence before each call minute; LiveKit down → no charge, `service_unavailable` |
 | Never a negative balance (§5 P4) | prepaid minutes + row locks + `CHECK (balance >= 0)`; 100-way concurrency test |
 | Own design system (§0.1) | `packages/shared/src/tokens.ts` + `tokens/tokens.css`, AA contrast tested |
@@ -202,9 +201,10 @@ payouts:   cli payouts generate (1st of month, previous IST month) ──> draft
 ## Checks
 
 `make ci` = lint (ESLint, Prettier, Ruff) → types (tsc, mypy strict) → `make data` → unit and
-property tests (Vitest, pytest + Hypothesis) → golden astro fixtures → integration tests (Postgres + Redis, migrations up/down/up) → web production build →
-SSR smoke test of `/` and `/hi`. GitHub Actions runs the same, plus a Docker build of every
-image and a repo-hygiene job (no `.env` files or live keys committed).
+property tests (Vitest, pytest + Hypothesis) → golden astro fixtures → integration tests
+(Postgres + Redis, migrations up/down/up) → web production build → SSR smoke test of `/` and
+`/hi`. GitHub Actions runs the same, plus a Docker build of every image and a repo-hygiene job
+(no `.env` files or live keys committed).
 
 ## Decisions
 

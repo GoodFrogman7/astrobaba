@@ -24,5 +24,5 @@ export function useSubmit<T>() {
       }
     });
   }
-  return { pending, result, errors, submit, setErrors };
+  return { pending, result, errors, submit };
 }

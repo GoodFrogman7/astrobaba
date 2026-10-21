@@ -174,12 +174,12 @@ class LiveKitCalls(_Signer):
         )
         self._url = settings.livekit_url
 
-    def _client(self) -> api.LiveKitAPI:
+    def _client(self, timeout_s: float = LIVEKIT_TIMEOUT_S) -> api.LiveKitAPI:
         return api.LiveKitAPI(
             self._url,
             self._key,
             self._secret,
-            timeout=aiohttp.ClientTimeout(total=LIVEKIT_TIMEOUT_S),
+            timeout=aiohttp.ClientTimeout(total=timeout_s),
             failover=False,
         )
 
@@ -200,13 +200,7 @@ class LiveKitCalls(_Signer):
             await lk.aclose()
 
     async def list_participants(self, room: str) -> set[str]:
-        lk = api.LiveKitAPI(
-            self._url,
-            self._key,
-            self._secret,
-            timeout=aiohttp.ClientTimeout(total=VERIFY_TIMEOUT_S),
-            failover=False,
-        )
+        lk = self._client(VERIFY_TIMEOUT_S)
         try:
             found = await lk.room.list_participants(api.ListParticipantsRequest(room=room))
         except api.ServerError as exc:

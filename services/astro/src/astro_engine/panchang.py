@@ -5,7 +5,7 @@ from collections.abc import Callable
 from datetime import date
 from typing import Any
 
-from astro_engine.ephemeris import Ayanamsha, EphemerisBackend, norm
+from astro_engine.ephemeris import Ayanamsha, BodyPosition, EphemerisBackend, norm
 from astro_engine.tables import KARANA_SPAN, NAKSHATRA_SPAN, TITHI_SPAN, get_table, get_tables
 from astro_engine.timeutil import (
     TimeInputError,
@@ -13,7 +13,6 @@ from astro_engine.timeutil import (
     jd_from_utc,
     local_midnight_utc,
     utc_from_jd,
-    zone,
 )
 from astro_engine.zodiac import placement
 
@@ -123,7 +122,6 @@ def compute_panchang(
     ayanamsha: Ayanamsha = "lahiri",
 ) -> dict[str, Any]:
     t = get_tables()
-    zone(tz)
     jd_midnight = jd_from_utc(local_midnight_utc(day, tz))
     sunrise = backend.sunrise(jd_midnight, lat, lon)
     sunset = backend.sunset(sunrise, lat, lon) if sunrise else None
@@ -135,17 +133,18 @@ def compute_panchang(
     if sunrise - jd_midnight >= 1.0:
         raise TimeInputError("no_sunrise", "The Sun does not rise at this place on this date.")
 
-    def sun_moon(jd: float) -> tuple[Any, Any]:
-        return backend.body(jd, "sun", ayanamsha, "mean"), backend.body(
-            jd, "moon", ayanamsha, "mean"
-        )
+    def body(jd: float, graha: str) -> BodyPosition:
+        return backend.body(jd, graha, ayanamsha, "mean")
+
+    def sun_moon(jd: float) -> tuple[BodyPosition, BodyPosition]:
+        return body(jd, "sun"), body(jd, "moon")
 
     def elongation(jd: float) -> tuple[float, float]:
         s, m = sun_moon(jd)
         return norm(m.tropical - s.tropical), m.speed - s.speed
 
     def moon_sidereal(jd: float) -> tuple[float, float]:
-        m = backend.body(jd, "moon", ayanamsha, "mean")
+        m = body(jd, "moon")
         return m.sidereal, m.speed
 
     def yoga_angle(jd: float) -> tuple[float, float]:

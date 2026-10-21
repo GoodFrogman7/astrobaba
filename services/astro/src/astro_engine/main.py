@@ -32,7 +32,7 @@ from astro_engine.models import (
 from astro_engine.numerology import compute_numerology
 from astro_engine.panchang import compute_panchang
 from astro_engine.tables import get_tables
-from astro_engine.timeutil import TimeInputError, resolve_local
+from astro_engine.timeutil import ResolvedTime, TimeInputError, resolve_local
 from astro_engine.transits import compute_transits
 
 SOURCE_URL = "https://github.com/GoodFrogman7/astrobaba/tree/main/services/astro"
@@ -52,7 +52,7 @@ async def ephemeris_error(_: Request, exc: EphemerisError) -> JSONResponse:
     )
 
 
-def _resolve(b: Birth) -> Any:
+def _resolve(b: Birth) -> ResolvedTime:
     return resolve_local(b.date, b.time, b.place.tz, utc_offset=b.utc_offset, fold=b.fold)
 
 
@@ -169,18 +169,13 @@ def match(req: MatchRequest) -> dict[str, Any]:
     groom = _kundli(req.groom, req.ayanamsha)
     bride = _kundli(req.bride, req.ayanamsha)
     result = ashtakoota(_moon(groom), _moon(bride))
-    result["groom"] = {
-        "birth": groom["birth"],
-        "moon": _moon(groom),
-        "flags": groom["flags"],
-        "mangal_dosha": mangal_dosha(groom),
-    }
-    result["bride"] = {
-        "birth": bride["birth"],
-        "moon": _moon(bride),
-        "flags": bride["flags"],
-        "mangal_dosha": mangal_dosha(bride),
-    }
+    for side, chart in (("groom", groom), ("bride", bride)):
+        result[side] = {
+            "birth": chart["birth"],
+            "moon": _moon(chart),
+            "flags": chart["flags"],
+            "mangal_dosha": mangal_dosha(chart),
+        }
     return result
 
 

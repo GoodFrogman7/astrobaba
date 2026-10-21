@@ -1,5 +1,6 @@
 "use server";
 
+import type { PayoutGenerateResult } from "@astro/shared";
 import { adminAction, field } from "@/lib/actions-common";
 import { api } from "@/lib/api";
 import { ID } from "@/lib/money-admin";
@@ -22,15 +23,6 @@ import type { ActionResult } from "@/lib/result";
 const LIST = "/money/payouts";
 const detail = (id: string) => `/money/payouts/${id}`;
 
-function generatedCount(body: unknown): number | null {
-  if (!body || typeof body !== "object") return null;
-  const b = body as Record<string, unknown>;
-  for (const k of ["generated", "count", "created"]) {
-    if (typeof b[k] === "number") return b[k] as number;
-  }
-  return Array.isArray(b.items) ? b.items.length : null;
-}
-
 export async function generatePayouts(
   _: ActionResult | null,
   form: FormData,
@@ -40,11 +32,9 @@ export async function generatePayouts(
   const period = parsed.value;
   return adminAction(
     [LIST],
-    () => api.post<unknown>("/v1/admin/payouts/generate", { period }),
-    (body) => {
-      const n = generatedCount(body);
-      return `Statements for ${formatPeriod(period)} generated${n === null ? "" : ` (${n})`}. Drafts were recalculated from the ledger; approved and paid statements were not touched.`;
-    },
+    () => api.post<PayoutGenerateResult>("/v1/admin/payouts/generate", { period }),
+    (body) =>
+      `Statements for ${formatPeriod(period)} generated (${body.generated}). Drafts were recalculated from the ledger; approved and paid statements were not touched.`,
     payoutErrorText,
   );
 }

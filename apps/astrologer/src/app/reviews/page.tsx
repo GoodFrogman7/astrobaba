@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { StatusNotice } from "@/components/StatusNotice";
-import { api, ApiError } from "@/lib/api";
+import { tryGet } from "@/lib/api";
 import { formatIst } from "@/lib/format";
 import { consolePage } from "@/lib/guard";
 import { ratingLabel, reviewFilter, reviewStatus, stars } from "@/lib/reviews";
@@ -19,23 +18,13 @@ export default async function ReviewsPage({
   const sp = await searchParams;
   const filter = reviewFilter(sp.filter);
   const cursor = typeof sp.cursor === "string" ? sp.cursor.slice(0, 200) : "";
-  const { access, data } = await consolePage(async () => {
+  const page = await consolePage(async () => {
     const q = new URLSearchParams({ filter, limit: "20" });
     if (cursor) q.set("cursor", cursor);
-    try {
-      return {
-        ok: true as const,
-        page: await api.get<Page<PortalReview>>(`/v1/astrologer/me/reviews?${q}`),
-      };
-    } catch (e) {
-      if (e instanceof ApiError) return { ok: false as const, error: e.message || e.code };
-      throw e;
-    }
+    return tryGet<Page<PortalReview>>(`/v1/astrologer/me/reviews?${q}`);
   });
-  if (access.kind === "anon") return null;
-  if (access.kind !== "live" || !data) {
-    return access.kind === "live" ? null : <StatusNotice access={access} />;
-  }
+  if (!page.live) return page.notice;
+  const { data } = page;
   const tabs = [
     { label: "All reviews", href: "/reviews", on: filter === "all" },
     { label: "Not replied yet", href: "/reviews?filter=unreplied", on: filter === "unreplied" },
@@ -70,13 +59,13 @@ export default async function ReviewsPage({
         >
           Could not load reviews: {data.error}
         </p>
-      ) : data.page.items.length === 0 ? (
+      ) : data.value.items.length === 0 ? (
         <p className="mt-8 text-muted">
           {filter === "unreplied" ? "Every review has a reply." : "No reviews yet."}
         </p>
       ) : (
         <ul className="mt-6 space-y-4">
-          {data.page.items.map((r) => {
+          {data.value.items.map((r) => {
             const st = reviewStatus(r.status);
             return (
               <li key={r.id} className="rounded-md border border-border bg-surface p-4">
@@ -86,9 +75,7 @@ export default async function ReviewsPage({
                       {stars(r.rating)}
                     </span>
                     <span className="sr-only">{ratingLabel(r.rating)}</span>
-                    <span className="ml-2 text-sm text-muted">
-                      {r.author_label ?? "Verified client"}
-                    </span>
+                    <span className="ml-2 text-sm text-muted">{r.author_label}</span>
                   </p>
                   <p className="text-sm text-muted">
                     {formatIst(r.created_at)} ·{" "}
@@ -127,11 +114,11 @@ export default async function ReviewsPage({
             First page
           </Link>
         )}
-        {data.ok && data.page.next_cursor && (
+        {data.ok && data.value.next_cursor && (
           <Link
             href={`/reviews?${new URLSearchParams({
               ...(filter === "unreplied" ? { filter } : {}),
-              cursor: data.page.next_cursor,
+              cursor: data.value.next_cursor,
             })}`}
             className="underline"
           >

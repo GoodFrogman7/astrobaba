@@ -4,6 +4,7 @@ data: never log them."""
 import datetime as dt
 import uuid
 from typing import Any
+from uuid import uuid4
 
 from sqlalchemy import (
     BigInteger,
@@ -76,14 +77,10 @@ REVIEW_STATUSES = ("published", "flagged", "hidden")
 DEFAULT_FLAGS = {"chat_enabled": True, "call_enabled": False, "show_in_directory": True}
 
 
-def _uuid() -> uuid.UUID:
-    return uuid.uuid4()
-
-
 class User(Base):
     __tablename__ = "users"
 
-    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=_uuid)
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid4)
     phone: Mapped[str] = mapped_column(CITEXT, unique=True)  # E.164
     created_at: Mapped[dt.datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
@@ -98,7 +95,7 @@ class User(Base):
 class AuthSession(Base):
     __tablename__ = "auth_sessions"
 
-    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=_uuid)
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid4)
     user_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("users.id", ondelete="CASCADE"), index=True
     )
@@ -114,7 +111,7 @@ class AuthSession(Base):
 class SavedKundli(Base):
     __tablename__ = "saved_kundlis"
 
-    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=_uuid)
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid4)
     user_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("users.id", ondelete="CASCADE"), index=True
     )
@@ -142,7 +139,7 @@ class HoroscopeEntry(Base):
     __tablename__ = "horoscope_entries"
     __table_args__ = (UniqueConstraint("period", "sign", "ist_date", "locale"),)
 
-    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=_uuid)
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid4)
     period: Mapped[str] = mapped_column(Enum(*PERIODS, name="horoscope_period"))
     sign: Mapped[str] = mapped_column(Text)
     ist_date: Mapped[dt.date] = mapped_column(Date)  # window start (IST)
@@ -189,7 +186,7 @@ class Astrologer(Base):
         CheckConstraint("experience_years BETWEEN 0 AND 80", name="experience_range"),
     )
 
-    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=_uuid)
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid4)
     user_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("users.id", ondelete="CASCADE"), unique=True
     )
@@ -245,7 +242,7 @@ class AstrologerVerification(Base):
 class KycDocument(Base):
     __tablename__ = "kyc_documents"
 
-    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=_uuid)
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid4)
     astrologer_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("astrologers.id", ondelete="CASCADE"), index=True
     )
@@ -264,7 +261,7 @@ class KycDocument(Base):
 
 
 class ConsultSession(Base):
-    """A consultation (Phase 4: chat). State machine and metering: session_service.py, ADR-0007.
+    """A consultation (chat or call). State machine and metering: session_service.py, ADR-0007.
 
     Money facts (`price_per_min_paise`, `commission_bps`) are captured at creation so later price
     or rate changes never reprice a session. `billed_minutes` is the highest minute posted to the
@@ -295,7 +292,7 @@ class ConsultSession(Base):
         Index("ix_consult_sessions_status_astrologer", "status", "astrologer_id"),
     )
 
-    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=_uuid)
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid4)
     user_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("users.id", ondelete="CASCADE"), index=True
     )
@@ -337,7 +334,7 @@ class Review(Base):
     __tablename__ = "reviews"
     __table_args__ = (CheckConstraint("rating BETWEEN 1 AND 5", name="rating_range"),)
 
-    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=_uuid)
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid4)
     session_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("consult_sessions.id", ondelete="CASCADE"), unique=True
     )
@@ -366,5 +363,5 @@ class Review(Base):
     )
 
 
-# Phase 4 tables live in their own modules; importing them here registers them on Base.metadata.
+# The other tables live in their own modules; importing them here registers them on Base.metadata.
 from astro_api import models_ledger, models_portal, models_sessions  # noqa: E402, F401

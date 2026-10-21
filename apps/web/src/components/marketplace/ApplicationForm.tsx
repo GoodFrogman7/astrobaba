@@ -7,7 +7,7 @@ import {
   MIN_PRICE_PAISE,
   validateApplication,
 } from "@/lib/marketplace/application";
-import { rupeesPerMin } from "@/lib/marketplace/format";
+import { formatPaise } from "@/lib/marketplace/format";
 import { TAXONOMY } from "@/lib/marketplace/taxonomy";
 import type { ApplicationInput } from "@/lib/marketplace/types";
 
@@ -167,8 +167,8 @@ export function ApplicationForm({ onDone }: { onDone: () => void }) {
       </div>
       <p id="price-hint" className="text-sm text-muted">
         {t("priceHint", {
-          min: rupeesPerMin(MIN_PRICE_PAISE, locale),
-          max: rupeesPerMin(MAX_PRICE_PAISE, locale),
+          min: formatPaise(MIN_PRICE_PAISE, locale),
+          max: formatPaise(MAX_PRICE_PAISE, locale),
         })}
       </p>
       <label className="flex items-start gap-2 text-sm">

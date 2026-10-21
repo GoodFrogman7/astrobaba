@@ -26,5 +26,4 @@ const lookup = (list: Named[], id: string, locale: "en" | "hi") =>
 
 export const skillName = (id: string, l: "en" | "hi") => lookup(TAXONOMY.skills, id, l);
 export const languageName = (id: string, l: "en" | "hi") => lookup(TAXONOMY.languages, id, l);
-export const genderName = (id: string, l: "en" | "hi") => lookup(TAXONOMY.genders, id, l);
 export const tierName = (id: string, l: "en" | "hi") => lookup(TAXONOMY.tiers, id, l);

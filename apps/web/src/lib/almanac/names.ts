@@ -12,7 +12,6 @@ export const SIGNS = signsFile.signs.map((s) => ({
   sa: s.sa,
   lord: s.lord,
 }));
-export type SignId = (typeof SIGNS)[number]["id"];
 export const SIGN_IDS = SIGNS.map((s) => s.id);
 
 export function signName(id: string, locale: Loc): string {

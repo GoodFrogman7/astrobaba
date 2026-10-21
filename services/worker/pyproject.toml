@@ -1,7 +1,7 @@
 [project]
 name = "astro-worker"
 version = "0.0.0"
-description = "Background jobs: horoscope generation + review; PDF reports, reconciliation, payouts later."
+description = "Background jobs: horoscope generation and review."
 requires-python = ">=3.12"
 dependencies = [
   "astro-api",

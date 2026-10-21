@@ -59,7 +59,7 @@ from astro_api.models_sessions import ChatMessage
 log = logging.getLogger("astro_api.sessions")
 
 BUSY_STATUSES = ("requested", "accepted", "active")  # an astrologer with one of these is not free
-ROLES = ("user", "astrologer")
+ROLES = chat_bus.ROLES
 
 
 def utcnow() -> dt.datetime:
@@ -89,11 +89,6 @@ def rules() -> SessionRules:
         min_start_minutes=int(s["min_start_minutes"]),
         low_balance_warning_minutes=int(s["low_balance_warning_minutes"]),
     )
-
-
-def commission_bps(tier: str | None) -> int:
-    """Platform share for the astrologer's tier, captured on the session row at creation."""
-    return billing_config.commission_bps(tier)
 
 
 # ---------------------------------------------------------------- dependencies

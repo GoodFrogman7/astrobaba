@@ -181,8 +181,6 @@ export function chatReducer(state: ChatState, action: ChatAction): ChatState {
             error: { code: ev.code, message: ev.message },
             pending: SEND_REFUSED.has(ev.code) ? failSending(state.pending) : state.pending,
           };
-        case "pong":
-          return state;
         default:
           return state;
       }

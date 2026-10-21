@@ -17,7 +17,7 @@ in this month. Payout postings (`kind = payout`) are not earnings and are ignore
 import datetime as dt
 import re
 import uuid
-from dataclasses import asdict, dataclass
+from dataclasses import dataclass
 from typing import Any
 from zoneinfo import ZoneInfo
 
@@ -97,14 +97,13 @@ class Totals:
         return bool(self.gross_paise or self.refunds_paise or self.minutes)
 
     def as_dict(self) -> dict[str, int]:
-        d = asdict(self)
         return {
-            "gross_paise": d["gross_paise"],
-            "commission_paise": d["commission_paise"],
-            "refunds_paise": d["refunds_paise"],
+            "gross_paise": self.gross_paise,
+            "commission_paise": self.commission_paise,
+            "refunds_paise": self.refunds_paise,
             "net_paise": self.net_paise,
-            "sessions": d["sessions"],
-            "minutes": d["minutes"],
+            "sessions": self.sessions,
+            "minutes": self.minutes,
         }
 
 

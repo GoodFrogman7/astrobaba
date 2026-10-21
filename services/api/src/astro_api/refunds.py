@@ -1,7 +1,7 @@
-"""Refund rules engine (rules in data/marketplace/billing.json). Owned by the wallet work.
+"""Refund rules engine (rules in data/marketplace/billing.json).
 
-The session work calls `on_session_end` after a session ends (in its own transaction, after the
-session row is committed); review creation calls `on_review`. Both are idempotent (key
+`on_session_end` runs after a session ends (in its own transaction, after the session row is
+committed); review creation calls `on_review`. Both are idempotent (key
 `refund:{rule}:{session_id}`) and audited.
 
 Postings (wallet.post_refund): a refund reverses the session's charges in proportion. Real comes
@@ -24,7 +24,6 @@ from astro_api.models import ConsultSession
 from astro_api.models_ledger import Refund
 
 SYSTEM_ACTOR = "system:refunds"
-RULES = ("failed_connect", "astrologer_drop", "service_unavailable", "low_rating", "manual")
 
 
 @dataclass(frozen=True)

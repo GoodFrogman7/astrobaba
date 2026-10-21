@@ -5,5 +5,3 @@
 export type ActionResult =
   | { ok: true; message?: string }
   | { ok: false; error: string; errors?: string[]; retryable?: boolean };
-
-export const IDLE: ActionResult | null = null;

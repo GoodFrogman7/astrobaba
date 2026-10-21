@@ -1,7 +1,7 @@
 # Admin console
 
-Internal Next.js app (Phase 3), English only, never indexed. Sign-in is phone OTP through the
-core API; only users with the `admin` role see anything.
+Internal Next.js app, English only, never indexed. Sign-in is phone OTP through the core API;
+only users with the `admin` role see anything.
 
 - `/astrologers`: application and KYC queue by status, astrologer detail with documents,
   verification checklist (identity → qualification → interview → probation), approve with
@@ -15,9 +15,9 @@ core API; only users with the `admin` role see anything.
   unknown (timeout, 5xx) and replaced after any definite answer
 - `/money/free-sessions`: first-free-session claims with abuse score and reasons, flagged
   filter, allow / block / reset overrides with a note (audited)
-- `/money/payouts?period=YYYY-MM&status=`: monthly payout statements (Phase 5,
-  docs/api/portal.md §3) with status filter and totals; "Generate for period" (ended IST months
-  only, confirm). `/money/payouts/<id>`: totals, session lines, bank-detail placeholders and the
+- `/money/payouts?period=YYYY-MM&status=`: monthly payout statements
+  ([portal.md §3](../../docs/api/portal.md)) with status filter and totals; "Generate for
+  period" (ended IST months only, confirm). `/money/payouts/<id>`: totals, session lines, bank-detail placeholders and the
   next step only: Approve (draft), Mark paid with bank reference + paid-on date (approved; spells
   out the `payout:{id}` ledger posting), Void with a note (draft/approved). API errors such as
   `409 exceeds_payable` are shown in plain words. Bank transfers themselves are manual.

@@ -8,8 +8,7 @@ export const FLAG_NAMES = Object.keys(FLAGS) as FlagName[];
 
 /**
  * Resolve a flag: env `FLAG_<NAME>` (true/false/1/0) overrides the default in flags.json.
- * Same rule as the Python side (services/api/app/flags.py). Per-user and per-astrologer
- * flags come later from the database.
+ * Same rule as the Python side (services/api/src/astro_api/flags.py).
  */
 export function flagEnabled(
   name: FlagName,

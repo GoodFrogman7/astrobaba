@@ -1,7 +1,6 @@
 {
   "almanac": {
     "panchang": {
-      "heading": "{city} का पंचांग",
       "summary": "एक नज़र में",
       "vaara": "वार",
       "sunrise": "सूर्योदय",
@@ -51,7 +50,6 @@
       }
     },
     "horoscope": {
-      "heading": "{sign} {period} राशिफल",
       "areas": {
         "overall": "समग्र",
         "love": "प्रेम और संबंध",

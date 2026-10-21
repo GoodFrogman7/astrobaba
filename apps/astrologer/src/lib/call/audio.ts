@@ -1,5 +1,5 @@
 import type { CallToken } from "@astro/shared";
-import { backoffMs, type Timers } from "../chat/socket";
+import { backoffMs, browserTimers, type Timers } from "../chat/socket";
 import { micFailure, tokenFailure, type CallAudioAction } from "./state";
 
 /**
@@ -54,13 +54,6 @@ export interface CallAudioDeps {
   /** Automatic reconnect attempts before giving up and showing "Try again". */
   maxAttempts?: number;
 }
-
-const browserTimers: Timers = {
-  setTimeout: (fn, ms) => globalThis.setTimeout(fn, ms),
-  clearTimeout: (id) => globalThis.clearTimeout(id as ReturnType<typeof setTimeout>),
-  setInterval: (fn, ms) => globalThis.setInterval(fn, ms),
-  clearInterval: (id) => globalThis.clearInterval(id as ReturnType<typeof setInterval>),
-};
 
 export class CallAudio {
   private room: AudioRoom | null = null;

@@ -1,9 +1,9 @@
-import type { EarningRow, Payout } from "@astro/shared";
+import type { EarningRow, Payout, PayoutAdjustment } from "@astro/shared";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { EarningRows } from "@/components/EarningRows";
 import { PayoutBadge } from "@/components/PayoutBadge";
-import { StatusNotice } from "@/components/StatusNotice";
 import { api, ApiError } from "@/lib/api";
 import {
   formatDeduction,
@@ -15,17 +15,16 @@ import {
 import { formatIst, formatRupees } from "@/lib/format";
 import { OPAQUE_ID } from "@/lib/forward";
 import { consolePage } from "@/lib/guard";
-import type { PayoutAdjustment } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Payout statement" };
 
-type PayoutDetail = Payout & { lines?: EarningRow[]; adjustments?: PayoutAdjustment[] };
+type PayoutDetail = Payout & { lines: EarningRow[]; adjustments: PayoutAdjustment[] };
 
 export default async function PayoutPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   if (!OPAQUE_ID.test(id)) notFound();
-  const { access, data } = await consolePage(async () => {
+  const page = await consolePage(async () => {
     try {
       return await api.get<PayoutDetail>(`/v1/astrologer/me/payouts/${encodeURIComponent(id)}`);
     } catch (e) {
@@ -33,12 +32,10 @@ export default async function PayoutPage({ params }: { params: Promise<{ id: str
       throw e;
     }
   });
-  if (access.kind === "anon") return null;
-  if (access.kind !== "live") return <StatusNotice access={access} />;
-  if (!data) notFound();
-  const p = data;
-  const lines = p.lines ?? [];
-  const adjustments = p.adjustments ?? [];
+  if (!page.live) return page.notice;
+  const p = page.data;
+  if (!p) notFound();
+  const { lines, adjustments } = p;
   const rows = [
     { label: "Gross", value: formatRupees(p.gross_paise) },
     { label: "Platform commission", value: formatDeduction(p.commission_paise) },
@@ -126,16 +123,8 @@ export default async function PayoutPage({ params }: { params: Promise<{ id: str
                 key={i}
                 className="flex flex-wrap justify-between gap-3 border-b border-border py-1.5"
               >
-                <span>
-                  {a.description ??
-                    a.note ??
-                    a.reason ??
-                    a.kind?.replace(/_/g, " ") ??
-                    "Adjustment"}
-                </span>
-                {typeof a.amount_paise === "number" && (
-                  <span className="tabular-nums">{formatRupees(a.amount_paise)}</span>
-                )}
+                <span>{a.kind.replace(/_/g, " ")}</span>
+                <span className="tabular-nums">{formatRupees(a.amount_paise)}</span>
               </li>
             ))}
           </ul>
@@ -149,58 +138,7 @@ export default async function PayoutPage({ params }: { params: Promise<{ id: str
         {lines.length === 0 ? (
           <p className="mt-2 text-sm text-muted">No session lines.</p>
         ) : (
-          <div className="mt-3 overflow-x-auto">
-            <table className="w-full text-left text-sm">
-              <thead className="border-b border-border text-muted">
-                <tr>
-                  <th scope="col" className="py-2 pr-4 font-medium">
-                    Started (IST)
-                  </th>
-                  <th scope="col" className="py-2 pr-4 font-medium">
-                    Client
-                  </th>
-                  <th scope="col" className="py-2 pr-4 font-medium">
-                    Type
-                  </th>
-                  <th scope="col" className="py-2 pr-4 text-right font-medium">
-                    Minutes
-                  </th>
-                  <th scope="col" className="py-2 pr-4 text-right font-medium">
-                    Gross
-                  </th>
-                  <th scope="col" className="py-2 pr-4 text-right font-medium">
-                    Commission
-                  </th>
-                  <th scope="col" className="py-2 pr-4 text-right font-medium">
-                    Refunds
-                  </th>
-                  <th scope="col" className="py-2 text-right font-medium">
-                    Net
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {lines.map((r) => (
-                  <tr key={r.session_id} className="border-b border-border">
-                    <td className="py-2 pr-4 whitespace-nowrap">{formatIst(r.started_at)}</td>
-                    <td className="py-2 pr-4">{r.client_label}</td>
-                    <td className="py-2 pr-4">{r.kind === "call" ? "Call" : "Chat"}</td>
-                    <td className="py-2 pr-4 text-right tabular-nums">{r.billed_minutes}</td>
-                    <td className="py-2 pr-4 text-right tabular-nums">
-                      {formatRupees(r.gross_paise)}
-                    </td>
-                    <td className="py-2 pr-4 text-right tabular-nums">
-                      {formatDeduction(r.commission_paise)}
-                    </td>
-                    <td className="py-2 pr-4 text-right tabular-nums">
-                      {formatDeduction(r.refunds_paise)}
-                    </td>
-                    <td className="py-2 text-right tabular-nums">{formatRupees(r.net_paise)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <EarningRows rows={lines} />
         )}
       </section>
     </main>

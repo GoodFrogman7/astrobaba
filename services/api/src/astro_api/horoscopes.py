@@ -3,35 +3,21 @@
 
 import datetime as dt
 import uuid
-from typing import Annotated, Any, Literal
-from zoneinfo import ZoneInfo
+from typing import Annotated, Any, Literal, get_args
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Query
 from pydantic import BaseModel, Field
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from astro_api.audit import audit
-from astro_api.db import get_db
+from astro_api.db import Db
+from astro_api.earnings import ist_today
 from astro_api.errors import ApiError
 from astro_api.horoscope_rules import AREAS, text_errors
 from astro_api.models import HoroscopeEntry
 from astro_api.roles import AdminUser, actor
 
-SIGNS = (
-    "aries",
-    "taurus",
-    "gemini",
-    "cancer",
-    "leo",
-    "virgo",
-    "libra",
-    "scorpio",
-    "sagittarius",
-    "capricorn",
-    "aquarius",
-    "pisces",
-)
 Period = Literal["daily", "weekly", "monthly"]
 SignId = Literal[
     "aries",
@@ -47,14 +33,11 @@ SignId = Literal[
     "aquarius",
     "pisces",
 ]
+SIGNS: tuple[str, ...] = get_args(SignId)
 Locale = Literal["en", "hi"]
 
 public = APIRouter(prefix="/v1/horoscopes", tags=["horoscopes"])
 admin = APIRouter(prefix="/v1/admin/horoscopes", tags=["admin"])
-
-
-def ist_today() -> dt.date:
-    return dt.datetime.now(ZoneInfo("Asia/Kolkata")).date()
 
 
 class PublicHoroscope(BaseModel):
@@ -109,11 +92,7 @@ def _admin(e: HoroscopeEntry) -> dict[str, Any]:
 
 @public.get("/{period}/{sign}", response_model=PublicHoroscope)
 async def published(
-    period: Period,
-    sign: SignId,
-    db: Annotated[AsyncSession, Depends(get_db)],
-    date: dt.date | None = None,
-    locale: Locale = "en",
+    period: Period, sign: SignId, db: Db, date: dt.date | None = None, locale: Locale = "en"
 ) -> dict[str, Any]:
     day = date or ist_today()
     entry = (
@@ -136,7 +115,7 @@ async def published(
 @admin.get("", response_model=list[AdminHoroscope])
 async def list_entries(
     _: AdminUser,
-    db: Annotated[AsyncSession, Depends(get_db)],
+    db: Db,
     status: Literal["pending_review", "published", "rejected"] = "pending_review",
     limit: Annotated[int, Query(ge=1, le=200)] = 50,
 ) -> list[dict[str, Any]]:
@@ -162,9 +141,7 @@ async def _entry(db: AsyncSession, entry_id: uuid.UUID) -> HoroscopeEntry:
 
 
 @admin.get("/{entry_id}", response_model=AdminHoroscope)
-async def get_entry(
-    _: AdminUser, entry_id: uuid.UUID, db: Annotated[AsyncSession, Depends(get_db)]
-) -> dict[str, Any]:
+async def get_entry(_: AdminUser, entry_id: uuid.UUID, db: Db) -> dict[str, Any]:
     return _admin(await _entry(db, entry_id))
 
 
@@ -198,10 +175,7 @@ def apply_approval(
 
 @admin.post("/{entry_id}/approve", response_model=AdminHoroscope)
 async def approve(
-    admin_user: AdminUser,
-    entry_id: uuid.UUID,
-    body: Approve,
-    db: Annotated[AsyncSession, Depends(get_db)],
+    admin_user: AdminUser, entry_id: uuid.UUID, body: Approve, db: Db
 ) -> dict[str, Any]:
     entry = await _entry(db, entry_id)
     errors = apply_approval(entry, body.reviewer, body.sections)
@@ -221,10 +195,7 @@ async def approve(
 
 @admin.post("/{entry_id}/reject", response_model=AdminHoroscope)
 async def reject(
-    admin_user: AdminUser,
-    entry_id: uuid.UUID,
-    body: Reject,
-    db: Annotated[AsyncSession, Depends(get_db)],
+    admin_user: AdminUser, entry_id: uuid.UUID, body: Reject, db: Db
 ) -> dict[str, Any]:
     entry = await _entry(db, entry_id)
     if entry.status == "published":

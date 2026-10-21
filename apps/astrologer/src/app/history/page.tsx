@@ -1,10 +1,10 @@
+import type { SessionView } from "@astro/shared";
 import type { Metadata } from "next";
 import Link from "next/link";
-import { StatusNotice } from "@/components/StatusNotice";
 import { api } from "@/lib/api";
 import { endReasonText, formatIst, formatRate, formatRupees } from "@/lib/format";
 import { consolePage } from "@/lib/guard";
-import type { SessionPage } from "@/lib/types";
+import type { Page } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Session history" };
@@ -26,15 +26,13 @@ export default async function HistoryPage({
 }) {
   const sp = await searchParams;
   const cursor = typeof sp.cursor === "string" ? sp.cursor.slice(0, 200) : "";
-  const { access, data } = await consolePage(() => {
+  const page = await consolePage(() => {
     const params = new URLSearchParams({ role: "astrologer", limit: "25" });
     if (cursor) params.set("cursor", cursor);
-    return api.get<SessionPage>(`/v1/sessions?${params}`);
+    return api.get<Page<SessionView>>(`/v1/sessions?${params}`);
   });
-  if (access.kind === "anon") return null;
-  if (access.kind !== "live" || !data) {
-    return access.kind === "live" ? null : <StatusNotice access={access} />;
-  }
+  if (!page.live) return page.notice;
+  const { data } = page;
   return (
     <main id="main" className="mx-auto max-w-4xl px-4 py-8">
       <h1 className="text-2xl font-semibold">Session history</h1>

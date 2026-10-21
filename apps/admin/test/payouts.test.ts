@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
   allowedActions,
-  astrologerName,
   formatPeriod,
   istMonth,
   markPaidConsequence,
@@ -29,15 +28,19 @@ function payout(over: Partial<AdminPayout> = {}): AdminPayout {
     gross_paise: 100000,
     commission_paise: 30000,
     refunds_paise: 5000,
+    carried_in_paise: 0,
     net_paise: 65000,
     carried_forward_paise: 0,
+    void_reason: null,
     sessions: 12,
     minutes: 140,
     generated_at: "2026-10-01T00:05:00Z",
     approved_at: null,
     paid_at: null,
+    paid_on: null,
     reference: null,
-    astrologer: { id: "a_1", display_name: "Demo Astrologer 01" },
+    tax_note: "TDS and GST are not modelled yet.",
+    astrologer: { id: "a_1", display_name: "Demo Astrologer 01", slug: "demo-01" },
     ...over,
   };
 }
@@ -145,6 +148,5 @@ describe("display", () => {
     expect(markPaidConsequence(payout())).toBe(
       "This posts ledger transaction payout:po_1 for ₹650: debit astrologer:a_1:payable, credit bank:payouts. It is recorded in the audit log under your account and cannot be undone from here.",
     );
-    expect(astrologerName(payout({ astrologer: null, astrologer_id: "a_9" }))).toBe("a_9");
   });
 });

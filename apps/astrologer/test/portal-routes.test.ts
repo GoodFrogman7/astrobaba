@@ -8,37 +8,7 @@ import {
   statementCsvRoute,
 } from "../src/lib/portal-routes";
 import { sessionActionRoute } from "../src/lib/routes";
-
-type FetchMock = ReturnType<
-  typeof vi.fn<(url: string | URL | Request, init?: RequestInit) => Promise<Response>>
->;
-
-function api(status = 200, body: unknown = { ok: true }, headers: Record<string, string> = {}) {
-  return vi.fn<(url: string | URL | Request, init?: RequestInit) => Promise<Response>>(
-    async () =>
-      new Response(typeof body === "string" ? body : JSON.stringify(body), {
-        status,
-        headers: { "set-cookie": "upstream=1", ...headers },
-      }),
-  );
-}
-
-const deps = (f: FetchMock, token: string | null = "tok") => ({
-  token: token ?? undefined,
-  apiUrl: "http://api.test",
-  fetchImpl: f as unknown as typeof fetch,
-  wsBase: "wss://api.example",
-});
-
-function sent(f: FetchMock) {
-  const [url, init] = f.mock.calls[0]!;
-  return {
-    url: String(url),
-    init: init!,
-    headers: init!.headers as Record<string, string>,
-    body: init!.body ? JSON.parse(String(init!.body)) : undefined,
-  };
-}
+import { api, deps, sent } from "./fixtures";
 
 describe("call token", () => {
   const good = {

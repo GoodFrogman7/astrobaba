@@ -1,5 +1,5 @@
 """Astrologer portal: availability, consult settings, earnings, reviews, payout statements
-(Phase 5, portal work). docs/api/portal.md §2.
+(docs/api/portal.md §2).
 
 Every endpoint is for the signed-in user's own astrologer record (`404 not_applied` otherwise).
 Money figures come from the ledger (astro_api.earnings, astro_api.payouts). The client is shown
@@ -11,7 +11,7 @@ import re
 import uuid
 from typing import Annotated, Any, Literal
 
-from fastapi import APIRouter, Depends, Query, Request
+from fastapi import APIRouter, Query, Request
 from fastapi.responses import Response
 from pydantic import BaseModel, StrictBool
 from sqlalchemy import delete, insert, select
@@ -20,13 +20,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from astro_api import earnings, payouts, wallet
 from astro_api.applicant import own_astrologer
 from astro_api.audit import audit
-from astro_api.auth import current_user
-from astro_api.config import Settings
-from astro_api.db import get_db
+from astro_api.auth import CurrentUser
+from astro_api.db import Db, settings_of
 from astro_api.errors import ApiError
 from astro_api.flags import flag_enabled
 from astro_api.marketplace import decode_cursor, encode_cursor
-from astro_api.models import Astrologer, Review, User
+from astro_api.models import Astrologer, Review
 from astro_api.models_portal import (
     MAX_SLOTS,
     SLOT_STEP_MINUTES,
@@ -37,16 +36,9 @@ from astro_api.models_portal import (
 from astro_api.roles import actor
 
 router = APIRouter(prefix="/v1/astrologer/me", tags=["portal"])
-Db = Annotated[AsyncSession, Depends(get_db)]
-Me = Annotated[User, Depends(current_user)]
 Limit = Annotated[int, Query(ge=1, le=50)]
 
 _HHMM = re.compile(r"^(\d{2}):(\d{2})$")
-
-
-def _settings(request: Request) -> Settings:
-    settings: Settings = request.app.state.settings
-    return settings
 
 
 # ---------------------------------------------------------------- availability
@@ -97,13 +89,13 @@ def parse_slots(raw: list[Any]) -> list[tuple[int, int, int]]:
 
 
 @router.get("/availability")
-async def get_availability(user: Me, db: Db) -> dict[str, Any]:
+async def get_availability(user: CurrentUser, db: Db) -> dict[str, Any]:
     a = await own_astrologer(db, user)
     return await availability_view(db, a.id)
 
 
 @router.put("/availability")
-async def put_availability(body: AvailabilityIn, user: Me, db: Db) -> dict[str, Any]:
+async def put_availability(body: AvailabilityIn, user: CurrentUser, db: Db) -> dict[str, Any]:
     a = await own_astrologer(db, user, lock=True)
     slots = parse_slots(body.slots)
     await db.execute(
@@ -140,12 +132,12 @@ def consult_view(a: Astrologer) -> dict[str, bool]:
 
 
 @router.get("/consult")
-async def get_consult(user: Me, db: Db) -> dict[str, bool]:
+async def get_consult(user: CurrentUser, db: Db) -> dict[str, bool]:
     return consult_view(await own_astrologer(db, user))
 
 
 @router.patch("/consult")
-async def patch_consult(body: ConsultIn, user: Me, db: Db) -> dict[str, bool]:
+async def patch_consult(body: ConsultIn, user: CurrentUser, db: Db) -> dict[str, bool]:
     a = await own_astrologer(db, user, lock=True)
     changes = {k: v for k, v in body.model_dump(exclude_unset=True).items() if v is not None}
     if changes.get("call_enabled") and not flag_enabled("voice_calls"):
@@ -170,7 +162,7 @@ def _date(value: str) -> dt.date:
 @router.get("/earnings")
 async def get_earnings(
     request: Request,
-    user: Me,
+    user: CurrentUser,
     db: Db,
     from_: Annotated[str | None, Query(alias="from")] = None,
     to: str | None = None,
@@ -193,7 +185,7 @@ async def get_earnings(
     offset = decode_cursor(cursor)
     start, end = earnings.range_bounds(first, last)
     lines = await earnings.session_lines(db, a.id, start, end, offset=offset, limit=limit + 1)
-    settings = _settings(request)
+    settings = settings_of(request)
     return {
         "from": first.isoformat(),
         "to": last.isoformat(),
@@ -207,7 +199,7 @@ async def get_earnings(
 
 
 @router.get("/balance")
-async def get_balance(user: Me, db: Db) -> dict[str, Any]:
+async def get_balance(user: CurrentUser, db: Db) -> dict[str, Any]:
     a = await own_astrologer(db, user)
     last = (
         await db.execute(
@@ -250,7 +242,7 @@ def own_review(r: Review) -> dict[str, Any]:
 
 @router.get("/reviews")
 async def get_reviews(
-    user: Me,
+    user: CurrentUser,
     db: Db,
     cursor: str | None = None,
     limit: Limit = 20,
@@ -285,7 +277,7 @@ async def _own_payout(db: AsyncSession, a: Astrologer, payout_id: uuid.UUID) -> 
 
 
 @router.get("/payouts")
-async def list_payouts(user: Me, db: Db) -> dict[str, Any]:
+async def list_payouts(user: CurrentUser, db: Db) -> dict[str, Any]:
     a = await own_astrologer(db, user)
     rows = (
         await db.execute(
@@ -296,16 +288,18 @@ async def list_payouts(user: Me, db: Db) -> dict[str, Any]:
 
 
 @router.get("/payouts/{payout_id}")
-async def get_payout(payout_id: uuid.UUID, request: Request, user: Me, db: Db) -> dict[str, Any]:
+async def get_payout(
+    payout_id: uuid.UUID, request: Request, user: CurrentUser, db: Db
+) -> dict[str, Any]:
     a = await own_astrologer(db, user)
-    return await payouts.detail(db, _settings(request), await _own_payout(db, a, payout_id))
+    return await payouts.detail(db, settings_of(request), await _own_payout(db, a, payout_id))
 
 
 @router.get("/payouts/{payout_id}/statement.csv")
-async def statement(payout_id: uuid.UUID, request: Request, user: Me, db: Db) -> Response:
+async def statement(payout_id: uuid.UUID, request: Request, user: CurrentUser, db: Db) -> Response:
     a = await own_astrologer(db, user)
     p = await _own_payout(db, a, payout_id)
-    body = await payouts.statement_csv(db, _settings(request), p)
+    body = await payouts.statement_csv(db, settings_of(request), p)
     return Response(
         body,
         media_type="text/csv; charset=utf-8",

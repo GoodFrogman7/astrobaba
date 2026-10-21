@@ -9,15 +9,7 @@ import { AVAILABILITY_LIMITS, type AvailabilitySlot, type Weekday } from "@astro
  * as two slots, e.g. Monday 22:00–24:00 and Tuesday 00:00–02:00.
  */
 
-export const WEEKDAYS: readonly { value: Weekday; label: string; short: string }[] = [
-  { value: 0, label: "Monday", short: "Mon" },
-  { value: 1, label: "Tuesday", short: "Tue" },
-  { value: 2, label: "Wednesday", short: "Wed" },
-  { value: 3, label: "Thursday", short: "Thu" },
-  { value: 4, label: "Friday", short: "Fri" },
-  { value: 5, label: "Saturday", short: "Sat" },
-  { value: 6, label: "Sunday", short: "Sun" },
-];
+const WEEKDAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 
 export const DAY_MINUTES = 24 * 60;
 const STEP = AVAILABILITY_LIMITS.stepMinutes;
@@ -48,11 +40,7 @@ export function timeOptions(kind: "start" | "end"): string[] {
 }
 
 export function weekdayLabel(w: number): string {
-  return WEEKDAYS[w]?.label ?? "Unknown day";
-}
-
-export function formatSlot(s: AvailabilitySlot): string {
-  return `${WEEKDAYS[s.weekday]?.short ?? "?"} ${s.start}–${s.end}`;
+  return WEEKDAYS[w] ?? "Unknown day";
 }
 
 export interface SlotIssue {
@@ -183,12 +171,12 @@ export function copyDay(
 export function groupByDay(
   slots: readonly AvailabilitySlot[],
 ): { weekday: Weekday; label: string; entries: { slot: AvailabilitySlot; index: number }[] }[] {
-  return WEEKDAYS.map((d) => ({
-    weekday: d.value,
-    label: d.label,
+  return WEEKDAYS.map((label, weekday) => ({
+    weekday: weekday as Weekday,
+    label,
     entries: slots
       .map((slot, index) => ({ slot, index }))
-      .filter((e) => e.slot.weekday === d.value)
+      .filter((e) => e.slot.weekday === weekday)
       .sort((a, b) => (toMinutes(a.slot.start) ?? 0) - (toMinutes(b.slot.start) ?? 0)),
   }));
 }
@@ -236,23 +224,7 @@ export function activeSlot(
   return null;
 }
 
-/* ---------- API errors ---------- */
-
-/**
- * `422 invalid_slots` names the bad slot by index. The field name is read tolerantly (`index`,
- * `slot_index`, or the first of `indexes`/`errors[].index`). Null when no index is given.
- */
-export function invalidSlotIndex(body: unknown, count: number): number | null {
-  if (!body || typeof body !== "object") return null;
-  const b = body as Record<string, unknown>;
-  const candidates: unknown[] = [
-    b.index,
-    b.slot_index,
-    Array.isArray(b.indexes) ? b.indexes[0] : undefined,
-    Array.isArray(b.errors) ? (b.errors[0] as { index?: unknown } | undefined)?.index : undefined,
-  ];
-  for (const c of candidates) {
-    if (typeof c === "number" && Number.isInteger(c) && c >= 0 && c < count) return c;
-  }
-  return null;
+/** The `index` of a `422 invalid_slots`, or null when it names no slot on screen. */
+export function invalidSlotIndex(i: unknown, count: number): number | null {
+  return typeof i === "number" && Number.isInteger(i) && i >= 0 && i < count ? i : null;
 }

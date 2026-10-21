@@ -6,8 +6,8 @@ import { NotAuthorised } from "@/components/NotAuthorised";
 import { api } from "@/lib/api";
 import { adminPage } from "@/lib/guard";
 import { tryLoad } from "@/lib/load";
-import { asItems, checkView, formatIst, yesterdayIst } from "@/lib/money-admin";
-import type { ReconRun } from "@/lib/types";
+import { formatIst, yesterdayIst } from "@/lib/money-admin";
+import type { Page, ReconRun } from "@/lib/types";
 import { runReconciliation } from "../actions";
 
 export const dynamic = "force-dynamic";
@@ -21,7 +21,7 @@ const BADGE: Record<string, string> = {
 
 export default async function ReconciliationPage() {
   const { access, data } = await adminPage(() =>
-    tryLoad(async () => asItems<ReconRun>(await api.get("/v1/admin/money/reconciliation"))),
+    tryLoad(() => api.get<Page<ReconRun>>("/v1/admin/money/reconciliation")),
   );
   if (access.kind !== "admin" || !data) return <NotAuthorised />;
   const yesterday = yesterdayIst();
@@ -66,10 +66,7 @@ export default async function ReconciliationPage() {
       ) : (
         <ul className="mt-4 space-y-3">
           {data.value.items.map((r) => (
-            <li
-              key={r.id ?? `${r.date}-${r.started_at ?? ""}`}
-              className="rounded-md border border-border bg-surface p-4"
-            >
+            <li key={r.id} className="rounded-md border border-border bg-surface p-4">
               <div className="flex flex-wrap items-baseline justify-between gap-2">
                 <span className="font-medium">
                   {r.date}{" "}
@@ -88,18 +85,17 @@ export default async function ReconciliationPage() {
               </div>
               {r.checks.length > 0 && (
                 <ul className="mt-2 space-y-1 text-sm">
-                  {r.checks.map(checkView).map((c, i) => (
+                  {r.checks.map((c, i) => (
                     <li key={`${c.name}-${i}`} className="flex flex-wrap gap-2">
                       <span className={c.status === "ok" ? "text-success" : "text-danger"}>
                         {c.status === "ok" ? "✓" : "✗"}
                       </span>
                       <span>{c.name.replace(/_/g, " ")}</span>
-                      {typeof c.drift_paise === "number" && c.drift_paise !== 0 && (
+                      {!!c.drift_paise && (
                         <span>
                           (<Amount paise={c.drift_paise} />)
                         </span>
                       )}
-                      {c.detail && <span className="text-muted">{c.detail}</span>}
                     </li>
                   ))}
                 </ul>

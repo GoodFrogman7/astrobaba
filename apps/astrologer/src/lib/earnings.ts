@@ -143,15 +143,6 @@ export function dayBars<T extends EarningTotals & { date: string }>(
     .map((d) => ({ ...d, percent: barPercent(d.gross_paise, max) }));
 }
 
-export const EMPTY_TOTALS: EarningTotals = {
-  gross_paise: 0,
-  commission_paise: 0,
-  refunds_paise: 0,
-  net_paise: 0,
-  sessions: 0,
-  minutes: 0,
-};
-
 /* ---------- Payout statements ---------- */
 
 export const PAYOUT_STATUS_LABEL: Record<PayoutStatus, string> = {
@@ -163,7 +154,7 @@ export const PAYOUT_STATUS_LABEL: Record<PayoutStatus, string> = {
 
 /** One plain sentence on what a payout's status means for the astrologer. */
 export function payoutStatusText(p: {
-  status: PayoutStatus | string;
+  status: PayoutStatus;
   carried_forward_paise: number;
 }): string {
   switch (p.status) {
@@ -177,8 +168,6 @@ export function payoutStatusText(p: {
       return p.carried_forward_paise > 0
         ? `Below the minimum payout, so ${formatRupees(p.carried_forward_paise)} was carried forward to the next month. Nothing is lost.`
         : "This statement was cancelled. Contact support if you have questions.";
-    default:
-      return String(p.status);
   }
 }
 

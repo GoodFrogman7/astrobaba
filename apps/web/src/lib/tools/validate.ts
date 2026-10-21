@@ -16,8 +16,6 @@ export function validateBirth(b: Partial<BirthInput> | undefined): string[] {
   const p = b.place;
   if (
     !p ||
-    typeof p.lat !== "number" ||
-    typeof p.lon !== "number" ||
     !Number.isFinite(p.lat) ||
     !Number.isFinite(p.lon) ||
     Math.abs(p.lat) > 90 ||

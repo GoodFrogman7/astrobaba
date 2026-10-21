@@ -122,10 +122,7 @@ def test_deletion_rules(client: TestClient, applicant: dict[str, str], admin_hea
 
 
 def test_admin_streams_content_and_audits(
-    client: TestClient,
-    applicant: dict[str, str],
-    admin_headers: Any,
-    login: Any,
+    client: TestClient, applicant: dict[str, str], admin_headers: Any, login: Any
 ) -> None:
     doc = upload(client, applicant, JPEG, filename="aadhaar.jpg").json()
     aid = client.get("/v1/astrologer/me", headers=applicant).json()["id"]

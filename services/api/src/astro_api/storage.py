@@ -3,7 +3,6 @@ through the admin content endpoint."""
 
 import hashlib
 import secrets
-from dataclasses import dataclass
 from pathlib import Path
 from typing import Protocol
 
@@ -87,14 +86,6 @@ def make_storage(settings: Settings) -> DocumentStorage:
         data = repo_data_dir()
         root = (data / "uploads") if data else Path("/var/lib/astro/uploads")
     return LocalStorage(root)
-
-
-@dataclass(frozen=True)
-class StoredFile:
-    key: str
-    content_type: str
-    size: int
-    sha256: str
 
 
 def new_key() -> str:

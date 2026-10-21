@@ -2,9 +2,8 @@ import "server-only";
 
 import { NextResponse, type NextRequest } from "next/server";
 import { deviceId, sessionToken, setDevice } from "@/lib/tools/proxy";
+import { API_URL } from "@/lib/upstream";
 import { IDEMPOTENCY_KEY } from "./idempotency";
-
-const API_URL = (process.env.API_URL ?? "http://localhost:8000").replace(/\/$/, "");
 
 /** Ids in our paths (sessions, orders): opaque, short, URL-safe. */
 export const ID = /^[A-Za-z0-9_-]{1,64}$/;

@@ -27,7 +27,7 @@ import yaml
 from astro_engine.ephemeris import get_backend
 from astro_engine.kundli import compute_kundli
 from astro_engine.panchang import compute_panchang
-from astro_engine.timeutil import jd_from_utc, resolve_local
+from astro_engine.timeutil import TimeInputError, jd_from_utc, resolve_local
 
 HERE = Path(__file__).resolve().parent
 FIXTURES = HERE / "fixtures"
@@ -56,7 +56,7 @@ def arcsec(a: float, b: float) -> float:
 
 
 def ts(s: str) -> datetime:
-    return datetime.fromisoformat(s.replace("Z", "+00:00"))
+    return datetime.fromisoformat(s)
 
 
 def utc_from_jd(jd: float) -> datetime:
@@ -129,8 +129,6 @@ def test_unknown_time_chart() -> None:
 
 @pytest.mark.parametrize("bad", CHARTS["invalid_inputs"], ids=lambda c: c["id"])
 def test_invalid_inputs_rejected(bad: dict[str, Any]) -> None:
-    from astro_engine.timeutil import TimeInputError
-
     local = datetime.fromisoformat(bad["local"])
     with pytest.raises(TimeInputError) as e:
         resolve_local(local.date(), local.time(), bad["place"]["tz"])
@@ -144,8 +142,7 @@ ROWS = ALMANAC["rows"]
 
 def _usno_utc(day: date, hhmm: str, tz_hours: float) -> datetime:
     h, m = map(int, hhmm.split(":"))
-    local = datetime.combine(day, time(h, m), tzinfo=UTC)
-    return local - timedelta(hours=tz_hours)
+    return datetime.combine(day, time(h, m), tzinfo=UTC) - timedelta(hours=tz_hours)
 
 
 def _crossings(series: list[tuple[float, float]], span: float) -> list[float]:

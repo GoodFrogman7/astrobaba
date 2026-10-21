@@ -8,7 +8,7 @@ import datetime as dt
 import uuid
 from typing import Annotated, Any, Literal
 
-from fastapi import APIRouter, Depends, Query, Request
+from fastapi import APIRouter, Query, Request
 from fastapi.responses import Response
 from pydantic import BaseModel, Field
 from sqlalchemy import String, cast, func, or_, select
@@ -16,7 +16,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from astro_api.applicant import me_view
 from astro_api.audit import audit
-from astro_api.db import get_db
+from astro_api.db import Db
 from astro_api.errors import ApiError
 from astro_api.marketplace import decode_cursor, encode_cursor
 from astro_api.models import (
@@ -32,9 +32,10 @@ from astro_api.models import (
     User,
 )
 from astro_api.phone import mask_phone
+from astro_api.reviews import review_for_update
 from astro_api.roles import AdminUser, actor
 from astro_api.storage import DocumentStorage
-from astro_api.taxonomy import ids, tier_bounds
+from astro_api.taxonomy import tier_bounds
 
 router = APIRouter(prefix="/v1/admin", tags=["admin"])
 
@@ -69,8 +70,6 @@ class AstrologerPatch(BaseModel):
 
 
 def _check_price(tier: str, price: int) -> None:
-    if tier not in ids("tiers"):
-        raise ApiError(422, "invalid_tier", f"Unknown tier: {tier}")
     low, high = tier_bounds(tier)
     if not low <= price <= high:
         raise ApiError(
@@ -147,7 +146,7 @@ async def detail(db: AsyncSession, a: Astrologer) -> dict[str, Any]:
 @router.get("/astrologers")
 async def list_astrologers(
     _: AdminUser,
-    db: Annotated[AsyncSession, Depends(get_db)],
+    db: Db,
     status: str | None = None,
     q: Annotated[str | None, Query(max_length=60)] = None,
     cursor: str | None = None,
@@ -216,18 +215,13 @@ async def list_astrologers(
 
 
 @router.get("/astrologers/{astrologer_id}")
-async def get_astrologer(
-    _: AdminUser, astrologer_id: uuid.UUID, db: Annotated[AsyncSession, Depends(get_db)]
-) -> dict[str, Any]:
+async def get_astrologer(_: AdminUser, astrologer_id: uuid.UUID, db: Db) -> dict[str, Any]:
     return await detail(db, await _astrologer(db, astrologer_id, lock=False))
 
 
 @router.get("/documents/{document_id}/content")
 async def document_content(
-    admin_user: AdminUser,
-    document_id: uuid.UUID,
-    request: Request,
-    db: Annotated[AsyncSession, Depends(get_db)],
+    admin_user: AdminUser, document_id: uuid.UUID, request: Request, db: Db
 ) -> Response:
     doc = await db.get(KycDocument, document_id)
     if doc is None:
@@ -262,7 +256,7 @@ async def verify_step(
     astrologer_id: uuid.UUID,
     step: Literal["identity", "qualification", "interview", "probation"],
     body: VerificationIn,
-    db: Annotated[AsyncSession, Depends(get_db)],
+    db: Db,
 ) -> dict[str, Any]:
     a = await _astrologer(db, astrologer_id)
     steps = await _steps(db, a.id)
@@ -318,10 +312,7 @@ async def verify_step(
 
 @router.post("/astrologers/{astrologer_id}/approve")
 async def approve(
-    admin_user: AdminUser,
-    astrologer_id: uuid.UUID,
-    body: ApproveIn,
-    db: Annotated[AsyncSession, Depends(get_db)],
+    admin_user: AdminUser, astrologer_id: uuid.UUID, body: ApproveIn, db: Db
 ) -> dict[str, Any]:
     a = await _astrologer(db, astrologer_id)
     steps = await _steps(db, a.id)
@@ -353,10 +344,7 @@ async def approve(
 
 @router.post("/astrologers/{astrologer_id}/suspend")
 async def suspend(
-    admin_user: AdminUser,
-    astrologer_id: uuid.UUID,
-    body: ReasonIn,
-    db: Annotated[AsyncSession, Depends(get_db)],
+    admin_user: AdminUser, astrologer_id: uuid.UUID, body: ReasonIn, db: Db
 ) -> dict[str, Any]:
     a = await _astrologer(db, astrologer_id)
     if a.status not in ("probation", "approved"):
@@ -369,9 +357,7 @@ async def suspend(
 
 
 @router.post("/astrologers/{astrologer_id}/reinstate")
-async def reinstate(
-    admin_user: AdminUser, astrologer_id: uuid.UUID, db: Annotated[AsyncSession, Depends(get_db)]
-) -> dict[str, Any]:
+async def reinstate(admin_user: AdminUser, astrologer_id: uuid.UUID, db: Db) -> dict[str, Any]:
     a = await _astrologer(db, astrologer_id)
     if a.status != "suspended":
         raise ApiError(409, "invalid_transition", "Only suspended astrologers can be reinstated.")
@@ -384,10 +370,7 @@ async def reinstate(
 
 @router.post("/astrologers/{astrologer_id}/reject")
 async def reject(
-    admin_user: AdminUser,
-    astrologer_id: uuid.UUID,
-    body: ReasonIn,
-    db: Annotated[AsyncSession, Depends(get_db)],
+    admin_user: AdminUser, astrologer_id: uuid.UUID, body: ReasonIn, db: Db
 ) -> dict[str, Any]:
     a = await _astrologer(db, astrologer_id)
     if a.status == "rejected":
@@ -400,10 +383,7 @@ async def reject(
 
 @router.patch("/astrologers/{astrologer_id}")
 async def patch_astrologer(
-    admin_user: AdminUser,
-    astrologer_id: uuid.UUID,
-    body: AstrologerPatch,
-    db: Annotated[AsyncSession, Depends(get_db)],
+    admin_user: AdminUser, astrologer_id: uuid.UUID, body: AstrologerPatch, db: Db
 ) -> dict[str, Any]:
     a = await _astrologer(db, astrologer_id)
     changes: dict[str, Any] = {}
@@ -446,7 +426,7 @@ def admin_review(r: Review, a: Astrologer | None) -> dict[str, Any]:
 @router.get("/reviews")
 async def list_reviews(
     _: AdminUser,
-    db: Annotated[AsyncSession, Depends(get_db)],
+    db: Db,
     status: str = "flagged",
     cursor: str | None = None,
     limit: Annotated[int, Query(ge=1, le=100)] = 50,
@@ -473,23 +453,11 @@ async def list_reviews(
     }
 
 
-async def _review(db: AsyncSession, review_id: uuid.UUID) -> Review:
-    r = (
-        await db.execute(select(Review).where(Review.id == review_id).with_for_update())
-    ).scalar_one_or_none()
-    if r is None:
-        raise ApiError(404, "not_found", "Review not found.")
-    return r
-
-
 @router.post("/reviews/{review_id}/hide")
 async def hide_review(
-    admin_user: AdminUser,
-    review_id: uuid.UUID,
-    body: ReasonIn,
-    db: Annotated[AsyncSession, Depends(get_db)],
+    admin_user: AdminUser, review_id: uuid.UUID, body: ReasonIn, db: Db
 ) -> dict[str, Any]:
-    r = await _review(db, review_id)
+    r = await review_for_update(db, review_id)
     r.status, r.moderation_note = "hidden", body.reason
     r.moderated_by, r.moderated_at = admin_user.id, dt.datetime.now(dt.UTC)
     audit(db, actor(admin_user), "review.hide", "review", str(r.id))
@@ -498,11 +466,9 @@ async def hide_review(
 
 
 @router.post("/reviews/{review_id}/unhide")
-async def unhide_review(
-    admin_user: AdminUser, review_id: uuid.UUID, db: Annotated[AsyncSession, Depends(get_db)]
-) -> dict[str, Any]:
+async def unhide_review(admin_user: AdminUser, review_id: uuid.UUID, db: Db) -> dict[str, Any]:
     """Publish: clears an automatic hold or a hide after a moderator has looked."""
-    r = await _review(db, review_id)
+    r = await review_for_update(db, review_id)
     r.status, r.auto_flag_reason = "published", None
     r.moderated_by, r.moderated_at = admin_user.id, dt.datetime.now(dt.UTC)
     audit(db, actor(admin_user), "review.publish", "review", str(r.id))

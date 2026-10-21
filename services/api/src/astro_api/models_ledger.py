@@ -1,4 +1,4 @@
-"""Ledger and wallet tables (migration 0004, ADR-0002). Owned by the wallet work.
+"""Ledger and wallet tables (migration 0004, ADR-0002).
 
 `ledger_transactions` and `ledger_entries` are the record: append-only (a trigger rejects UPDATE
 and DELETE) and balanced per transaction (a deferred constraint trigger checks at commit).
@@ -9,6 +9,7 @@ Integer paise everywhere. No personal data: ids and amounts only.
 import datetime as dt
 import uuid
 from typing import Any
+from uuid import uuid4
 
 from sqlalchemy import (
     BigInteger,
@@ -51,10 +52,6 @@ def _in(column: str, values: tuple[str, ...]) -> str:
     return f"{column} IN ({', '.join(repr(v) for v in values)})"
 
 
-def _uuid() -> uuid.UUID:
-    return uuid.uuid4()
-
-
 class LedgerTransaction(Base):
     """One business event. `idempotency_key` is deterministic (ADR-0002 §4)."""
 
@@ -67,7 +64,7 @@ class LedgerTransaction(Base):
         Index("ix_ledger_transactions_external_ref", "external_ref"),
     )
 
-    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=_uuid)
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid4)
     seq: Mapped[int] = mapped_column(BigInteger, Identity(), unique=True)
     idempotency_key: Mapped[str] = mapped_column(Text, unique=True)
     payload_hash: Mapped[str] = mapped_column(Text)
@@ -146,7 +143,7 @@ class PromoLot(Base):
         Index("ix_promo_lots_session", "session_id"),
     )
 
-    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=_uuid)
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid4)
     user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"))
     campaign: Mapped[str] = mapped_column(Text)
     amount_paise: Mapped[int] = mapped_column(BigInteger)
@@ -171,7 +168,7 @@ class RechargeOrder(Base):
         CheckConstraint(_in("status", ORDER_STATUSES), name="status_known"),
     )
 
-    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=_uuid)
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid4)
     user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"), index=True)
     idempotency_key: Mapped[str] = mapped_column(Text)
     amount_paise: Mapped[int] = mapped_column(BigInteger)
@@ -222,7 +219,7 @@ class Refund(Base):
         Index("ix_refunds_created", "created_at", "id"),
     )
 
-    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=_uuid)
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid4)
     transaction_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("ledger_transactions.id"), unique=True
     )
@@ -249,7 +246,7 @@ class FreeSessionClaim(Base):
     __tablename__ = "free_session_claims"
     __table_args__ = (Index("ix_free_session_claims_ip_day", "ip_hash", "ip_day"),)
 
-    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=_uuid)
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid4)
     user_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("users.id", ondelete="CASCADE"), unique=True
     )
@@ -292,7 +289,7 @@ class ReconciliationRun(Base):
         Index("ix_reconciliation_runs_started", "started_at"),
     )
 
-    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=_uuid)
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid4)
     run_date: Mapped[dt.date] = mapped_column(Date)
     status: Mapped[str] = mapped_column(Text)
     drift_paise: Mapped[int] = mapped_column(BigInteger, default=0)

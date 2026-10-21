@@ -3,7 +3,8 @@
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 
-async function post(url: string, body: unknown) {
+/** POST JSON to one of our route handlers; the body is {} when the answer is not JSON. */
+export async function postJson(url: string, body: unknown) {
   const res = await fetch(url, {
     method: "POST",
     headers: { "content-type": "application/json" },
@@ -33,11 +34,11 @@ export function SignIn({ onSignedIn }: { onSignedIn: () => void }) {
     setBusy(true);
     try {
       if (!challenge) {
-        const r = await post("/api/auth/otp/request", { phone });
+        const r = await postJson("/api/auth/otp/request", { phone });
         if (r.status === 202) setChallenge(String(r.body.challenge_id));
         else setError(err(r.body.code));
       } else {
-        const r = await post("/api/auth/otp/verify", { challenge_id: challenge, code });
+        const r = await postJson("/api/auth/otp/verify", { challenge_id: challenge, code });
         if (r.status === 200) onSignedIn();
         else setError(err(r.body.code));
       }

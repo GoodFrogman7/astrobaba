@@ -1,7 +1,7 @@
 # Astrologer portal
 
-Next.js portal for live astrologers (Phase 4 console, extended in Phase 5). English only, never
-indexed (`X-Robots-Tag`, `robots.txt` disallow all, `noindex` metadata), never framed. Port 3002.
+Next.js portal for live astrologers. English only, never indexed (`X-Robots-Tag`, `robots.txt`
+disallow all, `noindex` metadata), never framed. Port 3002.
 Navigation: Console, Schedule, Earnings, Payouts, Reviews, Settings, History.
 
 - `/login`: phone OTP through the core API. The session token lives only in an httpOnly,

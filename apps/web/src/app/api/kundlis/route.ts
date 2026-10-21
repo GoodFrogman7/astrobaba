@@ -1,7 +1,8 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { validateBirth } from "@/lib/tools/validate";
 import type { BirthInput } from "@/lib/tools/types";
-import { api, errorResponse, sessionToken } from "@/lib/tools/proxy";
+import { errorResponse, sessionToken } from "@/lib/tools/proxy";
+import { api } from "@/lib/upstream";
 
 /** Save a kundli for the signed-in user. Birth details travel in the body only. */
 export async function POST(req: NextRequest) {

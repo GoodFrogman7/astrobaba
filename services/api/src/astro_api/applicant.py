@@ -6,16 +6,14 @@ import unicodedata
 import uuid
 from typing import Annotated, Any, Literal
 
-from fastapi import APIRouter, Depends, File, Form, Request, UploadFile
+from fastapi import APIRouter, File, Form, Request, UploadFile
 from pydantic import BaseModel, Field
-from redis.asyncio import Redis
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from astro_api.audit import audit
-from astro_api.auth import current_user
-from astro_api.config import Settings
-from astro_api.db import get_db
+from astro_api.auth import CurrentUser
+from astro_api.db import Db, redis_of, settings_of
 from astro_api.errors import ApiError
 from astro_api.marketplace import (
     PRESENCE_TTL_S,
@@ -189,11 +187,7 @@ async def me_view(db: AsyncSession, a: Astrologer) -> dict[str, Any]:
 
 
 @router.post("/application", status_code=201)
-async def apply(
-    body: ApplicationIn,
-    user: Annotated[User, Depends(current_user)],
-    db: Annotated[AsyncSession, Depends(get_db)],
-) -> dict[str, Any]:
+async def apply(body: ApplicationIn, user: CurrentUser, db: Db) -> dict[str, Any]:
     if not body.accepts_terms:
         raise ApiError(422, "terms_required", "Please accept the terms to apply.")
     _check_choices(body.skills, body.languages)
@@ -228,18 +222,12 @@ async def apply(
 
 
 @router.get("/me")
-async def get_me(
-    user: Annotated[User, Depends(current_user)], db: Annotated[AsyncSession, Depends(get_db)]
-) -> dict[str, Any]:
+async def get_me(user: CurrentUser, db: Db) -> dict[str, Any]:
     return await me_view(db, await own_astrologer(db, user))
 
 
 @router.patch("/me")
-async def patch_me(
-    body: ApplicationPatch,
-    user: Annotated[User, Depends(current_user)],
-    db: Annotated[AsyncSession, Depends(get_db)],
-) -> dict[str, Any]:
+async def patch_me(body: ApplicationPatch, user: CurrentUser, db: Db) -> dict[str, Any]:
     a = await own_astrologer(db, user, lock=True)
     if a.status not in EDITABLE_STATUSES:
         raise ApiError(409, "locked", "Your profile can no longer be edited here.")
@@ -251,7 +239,7 @@ async def patch_me(
             value = value.strip()
         if field == "bio_hi":
             value = (value or "").strip() or None
-        if value is None and field not in ("bio_hi",):
+        if value is None and field != "bio_hi":
             continue
         setattr(a, field, value)
     if changes.get("display_name"):
@@ -279,8 +267,8 @@ async def _kinds(db: AsyncSession, astrologer_id: uuid.UUID) -> set[str]:
 @router.post("/me/documents", status_code=201)
 async def upload_document(
     request: Request,
-    user: Annotated[User, Depends(current_user)],
-    db: Annotated[AsyncSession, Depends(get_db)],
+    user: CurrentUser,
+    db: Db,
     file: Annotated[UploadFile, File()],
     kind: Annotated[Literal["identity", "qualification", "other"], Form()],
 ) -> dict[str, Any]:
@@ -340,10 +328,7 @@ async def upload_document(
 
 @router.delete("/me/documents/{document_id}", status_code=204)
 async def delete_document(
-    document_id: uuid.UUID,
-    request: Request,
-    user: Annotated[User, Depends(current_user)],
-    db: Annotated[AsyncSession, Depends(get_db)],
+    document_id: uuid.UUID, request: Request, user: CurrentUser, db: Db
 ) -> None:
     a = await own_astrologer(db, user, lock=True)
     doc = await db.get(KycDocument, document_id)
@@ -362,13 +347,10 @@ async def delete_document(
 
 @router.post("/me/presence")
 async def set_presence(
-    body: PresenceIn,
-    request: Request,
-    user: Annotated[User, Depends(current_user)],
-    db: Annotated[AsyncSession, Depends(get_db)],
+    body: PresenceIn, request: Request, user: CurrentUser, db: Db
 ) -> dict[str, Any]:
-    settings: Settings = request.app.state.settings
-    redis: Redis = request.app.state.redis
+    settings = settings_of(request)
+    redis = redis_of(request)
     a = await own_astrologer(db, user)
     if not is_public(a, settings):
         raise ApiError(409, "not_live", "Only live astrologers can set presence.")

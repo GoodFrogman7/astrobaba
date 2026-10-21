@@ -1,5 +1,5 @@
-"""Admin money endpoints: refunds, free-session overrides and reconciliation reports
-(Phase 4, wallet work). Every write is audited with ids and amounts only."""
+"""Admin money endpoints: refunds, free-session overrides and reconciliation reports.
+Every write is audited with ids and amounts only."""
 
 import base64
 import datetime as dt
@@ -10,13 +10,11 @@ from fastapi import APIRouter, Depends, Query, Request
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
-from redis.asyncio import Redis
-from sqlalchemy import and_, or_, select
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import ColumnElement, and_, or_, select, true
 
 from astro_api import free_session, payments, reconciliation, refunds, wallet
 from astro_api.audit import audit
-from astro_api.db import get_db
+from astro_api.db import Db, redis_of, settings_of
 from astro_api.errors import ApiError
 from astro_api.idempotency import Idempotency, idempotency_key
 from astro_api.models import User
@@ -30,7 +28,6 @@ from astro_api.roles import AdminUser, actor
 from astro_api.wallet_api import wallet_view
 
 router = APIRouter(prefix="/v1/admin/money", tags=["admin-money"])
-Db = Annotated[AsyncSession, Depends(get_db)]
 Limit = Annotated[int, Query(ge=1, le=100)]
 
 
@@ -54,14 +51,16 @@ def _encode(at: dt.datetime, row_id: uuid.UUID) -> str:
     return base64.urlsafe_b64encode(f"{at.isoformat()}|{row_id}".encode()).decode()
 
 
-def _decode(cursor: str | None) -> tuple[dt.datetime, uuid.UUID] | None:
+def _before(at_col: Any, id_col: Any, cursor: str | None) -> ColumnElement[bool]:
+    """Keyset condition: rows after the cursor in (at desc, id desc) order."""
     if not cursor:
-        return None
+        return true()
     try:
-        at, row_id = base64.urlsafe_b64decode(cursor.encode()).decode().split("|")
-        return dt.datetime.fromisoformat(at), uuid.UUID(row_id)
+        raw_at, raw_id = base64.urlsafe_b64decode(cursor.encode()).decode().split("|")
+        at, row_id = dt.datetime.fromisoformat(raw_at), uuid.UUID(raw_id)
     except (ValueError, UnicodeDecodeError) as exc:
         raise ApiError(422, "invalid_cursor", "Bad cursor.") from exc
+    return or_(at_col < at, and_(at_col == at, id_col < row_id))
 
 
 def refund_view(r: Refund) -> dict[str, Any]:
@@ -96,10 +95,12 @@ async def user_wallet(user_id: uuid.UUID, _: AdminUser, db: Db) -> dict[str, Any
 async def list_refunds(
     _: AdminUser, db: Db, cursor: str | None = None, limit: Limit = 50
 ) -> dict[str, Any]:
-    q = select(Refund).order_by(Refund.created_at.desc(), Refund.id.desc()).limit(limit + 1)
-    if (after := _decode(cursor)) is not None:
-        at, row_id = after
-        q = q.where(or_(Refund.created_at < at, and_(Refund.created_at == at, Refund.id < row_id)))
+    q = (
+        select(Refund)
+        .where(_before(Refund.created_at, Refund.id, cursor))
+        .order_by(Refund.created_at.desc(), Refund.id.desc())
+        .limit(limit + 1)
+    )
     rows = list((await db.execute(q)).scalars())
     more = len(rows) > limit
     rows = rows[:limit]
@@ -117,7 +118,7 @@ async def create_refund(
     db: Db,
     key: Annotated[str, Depends(idempotency_key)],
 ) -> JSONResponse:
-    redis: Redis = request.app.state.redis
+    redis = redis_of(request)
     idem = Idempotency(
         redis, scope=f"admin_refund:{admin.id}", key=key, payload=body.model_dump(mode="json")
     )
@@ -154,28 +155,17 @@ async def create_refund(
 
 @router.get("/free-sessions")
 async def list_free_sessions(
-    _: AdminUser,
-    db: Db,
-    flagged: bool = False,
-    cursor: str | None = None,
-    limit: Limit = 50,
+    _: AdminUser, db: Db, flagged: bool = False, cursor: str | None = None, limit: Limit = 50
 ) -> dict[str, Any]:
     q = (
         select(FreeSessionClaim, FreeSessionOverride)
         .outerjoin(FreeSessionOverride, FreeSessionOverride.user_id == FreeSessionClaim.user_id)
+        .where(_before(FreeSessionClaim.claimed_at, FreeSessionClaim.id, cursor))
         .order_by(FreeSessionClaim.claimed_at.desc(), FreeSessionClaim.id.desc())
         .limit(limit + 1)
     )
     if flagged:
         q = q.where(FreeSessionClaim.abuse_score > 0)
-    if (after := _decode(cursor)) is not None:
-        at, row_id = after
-        q = q.where(
-            or_(
-                FreeSessionClaim.claimed_at < at,
-                and_(FreeSessionClaim.claimed_at == at, FreeSessionClaim.id < row_id),
-            )
-        )
     rows = (await db.execute(q)).all()
     more = len(rows) > limit
     rows = rows[:limit]
@@ -221,17 +211,10 @@ async def list_runs(
 ) -> dict[str, Any]:
     q = (
         select(ReconciliationRun)
+        .where(_before(ReconciliationRun.started_at, ReconciliationRun.id, cursor))
         .order_by(ReconciliationRun.started_at.desc(), ReconciliationRun.id.desc())
         .limit(limit + 1)
     )
-    if (after := _decode(cursor)) is not None:
-        at, row_id = after
-        q = q.where(
-            or_(
-                ReconciliationRun.started_at < at,
-                and_(ReconciliationRun.started_at == at, ReconciliationRun.id < row_id),
-            )
-        )
     rows = list((await db.execute(q)).scalars())
     more = len(rows) > limit
     rows = rows[:limit]
@@ -243,7 +226,7 @@ async def list_runs(
 
 @router.post("/reconciliation/run")
 async def run_now(body: RunIn, request: Request, admin: AdminUser, db: Db) -> dict[str, Any]:
-    gateway = payments.make_gateway(request.app.state.settings, request.app.state.redis)
+    gateway = payments.make_gateway(settings_of(request), redis_of(request))
     record = await reconciliation.run(db, gateway, body.date, trigger=actor(admin))
     audit(
         db, actor(admin), "reconciliation.run", "reconciliation_run", str(record.id),

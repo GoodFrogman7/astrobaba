@@ -12,7 +12,7 @@ import {
   toApiQuery,
   toPageQuery,
 } from "../src/lib/marketplace/filters";
-import { initials, rupeesPerMin } from "../src/lib/marketplace/format";
+import { formatPaise, initials } from "../src/lib/marketplace/format";
 import { personLd } from "../src/lib/marketplace/jsonld";
 import { TAXONOMY } from "../src/lib/marketplace/taxonomy";
 import type { AstrologerProfile } from "../src/lib/marketplace/types";
@@ -204,8 +204,8 @@ describe("application validation", () => {
 
 describe("formatting", () => {
   it("formats paise as rupees per minute and builds initials", () => {
-    expect(rupeesPerMin(4500, "en")).toBe("₹45");
-    expect(rupeesPerMin(1250, "en")).toBe("₹12.50");
+    expect(formatPaise(4500, "en")).toBe("₹45");
+    expect(formatPaise(1250, "en")).toBe("₹12.50");
     expect(initials("Meera  Joshi")).toBe("MJ");
     expect(initials("मीरा")).toBe("म");
     expect(initials("")).toBe("?");

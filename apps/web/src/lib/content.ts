@@ -22,12 +22,8 @@ export async function getContent(locale: Locale, key: string): Promise<PageConte
 }
 
 /** Fill {placeholders} in copy (e.g. {city}, {date}) with computed values. */
-export function fill(text: string, values: Record<string, string>): string {
-  return text.replace(/\{(\w+)\}/g, (m, k: string) => values[k] ?? m);
-}
-
 export function fillContent(c: PageContent, values: Record<string, string>): PageContent {
-  const f = (s: string) => fill(s, values);
+  const f = (s: string) => s.replace(/\{(\w+)\}/g, (m, k: string) => values[k] ?? m);
   return {
     title: f(c.title),
     description: f(c.description),

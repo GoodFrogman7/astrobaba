@@ -6,8 +6,8 @@ Each "process" is a real app instance (create_app + its lifespan). A killed proc
 stops: its shutdown never runs, and a transaction it had open never commits. Time is injected,
 with billing_minute_seconds=1 so a minute is one second of injected time.
 
-These tests use the `money` fixture; switch it to the real wallet in money_fakes.py and they run
-against the ledger unchanged (assertions on fake-only call counters are guarded).
+These tests use the `money` fixture, i.e. the real ledger (assertions on fake-only call counters
+are guarded).
 """
 
 import asyncio
@@ -23,19 +23,16 @@ from astro_api import session_service as svc
 from astro_api.config import Settings
 from astro_api.main import create_app
 from services.api.tests.money_fakes import (  # noqa: F401 - fixtures
+    GRACE,
     PRICE,
     FakeMoney,
     World,
+    at,
     money_fixture,
     world_fixture,
 )
 
 pytestmark = pytest.mark.integration
-GRACE = 90.0
-
-
-def at(t0: dt.datetime, seconds: float) -> dt.datetime:
-    return t0 + dt.timedelta(seconds=seconds)
 
 
 class Process:

@@ -5,7 +5,7 @@ import "server-only";
  * components, so service URLs and birth details stay on the server.
  */
 const ASTRO_URL = (process.env.ASTRO_URL ?? "http://localhost:8001").replace(/\/$/, "");
-const API_URL = (process.env.API_URL ?? "http://localhost:8000").replace(/\/$/, "");
+export const API_URL = (process.env.API_URL ?? "http://localhost:8000").replace(/\/$/, "");
 
 export class UpstreamError extends Error {
   constructor(

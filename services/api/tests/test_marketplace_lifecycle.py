@@ -250,7 +250,7 @@ def test_admin_list_filters_and_flags(
     app_body: Any,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    # The public profile offers calls only when the voice_calls flag is on too (Phase 5).
+    # The public profile offers calls only when the voice_calls flag is on too.
     monkeypatch.setenv("FLAG_VOICE_CALLS", "true")
     _, live_id, slug = make_live("+919811110014", display_name="Live One")
     applicant = login("+919811110015")

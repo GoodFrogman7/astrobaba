@@ -21,7 +21,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale, slug } = await params;
   const tool = findTool(slug);
   if (!tool) return {};
-  return pageMetadata(locale, `/tools/${slug}`, await getContent(locale, tool.contentKey));
+  return pageMetadata(locale, `/tools/${slug}`, await getContent(locale, tool.slug));
 }
 
 export default async function ToolPage({ params }: Props) {
@@ -29,7 +29,7 @@ export default async function ToolPage({ params }: Props) {
   const tool = findTool(slug);
   if (!tool) notFound();
   setRequestLocale(locale);
-  const content = await getContent(locale, tool.contentKey);
+  const content = await getContent(locale, tool.slug);
   const nav = await getTranslations({ locale, namespace: "nav" });
   return (
     <PageShell

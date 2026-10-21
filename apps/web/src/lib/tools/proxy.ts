@@ -2,13 +2,13 @@ import "server-only";
 
 import { cookies } from "next/headers";
 import { NextResponse, type NextRequest } from "next/server";
-import { api, UpstreamError } from "@/lib/upstream";
+import { UpstreamError } from "@/lib/upstream";
 import { DEVICE_COOKIE, deviceCookieFlags, isHttps, newDeviceId, SESSION_COOKIE } from "./cookies";
 
 /** Shared helpers for the auth/kundli route handlers that proxy to the core API. */
 export function errorResponse(e: unknown) {
   if (e instanceof UpstreamError) {
-    return NextResponse.json({ code: e.code }, { status: e.status === 503 ? 503 : e.status });
+    return NextResponse.json({ code: e.code }, { status: e.status });
   }
   return NextResponse.json({ code: "unexpected_error" }, { status: 500 });
 }
@@ -30,5 +30,3 @@ export function setDevice(res: NextResponse, req: NextRequest, id: string) {
 export async function sessionToken(): Promise<string | undefined> {
   return (await cookies()).get(SESSION_COOKIE)?.value;
 }
-
-export { api };

@@ -1,12 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { formatRupees, formatSignedRupees } from "../src/lib/money";
 import {
-  asItems,
-  checkView,
   IDEMPOTENCY_KEY,
   keyAfter,
   newIdempotencyKey,
-  normaliseWallet,
   parseOverride,
   parseReconDate,
   parseRefund,
@@ -86,30 +83,6 @@ describe("reconciliation date", () => {
   });
   it("defaults to yesterday in IST", () => {
     expect(yesterdayIst(now)).toBe("2026-10-21");
-  });
-});
-
-describe("response shapes", () => {
-  it("reads paged or bare lists", () => {
-    expect(asItems([1, 2])).toEqual({ items: [1, 2], next_cursor: null });
-    expect(asItems({ items: [1], next_cursor: "c" })).toEqual({ items: [1], next_cursor: "c" });
-    expect(asItems({ nope: true })).toEqual({ items: [], next_cursor: null });
-  });
-
-  it("reads the admin wallet in either documented shape", () => {
-    const wallet = { real_paise: 100, promo_paise: 50, total_paise: 150, promo_lots: [] };
-    const txn = { id: "t", kind: "refund", amount_paise: 100 };
-    expect(normaliseWallet({ wallet, transactions: [txn] })).toEqual({
-      wallet,
-      transactions: [txn],
-    });
-    expect(normaliseWallet({ ...wallet, transactions: [txn] }).wallet.total_paise).toBe(150);
-    expect(normaliseWallet({ ...wallet, items: [txn] }).transactions).toEqual([txn]);
-  });
-
-  it("accepts checks as names or objects", () => {
-    expect(checkView("ledger_balanced")).toEqual({ name: "ledger_balanced", status: "ok" });
-    expect(checkView({ name: "x", status: "drift", drift_paise: 5 }).status).toBe("drift");
   });
 });
 

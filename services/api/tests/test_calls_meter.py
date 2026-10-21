@@ -19,38 +19,31 @@ from typing import Any
 
 import pytest
 
-from astro_api import billing_meter, calls_api, chat_bus, livekit_client
+from astro_api import billing_meter, chat_bus, livekit_client
 from astro_api import session_service as svc
 from astro_api.livekit_client import FakeCalls, room_name
 from services.api.tests.money_fakes import (  # noqa: F401 - fixtures
+    GRACE,
     PRICE,
     FakeMoney,
     World,
+    alive,
+    at,
     deps_for,
     fake_money_fixture,
+    fast,
     money_fixture,
     world_fixture,
 )
 from services.api.tests.test_calls import enable_calls, install_fake
 
 pytestmark = pytest.mark.integration
-GRACE = 90.0
-
-
-def at(t0: dt.datetime, seconds: float) -> dt.datetime:
-    return t0 + dt.timedelta(seconds=seconds)
-
-
-async def alive(deps: svc.Deps, sid: uuid.UUID, now: dt.datetime, *roles: str) -> None:
-    """Control-socket traffic (ping) from these sides."""
-    for role in roles or svc.ROLES:
-        await chat_bus.touch(deps.redis, sid, role, now, GRACE)
 
 
 async def room(
     deps: svc.Deps, sid: uuid.UUID, role: str, joined: bool, when: dt.datetime, psid: str = ""
 ) -> bool:
-    return await calls_api.participant_event(
+    return await svc.call_participant(
         deps, sid, role, joined=joined, participant_sid=psid or f"PA_{role}", at=when
     )
 
@@ -62,10 +55,6 @@ async def start_call(deps: svc.Deps, sid: uuid.UUID, t0: dt.datetime) -> None:
     assert not await svc.activate(deps, sid, t0)
     await room(deps, sid, "astrologer", True, t0)
     assert await svc.activate(deps, sid, t0)
-
-
-def fast(w: World, calls: FakeCalls) -> Any:
-    return deps_for(w.settings, calls, billing_minute_seconds=1.0)
 
 
 @pytest.fixture

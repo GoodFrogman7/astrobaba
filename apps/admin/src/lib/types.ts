@@ -1,4 +1,5 @@
 /** Types for the admin console, from docs/api/marketplace.md and the horoscope admin API. */
+import type { EarningRow, Payout, PayoutAdjustment } from "@astro/shared";
 
 export type AstrologerStatus =
   "applied" | "kyc_submitted" | "interview" | "probation" | "approved" | "suspended" | "rejected";
@@ -56,13 +57,9 @@ export interface AdminAstrologerRow {
   tier: string | null;
   created_at: string;
   is_seed: boolean;
-  price_per_min_paise?: number | null;
-  requested_price_per_min_paise?: number;
-  verifications?: Record<string, StepStatus> | Verification[];
-  documents_count?: number;
 }
 
-export interface AdminAstrologer extends Omit<AdminAstrologerRow, "verifications"> {
+export interface AdminAstrologer extends AdminAstrologerRow {
   phone: string | null; // masked by the API
   bio: string;
   bio_hi: string | null;
@@ -143,7 +140,7 @@ export interface Me {
   roles?: string[];
 }
 
-/* ---- Money and sessions (Phase 4, docs/api/billing.md "Admin") ---- */
+/* ---- Money and sessions (docs/api/billing.md "Admin") ---- */
 
 export interface PromoLot {
   id: string;
@@ -160,18 +157,9 @@ export interface Wallet {
   free_session: { enabled: boolean; eligible: boolean; minutes: number; reason: string | null };
 }
 
-export type WalletTxnKind =
-  | "recharge"
-  | "recharge_bonus"
-  | "consultation"
-  | "refund"
-  | "free_session_grant"
-  | "promo_expiry"
-  | "adjustment";
-
 export interface WalletTxn {
   id: string;
-  kind: WalletTxnKind | string;
+  kind: string;
   /** Signed from the user's view: credit positive. */
   amount_paise: number;
   real_paise: number;
@@ -205,35 +193,26 @@ export interface FreeSessionClaim {
   claimed_at: string | null;
   abuse_score: number;
   /** Why the score is what it is (codes like shared_device, ip_burst); never raw phone/IP. */
-  reason: string | null;
-  reasons?: string[];
-  flagged: boolean;
-  status?: string | null;
-  override?: {
-    action: "allow" | "block" | "reset";
-    note: string | null;
-    actor: string | null;
-    at: string;
-  } | null;
+  reasons: string[];
+  override: { action: "allow" | "block" | "reset"; note: string | null; at?: string } | null;
 }
 
 export type ReconStatus = "ok" | "drift" | "error";
 
 export interface ReconCheck {
   name: string;
-  status: ReconStatus | string;
-  drift_paise?: number | null;
-  detail?: string | null;
+  status: ReconStatus;
+  drift_paise?: number;
 }
 
 export interface ReconRun {
-  id?: string;
+  id: string;
   date: string;
   status: ReconStatus;
   drift_paise: number;
-  checks: (ReconCheck | string)[];
-  started_at?: string | null;
-  finished_at?: string | null;
+  checks: ReconCheck[];
+  started_at: string;
+  finished_at: string | null;
 }
 
 /** `GET /v1/admin/sessions`: like SessionView, never any message content. */
@@ -242,8 +221,8 @@ export interface AdminSession {
   kind: string;
   status: string;
   end_reason: string | null;
-  user_id?: string | null;
-  client_label?: string | null;
+  user_id: string;
+  client_label: string;
   astrologer: { id: string; slug: string | null; display_name: string } | null;
   price_per_min_paise: number;
   is_free: boolean;
@@ -254,51 +233,14 @@ export interface AdminSession {
   billed_paise: number;
 }
 
-/* ---- Payouts (Phase 5, docs/api/portal.md §3) ---- */
-
 /** `GET /v1/admin/payouts` row: a Payout plus the astrologer it belongs to. */
-export interface AdminPayout {
-  id: string;
-  period: string;
-  status: "draft" | "approved" | "paid" | "void" | string;
-  gross_paise: number;
-  commission_paise: number;
-  refunds_paise: number;
-  net_paise: number;
-  carried_forward_paise: number;
-  sessions: number;
-  minutes: number;
-  generated_at: string;
-  approved_at: string | null;
-  paid_at: string | null;
-  reference: string | null;
-  astrologer?: { id: string; display_name: string; slug?: string | null } | null;
-  astrologer_id?: string;
-}
-
-/** One session line of a statement (the portal's EarningRow). */
-export interface PayoutLine {
-  session_id: string;
-  kind: string;
-  started_at: string | null;
-  ended_at: string | null;
-  billed_minutes: number;
-  gross_paise: number;
-  commission_paise: number;
-  refunds_paise: number;
-  net_paise: number;
-  client_label?: string;
-}
+export type AdminPayout = Payout & {
+  astrologer: { id: string; display_name: string; slug: string | null };
+};
 
 /** `GET /v1/admin/payouts/{id}`: the astrologer view plus bank-detail placeholders. */
 export interface AdminPayoutDetail extends AdminPayout {
-  lines?: PayoutLine[];
-  adjustments?: {
-    amount_paise?: number;
-    kind?: string;
-    note?: string | null;
-    description?: string | null;
-  }[];
-  /** Placeholders until bank details are collected; shape not fixed by the contract. */
-  bank?: Record<string, string | number | boolean | null> | null;
+  lines: EarningRow[];
+  adjustments: PayoutAdjustment[];
+  bank: Record<string, string | null>;
 }

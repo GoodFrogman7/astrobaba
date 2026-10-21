@@ -8,7 +8,7 @@ Checks, each reported with issues (ids and amounts only):
    credit of the same amount, and each recharge credit of the day has a gateway payment.
 4. settlements: each gateway settlement of the day has one clearing → bank posting with the same
    net amount and fees, and vice versa.
-5. payouts (Phase 5): every `paid` payout has exactly one `payout:{id}` ledger transaction that
+5. payouts: every `paid` payout has exactly one `payout:{id}` ledger transaction that
    debits that astrologer's payable and credits `bank:payouts` by its net amount, and every
    payout posting belongs to a paid payout. Not limited to the day: payouts are few.
 
@@ -18,34 +18,23 @@ Any issue → status `drift` and an error-level `reconciliation_drift` log line 
 import datetime as dt
 import logging
 from typing import Any
-from zoneinfo import ZoneInfo
 
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from astro_api import billing_config, wallet
+from astro_api import billing_config, earnings, wallet
 from astro_api.models_ledger import ReconciliationRun
 from astro_api.payments import FakeGateway, RazorpayGateway
 
 log = logging.getLogger(__name__)
-IST = ZoneInfo("Asia/Kolkata")
 MAX_ISSUES = 50
 
 Issue = dict[str, Any]
 
 
-def ist_today() -> dt.date:
-    return dt.datetime.now(IST).date()
-
-
 def default_day() -> dt.date:
     """Yesterday (IST): the last full day."""
-    return ist_today() - dt.timedelta(days=1)
-
-
-def day_bounds(day: dt.date) -> tuple[dt.datetime, dt.datetime]:
-    start = dt.datetime.combine(day, dt.time(0), IST)
-    return start.astimezone(dt.UTC), (start + dt.timedelta(days=1)).astimezone(dt.UTC)
+    return earnings.ist_today() - dt.timedelta(days=1)
 
 
 def _result(name: str, issues: list[Issue], drift: int, count: int | None = None) -> Issue:
@@ -325,7 +314,7 @@ async def run(
     db: AsyncSession, gateway: RazorpayGateway | FakeGateway, day: dt.date, *, trigger: str
 ) -> ReconciliationRun:
     """Run all checks for `day` (IST) and store the run. Caller commits."""
-    start, end = day_bounds(day)
+    start, end = earnings.range_bounds(day, day)
     record = ReconciliationRun(
         run_date=day,
         status="running",

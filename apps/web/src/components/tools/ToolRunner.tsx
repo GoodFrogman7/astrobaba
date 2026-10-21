@@ -9,7 +9,7 @@ import {
 } from "@/components/forms/BirthFields";
 import { DobField, NameField } from "@/components/forms/SimpleForms";
 import { computeDasha, computeDoshas, computeKundli, computeNumerology } from "@/lib/tools/actions";
-import type { ToolKind } from "@/lib/tools/registry";
+import type { ToolForm, ToolKind } from "@/lib/tools/registry";
 import type { ActionResult, Dasha, Doshas, Kundli, Numerology } from "@/lib/tools/types";
 import { validateBirth, validateDob, validateName } from "@/lib/tools/validate";
 import { ErrorList, PrivacyNote, SubmitButton } from "./ErrorList";
@@ -77,13 +77,7 @@ function localErrors(slug: ToolKind, draft: BirthDraft, name: string, dob: strin
 }
 
 /** Form + result for one /tools/[slug] page, driven by the registry's form type. */
-export function ToolRunner({
-  slug,
-  form,
-}: {
-  slug: ToolKind;
-  form: "birth" | "numerology" | "dob";
-}) {
+export function ToolRunner({ slug, form }: { slug: ToolKind; form: ToolForm }) {
   const [draft, setDraft] = useState<BirthDraft>(emptyBirth);
   const [name, setName] = useState("");
   const [dob, setDob] = useState("");

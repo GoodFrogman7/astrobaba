@@ -5,7 +5,6 @@ import {
   daysInclusive,
   earningsHref,
   earningsQuery,
-  EMPTY_TOTALS,
   formatDate,
   formatDeduction,
   formatMinutes,
@@ -16,6 +15,15 @@ import {
   payoutStatusText,
   resolvePeriod,
 } from "../src/lib/earnings";
+
+const EMPTY_TOTALS = {
+  gross_paise: 0,
+  commission_paise: 0,
+  refunds_paise: 0,
+  net_paise: 0,
+  sessions: 0,
+  minutes: 0,
+};
 
 // 2026-10-31 20:00 UTC is already 1 November 01:30 in IST.
 const lateOct31Utc = new Date("2026-10-31T20:00:00Z");

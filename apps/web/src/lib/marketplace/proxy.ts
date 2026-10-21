@@ -2,9 +2,8 @@ import "server-only";
 
 import { NextResponse, type NextRequest } from "next/server";
 import { sessionToken } from "@/lib/tools/proxy";
+import { API_URL } from "@/lib/upstream";
 import { checkUploadHeaders, limitStream, MAX_BODY_BYTES } from "./upload";
-
-const API_URL = (process.env.API_URL ?? "http://localhost:8000").replace(/\/$/, "");
 
 /**
  * Forward a JSON request for the signed-in user to the API and relay status + body. Personal

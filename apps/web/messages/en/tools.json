@@ -37,7 +37,6 @@
       "generic": "Something went wrong. Please try again."
     },
     "result": {
-      "heading": "Your result",
       "ascendant": "Ascendant (lagna)",
       "unknownAscendant": "Not available without a birth time",
       "graha": "Graha",
@@ -46,8 +45,6 @@
       "nakshatraPada": "Nakshatra (pada)",
       "house": "House",
       "retro": "Retrograde",
-      "yes": "Yes",
-      "no": "No",
       "north": "North Indian",
       "south": "South Indian",
       "chartStyle": "Chart style",
@@ -88,7 +85,6 @@
       "nakshatra": "Birth nakshatra",
       "pada": "Pada {pada}",
       "lord": "Ruled by {lord}",
-      "number": "Number",
       "planet": "Associated planet",
       "steps": "How it is calculated",
       "mulank": "Mulank (root number)",

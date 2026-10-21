@@ -168,8 +168,6 @@ function onServer(state: ChatState, event: ServerEvent, now: number): ChatState 
         ...state,
         callJoined: { user: !!event.joined?.user, astrologer: !!event.joined?.astrologer },
       };
-    case "pong":
-      return state;
     default:
       return state;
   }

@@ -29,11 +29,13 @@ export function chartLayout(data: KundliChartData): ChartLayout {
   return { mode, firstSign, houses };
 }
 
-/** "Su 16°", "Sa 16°(R)". Rahu and Ketu always move backwards, so they carry no mark. */
+/** Rahu and Ketu always move backwards, so they carry no retrograde mark. */
+const markRetro = (g: ChartGraha) => g.retrograde && g.id !== "rahu" && g.id !== "ketu";
+
+/** "Su 16°", "Sa 16°(R)". */
 export function grahaLabel(g: ChartGraha, locale: ChartLocale): string {
   const l = CHART_LABELS[locale];
-  const retro = g.retrograde && g.id !== "rahu" && g.id !== "ketu" ? l.retro : "";
-  return `${l.grahaShort[g.id]} ${Math.floor(g.degree_in_sign)}°${retro}`;
+  return `${l.grahaShort[g.id]} ${Math.floor(g.degree_in_sign)}°${markRetro(g) ? l.retro : ""}`;
 }
 
 /** Plain-text summary used for aria-label and the screen-reader list. */
@@ -44,7 +46,7 @@ export function houseSummaries(layout: ChartLayout, locale: ChartLocale): string
       ? h.grahas
           .map(
             (g) =>
-              `${l.grahaName[g.id]} ${Math.floor(g.degree_in_sign)}°${g.retrograde && g.id !== "rahu" && g.id !== "ketu" ? ` ${l.retro}` : ""}`,
+              `${l.grahaName[g.id]} ${Math.floor(g.degree_in_sign)}°${markRetro(g) ? ` ${l.retro}` : ""}`,
           )
           .join(", ")
       : l.none;

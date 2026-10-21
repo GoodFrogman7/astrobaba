@@ -16,15 +16,11 @@ class NumerologyInputError(TimeInputError):
     """Invalid numerology input; `code` is returned to API clients (422)."""
 
 
-def digit_sum(n: int) -> int:
-    return sum(int(d) for d in str(n))
-
-
 def reduce(n: int) -> tuple[int, list[int]]:
     """Repeated digit sum down to 1-9; returns the result and the intermediate totals."""
     chain = [n]
     while n > 9:
-        n = digit_sum(n)
+        n = sum(int(d) for d in str(n))
         chain.append(n)
     return n, chain
 

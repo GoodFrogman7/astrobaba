@@ -14,18 +14,18 @@ import uuid
 from dataclasses import dataclass
 from typing import Annotated, Any, Literal
 
-from fastapi import APIRouter, Depends, Query, Request
+from fastapi import APIRouter, Query, Request
 from redis.asyncio import Redis
 from sqlalchemy import ColumnElement, and_, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from astro_api.config import Settings
-from astro_api.db import get_db
+from astro_api.db import Db, redis_of, settings_of
 from astro_api.errors import ApiError
 from astro_api.flags import flag_enabled
 from astro_api.models import PUBLIC_STATUSES, Astrologer, Review
 from astro_api.models_portal import IST_ZONE, availability_view
-from astro_api.taxonomy import ids, taxonomy
+from astro_api.taxonomy import check_values, taxonomy
 
 router = APIRouter(prefix="/v1", tags=["marketplace"])
 
@@ -35,16 +35,6 @@ PRESENCE_TTL_S = 120
 PRIOR_MEAN = 4.0
 PRIOR_WEIGHT = 5
 PRESENCE_RANK = {"online": 0, "busy": 1, "offline": 2}
-
-
-def _settings(request: Request) -> Settings:
-    settings: Settings = request.app.state.settings
-    return settings
-
-
-def _redis(request: Request) -> Redis:
-    redis: Redis = request.app.state.redis
-    return redis
 
 
 # ---------------------------------------------------------------- visibility (the only rule)
@@ -160,9 +150,7 @@ async def ratings_of(db: AsyncSession, astrologer_ids: list[uuid.UUID]) -> dict[
     return {aid: Rating(int(c), int(t)) for aid, c, t in rows.all()}
 
 
-def card(
-    a: Astrologer, settings: Settings, rating: Rating, presence: tuple[str, int | None]
-) -> dict[str, Any]:
+def card(a: Astrologer, rating: Rating, presence: tuple[str, int | None]) -> dict[str, Any]:
     return {
         "id": a.id,
         "slug": a.slug,
@@ -183,14 +171,13 @@ def card(
 
 def profile(
     a: Astrologer,
-    settings: Settings,
     rating: Rating,
     presence: tuple[str, int | None],
     availability: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     since = a.approved_at or a.created_at
     return {
-        **card(a, settings, rating, presence),
+        **card(a, rating, presence),
         "bio": a.bio,
         "bio_hi": a.bio_hi,
         "verified": {"identity": True, "qualification": True, "interview": True},
@@ -234,12 +221,6 @@ async def get_taxonomy() -> dict[str, Any]:
     return taxonomy()
 
 
-def _check_filter(kind: str, values: list[str]) -> None:
-    bad = [v for v in values if v not in ids(kind)]
-    if bad:
-        raise ApiError(422, "invalid_filter", f"Unknown {kind}: {', '.join(bad)}", invalid=bad)
-
-
 def sort_key(sort: Sort) -> Any:
     """Sort keys over (astrologer, rating, presence). Every key ends with the id as tie-break."""
 
@@ -263,7 +244,7 @@ def sort_key(sort: Sort) -> Any:
 @router.get("/astrologers")
 async def list_astrologers(
     request: Request,
-    db: Annotated[AsyncSession, Depends(get_db)],
+    db: Db,
     skill: Annotated[list[str] | None, Query()] = None,
     language: Annotated[list[str] | None, Query()] = None,
     gender: str | None = None,
@@ -275,14 +256,14 @@ async def list_astrologers(
     cursor: str | None = None,
     limit: Annotated[int, Query(ge=1, le=50)] = 20,
 ) -> dict[str, Any]:
-    settings = _settings(request)
+    settings = settings_of(request)
     skills, languages = skill or [], language or []
-    _check_filter("skills", skills)
-    _check_filter("languages", languages)
+    check_values("skills", skills, "invalid_filter")
+    check_values("languages", languages, "invalid_filter")
     if gender:
-        _check_filter("genders", [gender])
+        check_values("genders", [gender], "invalid_filter")
     if tier:
-        _check_filter("tiers", [tier])
+        check_values("tiers", [tier], "invalid_filter")
     if min_price is not None and max_price is not None and min_price > max_price:
         raise ApiError(422, "invalid_filter", "min_price is above max_price.")
     offset = decode_cursor(cursor)
@@ -306,7 +287,7 @@ async def list_astrologers(
     # happen here. The public set is small (vetted supply, PLAN.md §1); revisit past ~10k rows.
     aids = [a.id for a in rows]
     ratings = await ratings_of(db, aids)
-    presence = await presence_of(_redis(request), aids)
+    presence = await presence_of(redis_of(request), aids)
     items = [(a, ratings.get(a.id, Rating()), presence[a.id]) for a in rows]
     if online:
         items = [i for i in items if i[2][0] == "online"]
@@ -314,33 +295,29 @@ async def list_astrologers(
     page = items[offset : offset + limit]
     next_offset = offset + limit
     return {
-        "items": [card(a, settings, r, p) for a, r, p in page],
+        "items": [card(a, r, p) for a, r, p in page],
         "next_cursor": encode_cursor(next_offset) if next_offset < len(items) else None,
         "total": len(items),
     }
 
 
 @router.get("/astrologers/slugs")
-async def slugs(
-    request: Request, db: Annotated[AsyncSession, Depends(get_db)]
-) -> list[dict[str, Any]]:
+async def slugs(request: Request, db: Db) -> list[dict[str, Any]]:
     rows = await db.execute(
         select(Astrologer.slug, Astrologer.updated_at)
-        .where(public_condition(_settings(request)))
+        .where(public_condition(settings_of(request)))
         .order_by(Astrologer.slug)
     )
     return [{"slug": s, "updated_at": u} for s, u in rows.all()]
 
 
 @router.get("/astrologers/{slug}")
-async def get_profile(
-    slug: str, request: Request, db: Annotated[AsyncSession, Depends(get_db)]
-) -> dict[str, Any]:
-    settings = _settings(request)
+async def get_profile(slug: str, request: Request, db: Db) -> dict[str, Any]:
+    settings = settings_of(request)
     a = await public_by_slug(db, settings, slug)
     rating = (await ratings_of(db, [a.id])).get(a.id, Rating())
-    presence = (await presence_of(_redis(request), [a.id]))[a.id]
-    return profile(a, settings, rating, presence, await availability_view(db, a.id))
+    presence = (await presence_of(redis_of(request), [a.id]))[a.id]
+    return profile(a, rating, presence, await availability_view(db, a.id))
 
 
 def public_review(r: Review) -> dict[str, Any]:
@@ -359,11 +336,11 @@ def public_review(r: Review) -> dict[str, Any]:
 async def list_reviews(
     slug: str,
     request: Request,
-    db: Annotated[AsyncSession, Depends(get_db)],
+    db: Db,
     cursor: str | None = None,
     limit: Annotated[int, Query(ge=1, le=50)] = 20,
 ) -> dict[str, Any]:
-    a = await public_by_slug(db, _settings(request), slug)
+    a = await public_by_slug(db, settings_of(request), slug)
     offset = decode_cursor(cursor)
     base = select(Review).where(Review.astrologer_id == a.id, review_visible())
     rows = list(

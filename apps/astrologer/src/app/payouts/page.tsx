@@ -2,8 +2,7 @@ import type { Payout } from "@astro/shared";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { PayoutBadge } from "@/components/PayoutBadge";
-import { StatusNotice } from "@/components/StatusNotice";
-import { api, ApiError } from "@/lib/api";
+import { tryGet } from "@/lib/api";
 import { formatDeduction, formatMonth, payoutStatusText, TAX_NOTE } from "@/lib/earnings";
 import { formatIst, formatRupees } from "@/lib/format";
 import { consolePage } from "@/lib/guard";
@@ -12,19 +11,9 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Payouts" };
 
 export default async function PayoutsPage() {
-  const { access, data } = await consolePage(async () => {
-    try {
-      const r = await api.get<{ items: Payout[] }>("/v1/astrologer/me/payouts");
-      return { ok: true as const, items: r.items ?? [] };
-    } catch (e) {
-      if (e instanceof ApiError) return { ok: false as const, error: e.message || e.code };
-      throw e;
-    }
-  });
-  if (access.kind === "anon") return null;
-  if (access.kind !== "live" || !data) {
-    return access.kind === "live" ? null : <StatusNotice access={access} />;
-  }
+  const page = await consolePage(() => tryGet<{ items: Payout[] }>("/v1/astrologer/me/payouts"));
+  if (!page.live) return page.notice;
+  const { data } = page;
   return (
     <main id="main" className="mx-auto max-w-5xl px-4 py-8">
       <h1 className="text-2xl font-semibold">Payout statements</h1>
@@ -41,7 +30,7 @@ export default async function PayoutsPage() {
         >
           Could not load your statements: {data.error}
         </p>
-      ) : data.items.length === 0 ? (
+      ) : data.value.items.length === 0 ? (
         <p className="mt-8 text-muted">
           No statements yet. The first one appears after your first month.
         </p>
@@ -77,7 +66,7 @@ export default async function PayoutsPage() {
               </tr>
             </thead>
             <tbody>
-              {data.items.map((p) => (
+              {data.value.items.map((p) => (
                 <tr key={p.id} className="border-b border-border align-top">
                   <th scope="row" className="py-2 pr-4 font-normal">
                     <Link href={`/payouts/${encodeURIComponent(p.id)}`} className="underline">

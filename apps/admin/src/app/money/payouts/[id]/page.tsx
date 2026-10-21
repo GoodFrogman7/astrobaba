@@ -9,13 +9,7 @@ import { PayoutStatus } from "@/components/PayoutStatus";
 import { api, ApiError } from "@/lib/api";
 import { adminPage } from "@/lib/guard";
 import { formatIst, ID } from "@/lib/money-admin";
-import {
-  allowedActions,
-  astrologerName,
-  formatPeriod,
-  markPaidConsequence,
-  TAX_NOTE,
-} from "@/lib/payouts";
+import { allowedActions, formatPeriod, markPaidConsequence, TAX_NOTE } from "@/lib/payouts";
 import type { AdminPayoutDetail } from "@/lib/types";
 import { approvePayout, markPayoutPaid, voidPayout } from "../actions";
 
@@ -37,7 +31,7 @@ export default async function PayoutDetailPage({ params }: { params: Promise<{ i
   if (!data) notFound();
   const p = data;
   const can = allowedActions(p.status);
-  const lines = p.lines ?? [];
+  const { lines } = p;
   const today = calendarDate(new Date(), IST);
   const backHref = `/money/payouts?${new URLSearchParams({ period: p.period })}`;
 
@@ -52,7 +46,7 @@ export default async function PayoutDetailPage({ params }: { params: Promise<{ i
       </p>
       <div className="mt-2 flex flex-wrap items-center gap-3">
         <h2 className="text-xl font-semibold">
-          {astrologerName(p)} · {formatPeriod(p.period)}
+          {p.astrologer.display_name} · {formatPeriod(p.period)}
         </h2>
         <PayoutStatus status={p.status} />
       </div>
@@ -102,20 +96,14 @@ export default async function PayoutDetailPage({ params }: { params: Promise<{ i
             <dd className="font-mono">{p.reference ?? "–"}</dd>
           </dl>
           <h3 className="mt-4 font-semibold">Bank details</h3>
-          {p.bank && Object.keys(p.bank).length > 0 ? (
-            <dl className="mt-2 grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-sm">
-              {Object.entries(p.bank).map(([k, v]) => (
-                <div key={k} className="contents">
-                  <dt className="text-muted">{k.replace(/_/g, " ")}</dt>
-                  <dd className="font-mono">{v === null || v === "" ? "–" : String(v)}</dd>
-                </div>
-              ))}
-            </dl>
-          ) : (
-            <p className="mt-1 text-sm text-muted">
-              Not collected yet. Use the details on file with the team.
-            </p>
-          )}
+          <dl className="mt-2 grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-sm">
+            {Object.entries(p.bank).map(([k, v]) => (
+              <div key={k} className="contents">
+                <dt className="text-muted">{k.replace(/_/g, " ")}</dt>
+                <dd className="font-mono">{v || "–"}</dd>
+              </div>
+            ))}
+          </dl>
         </section>
       </div>
 
@@ -138,7 +126,7 @@ export default async function PayoutDetailPage({ params }: { params: Promise<{ i
             <ActionForm
               action={approvePayout.bind(null, p.id)}
               submitLabel="Approve"
-              confirm={`Approve ${astrologerName(p)}'s statement for ${formatPeriod(p.period)}?`}
+              confirm={`Approve ${p.astrologer.display_name}'s statement for ${formatPeriod(p.period)}?`}
               className="mt-2"
             />
           </div>
@@ -214,7 +202,7 @@ export default async function PayoutDetailPage({ params }: { params: Promise<{ i
         )}
       </section>
 
-      {p.adjustments && p.adjustments.length > 0 && (
+      {p.adjustments.length > 0 && (
         <section className="mt-8">
           <h3 className="text-lg font-semibold">Adjustments</h3>
           <ul className="mt-2 space-y-1 text-sm">
@@ -223,8 +211,8 @@ export default async function PayoutDetailPage({ params }: { params: Promise<{ i
                 key={i}
                 className="flex flex-wrap justify-between gap-3 border-b border-border py-1.5"
               >
-                <span>{a.description ?? a.note ?? a.kind?.replace(/_/g, " ") ?? "Adjustment"}</span>
-                {typeof a.amount_paise === "number" && <Amount paise={a.amount_paise} signed />}
+                <span>{a.kind.replace(/_/g, " ")}</span>
+                <Amount paise={a.amount_paise} signed />
               </li>
             ))}
           </ul>

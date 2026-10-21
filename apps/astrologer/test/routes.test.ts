@@ -7,25 +7,7 @@ import {
   sessionActionRoute,
   sessionRoute,
 } from "../src/lib/routes";
-
-function api(status = 200, body: unknown = { ok: true }) {
-  return vi.fn<(url: string | URL | Request, init?: RequestInit) => Promise<Response>>(
-    async () =>
-      new Response(JSON.stringify(body), { status, headers: { "set-cookie": "upstream=1" } }),
-  );
-}
-
-const deps = (fetchImpl: ReturnType<typeof api>, token: string | null = "tok") => ({
-  token: token ?? undefined,
-  apiUrl: "http://api.test",
-  fetchImpl: fetchImpl as unknown as typeof fetch,
-  wsBase: "wss://api.example",
-});
-
-function sent(f: ReturnType<typeof api>) {
-  const [url, init] = f.mock.calls[0]!;
-  return { url: String(url), init: init!, headers: init!.headers as Record<string, string> };
-}
+import { api, deps, sent } from "./fixtures";
 
 describe("route forwarding", () => {
   it("forwards the session cookie as a Bearer token and never leaks upstream headers", async () => {

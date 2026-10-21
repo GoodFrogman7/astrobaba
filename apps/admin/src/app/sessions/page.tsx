@@ -6,8 +6,8 @@ import { NotAuthorised } from "@/components/NotAuthorised";
 import { api } from "@/lib/api";
 import { adminPage } from "@/lib/guard";
 import { tryLoad } from "@/lib/load";
-import { asItems, formatIst } from "@/lib/money-admin";
-import type { AdminSession } from "@/lib/types";
+import { formatIst } from "@/lib/money-admin";
+import type { AdminSession, Page } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Sessions" };
@@ -37,7 +37,7 @@ export default async function SessionsPage({
       const params = new URLSearchParams({ limit: "50" });
       if (status) params.set("status", status);
       if (cursor) params.set("cursor", cursor);
-      return asItems<AdminSession>(await api.get(`/v1/admin/sessions?${params}`));
+      return api.get<Page<AdminSession>>(`/v1/admin/sessions?${params}`);
     }),
   );
   if (access.kind !== "admin" || !data) return <NotAuthorised />;
@@ -111,10 +111,8 @@ export default async function SessionsPage({
                     )}
                   </td>
                   <td className="py-2 pr-4">
-                    {s.client_label ?? "–"}
-                    {s.user_id && (
-                      <span className="block font-mono text-xs text-muted">{s.user_id}</span>
-                    )}
+                    {s.client_label}
+                    <span className="block font-mono text-xs text-muted">{s.user_id}</span>
                   </td>
                   <td className="py-2 pr-4">
                     {s.status}
@@ -136,14 +134,12 @@ export default async function SessionsPage({
                   </td>
                   <td className="py-2 text-sm">
                     <span className="flex flex-col gap-1">
-                      {s.user_id && (
-                        <Link
-                          href={`/money/wallets?${new URLSearchParams({ user_id: s.user_id })}`}
-                          className="underline"
-                        >
-                          Wallet
-                        </Link>
-                      )}
+                      <Link
+                        href={`/money/wallets?${new URLSearchParams({ user_id: s.user_id })}`}
+                        className="underline"
+                      >
+                        Wallet
+                      </Link>
                       {s.billed_paise > 0 && (
                         <Link
                           href={`/money/refunds?${new URLSearchParams({ session_id: s.id })}`}

@@ -1,4 +1,4 @@
-"""Wallet and ledger operations (ADR-0002). Owned by the wallet work; the session meter calls it.
+"""Wallet and ledger operations (ADR-0002).
 
 Every function runs inside the caller's AsyncSession and does NOT commit: the caller commits, so
 a charge and the session row update land in one database transaction. Every write is idempotent
@@ -39,7 +39,7 @@ REFUNDS = "platform:refunds"
 GATEWAY_FEES = "platform:gateway_fees"
 CLEARING = "gateway:razorpay:clearing"
 BANK = "bank:settlement"
-BANK_PAYOUTS = "bank:payouts"  # asset: the account astrologer payouts are sent from (Phase 5)
+BANK_PAYOUTS = "bank:payouts"  # asset: the account astrologer payouts are sent from
 DEBIT_NORMAL = frozenset({PROMO_EXPENSE, REFUNDS, GATEWAY_FEES, CLEARING, BANK, BANK_PAYOUTS})
 
 FREE_SESSION_LOT_TTL = dt.timedelta(days=1)  # safety net; the lot is closed when the session ends
@@ -555,7 +555,6 @@ async def credit_recharge(
     user_id: uuid.UUID,
     payment_id: str,
     amount_paise: int,
-    order_id: uuid.UUID | None = None,
     occurred_at: dt.datetime | None = None,
 ) -> Posted:
     """Captured gateway payment → user's real balance. Key `razorpay:payment:{id}:captured`.
@@ -981,7 +980,7 @@ async def post_refund(
     )
 
 
-# ------------------------------------------------------------------ astrologer payouts (Phase 5)
+# ------------------------------------------------------------------ astrologer payouts
 
 
 async def lock_payable(db: AsyncSession, astrologer_id: uuid.UUID) -> int:

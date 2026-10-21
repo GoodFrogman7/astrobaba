@@ -2,27 +2,10 @@
 
 import { useTranslations } from "next-intl";
 import { useRef, useState } from "react";
+import { postJson } from "@/components/marketplace/SignIn";
 import type { BirthInput } from "@/lib/tools/types";
 
 type Step = "name" | "phone" | "code" | "saved";
-
-async function post(
-  url: string,
-  body: unknown,
-): Promise<{ status: number; body: Record<string, unknown> }> {
-  const res = await fetch(url, {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify(body),
-  });
-  let json: Record<string, unknown> = {};
-  try {
-    json = (await res.json()) as Record<string, unknown>;
-  } catch {
-    /* empty body */
-  }
-  return { status: res.status, body: json };
-}
 
 /** Optional sign-in by OTP to save a kundli (PLAN.md §5 Phase 2 funnel). */
 export function SaveKundli({ birth }: { birth: BirthInput }) {
@@ -39,7 +22,7 @@ export function SaveKundli({ birth }: { birth: BirthInput }) {
   const errorText = (c: string) => (t.has(`errors.${c}`) ? t(`errors.${c}`) : t("errors.generic"));
 
   async function save(): Promise<boolean> {
-    const r = await post("/api/kundlis", { name: name.trim(), birth });
+    const r = await postJson("/api/kundlis", { name: name.trim(), birth });
     if (r.status === 201) {
       setStep("saved");
       return true;
@@ -60,13 +43,13 @@ export function SaveKundli({ birth }: { birth: BirthInput }) {
         if (s.signed_in && (await save())) return;
         setStep("phone");
       } else if (step === "phone") {
-        const r = await post("/api/auth/otp/request", { phone });
+        const r = await postJson("/api/auth/otp/request", { phone });
         if (r.status === 202) {
           setChallenge(String(r.body.challenge_id));
           setStep("code");
         } else setError(errorText(String(r.body.code ?? "")));
       } else if (step === "code") {
-        const r = await post("/api/auth/otp/verify", { challenge_id: challenge, code });
+        const r = await postJson("/api/auth/otp/verify", { challenge_id: challenge, code });
         if (r.status === 200) await save();
         else setError(errorText(String(r.body.code ?? "")));
       }

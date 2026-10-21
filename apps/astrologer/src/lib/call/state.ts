@@ -106,8 +106,7 @@ const OPEN_FOR_AUDIO: readonly SessionStatus[] = ["accepted", "active"];
  * this tab owns the control socket (a replaced or refused socket means another tab has the call).
  */
 export function wantsAudio(status: SessionStatus, closeReason: CloseReason): boolean {
-  if (!OPEN_FOR_AUDIO.includes(status)) return false;
-  return closeReason === null;
+  return OPEN_FOR_AUDIO.includes(status) && closeReason === null;
 }
 
 /** Map a failed call-token request to a failure. 5xx/network are retried instead. */

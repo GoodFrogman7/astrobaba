@@ -19,18 +19,17 @@ session ids.
 import datetime as dt
 import logging
 import uuid
-from typing import Annotated, Any
+from typing import Any
 
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from astro_api import livekit_client
 from astro_api import session_service as svc
-from astro_api.auth import current_session
-from astro_api.db import get_db
+from astro_api.auth import CurrentSession
+from astro_api.db import Db
 from astro_api.errors import ApiError
-from astro_api.models import ENDED_SESSION_STATUSES, AuthSession, ConsultSession, User
+from astro_api.models import ENDED_SESSION_STATUSES, ConsultSession
 from astro_api.sessions_api import participant
 
 router = APIRouter(tags=["calls"])
@@ -39,17 +38,10 @@ log = logging.getLogger("astro_api.calls")
 EVENT_TTL_S = 24 * 3600
 JOINABLE = ("accepted", "active")
 
-SessionUser = Annotated[tuple[AuthSession, User], Depends(current_session)]
-Db = Annotated[AsyncSession, Depends(get_db)]
-
-
-def event_key(event_id: str) -> str:
-    return f"lkevt:{event_id}"
-
 
 @router.post("/v1/sessions/{session_id}/call-token")
 async def call_token(
-    session_id: uuid.UUID, request: Request, session_user: SessionUser, db: Db
+    session_id: uuid.UUID, request: Request, session_user: CurrentSession, db: Db
 ) -> dict[str, Any]:
     """`CallToken` (chat.ts). Needed to join; a rejoin asks for a new one."""
     deps = svc.Deps.of(request.app)
@@ -90,7 +82,7 @@ async def livekit_webhook(request: Request) -> JSONResponse:
         event = deps.call_backend().verify_webhook(body, request.headers.get("authorization"))
     except (livekit_client.InvalidWebhook, RuntimeError, ValueError):
         raise ApiError(401, "bad_signature", "Webhook signature is not valid.") from None
-    key = event_key(event.id) if event.id else None
+    key = f"lkevt:{event.id}" if event.id else None
     if key is not None and not await deps.redis.set(key, "1", nx=True, ex=EVENT_TTL_S):
         return JSONResponse({"status": "duplicate"})
     try:
@@ -127,7 +119,7 @@ async def on_event(
         return "ignored"
     # LiveKit's event time (it can arrive late); never in the future.
     at = min(event.created_at, now) if event.created_at is not None else now
-    await participant_event(
+    await svc.call_participant(
         deps,
         session_id,
         event.identity,
@@ -136,18 +128,3 @@ async def on_event(
         at=at,
     )
     return "ok"
-
-
-async def participant_event(
-    deps: svc.Deps,
-    session_id: uuid.UUID,
-    role: str,
-    *,
-    joined: bool,
-    participant_sid: str,
-    at: dt.datetime,
-) -> bool:
-    """A webhook join/leave of `role` at `at` (session_service.call_participant)."""
-    return await svc.call_participant(
-        deps, session_id, role, joined=joined, participant_sid=participant_sid, at=at
-    )

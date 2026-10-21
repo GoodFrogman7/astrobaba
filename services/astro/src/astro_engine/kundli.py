@@ -52,9 +52,7 @@ def compute_kundli(
     jd = when.jd
     grahas = graha_positions(backend, jd, ayanamsha, node)
     flags: list[str] = []
-    ascendant = None
-    houses = None
-    moon_range = None
+    ascendant = houses = moon_range = None
 
     if when.assumed_time:
         # Without a birth time there is no ascendant and no houses. Planets are computed for local
@@ -71,20 +69,18 @@ def compute_kundli(
             "nakshatra_changes": moon_start["nakshatra"] != moon_end["nakshatra"],
         }
     else:
-        asc = placement(backend.ascendant(jd, lat, lon, ayanamsha))
-        ascendant = asc
-        houses = []
-        for n in range(12):
-            sign_index = (asc["sign_index"] + n) % 12
-            houses.append(
-                {
-                    "house": n + 1,
-                    "sign_index": sign_index,
-                    "occupants": [g["id"] for g in grahas if g["sign_index"] == sign_index],
-                }
-            )
+        ascendant = placement(backend.ascendant(jd, lat, lon, ayanamsha))
+        lagna = ascendant["sign_index"]
+        houses = [
+            {
+                "house": n + 1,
+                "sign_index": (lagna + n) % 12,
+                "occupants": [g["id"] for g in grahas if g["sign_index"] == (lagna + n) % 12],
+            }
+            for n in range(12)
+        ]
         for g in grahas:
-            g["house"] = (g["sign_index"] - asc["sign_index"]) % 12 + 1
+            g["house"] = (g["sign_index"] - lagna) % 12 + 1
 
     return {
         "birth": {

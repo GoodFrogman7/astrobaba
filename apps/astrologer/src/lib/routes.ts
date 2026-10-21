@@ -1,4 +1,4 @@
-import { forward, json, SESSION_ID, wsUrl, type ForwardDeps } from "./forward";
+import { forward, json, OPAQUE_ID, wsUrl, type ForwardDeps } from "./forward";
 
 /**
  * Cores of the console's route handlers (src/app/api/**). Each takes the session token and the
@@ -22,7 +22,7 @@ export function incomingRoute(deps: ForwardDeps): Promise<Response> {
 }
 
 export async function sessionRoute(id: string, deps: ForwardDeps): Promise<Response> {
-  if (!SESSION_ID.test(id)) return json({ code: "not_found" }, 404);
+  if (!OPAQUE_ID.test(id)) return json({ code: "not_found" }, 404);
   return forward("GET", `/v1/sessions/${enc(id)}`, deps);
 }
 
@@ -31,7 +31,7 @@ export async function messagesRoute(
   params: URLSearchParams,
   deps: ForwardDeps,
 ): Promise<Response> {
-  if (!SESSION_ID.test(id)) return json({ code: "not_found" }, 404);
+  if (!OPAQUE_ID.test(id)) return json({ code: "not_found" }, 404);
   const after = params.get("after_seq") ?? "0";
   const limit = params.get("limit") ?? "200";
   if (
@@ -54,7 +54,7 @@ export async function sessionActionRoute(
   action: string,
   deps: RouteDeps,
 ): Promise<Response> {
-  if (!SESSION_ID.test(id) || !(SESSION_ACTIONS as readonly string[]).includes(action)) {
+  if (!OPAQUE_ID.test(id) || !(SESSION_ACTIONS as readonly string[]).includes(action)) {
     return json({ code: "not_found" }, 404);
   }
   const res = await forward("POST", `/v1/sessions/${enc(id)}/${action}`, deps, {});

@@ -6,8 +6,8 @@ import { NotAuthorised } from "@/components/NotAuthorised";
 import { api } from "@/lib/api";
 import { adminPage } from "@/lib/guard";
 import { tryLoad } from "@/lib/load";
-import { asItems, formatIst, ID, newIdempotencyKey, ruleLabel } from "@/lib/money-admin";
-import type { AdminRefund } from "@/lib/types";
+import { formatIst, ID, newIdempotencyKey, ruleLabel } from "@/lib/money-admin";
+import type { AdminRefund, Page } from "@/lib/types";
 import { RefundForm } from "./RefundForm";
 
 export const dynamic = "force-dynamic";
@@ -25,7 +25,7 @@ export default async function RefundsPage({
     tryLoad(async () => {
       const params = new URLSearchParams({ limit: "25" });
       if (cursor) params.set("cursor", cursor);
-      return asItems<AdminRefund>(await api.get(`/v1/admin/money/refunds?${params}`));
+      return api.get<Page<AdminRefund>>(`/v1/admin/money/refunds?${params}`);
     }),
   );
   if (access.kind !== "admin" || !data) return <NotAuthorised />;

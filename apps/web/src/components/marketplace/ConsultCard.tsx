@@ -1,5 +1,5 @@
 import { useLocale, useTranslations } from "next-intl";
-import { rupeesPerMin } from "@/lib/marketplace/format";
+import { formatPaise } from "@/lib/marketplace/format";
 import type { AstrologerProfile } from "@/lib/marketplace/types";
 import { PresenceBadge } from "./Presence";
 import { StartConsult } from "./StartConsult";
@@ -22,7 +22,7 @@ export function ConsultCard({ p }: { p: AstrologerProfile }) {
         {t("title", { name: p.display_name })}
       </h2>
       <p className="mt-2 text-2xl font-semibold">
-        {rupeesPerMin(p.price_per_min_paise, locale)}{" "}
+        {formatPaise(p.price_per_min_paise, locale)}{" "}
         <span className="text-base font-normal text-muted">{t("perMin")}</span>
       </p>
       <div className="mt-2">
@@ -54,7 +54,7 @@ export function MobileConsultBar({ p }: { p: AstrologerProfile }) {
     >
       <div className="mx-auto flex max-w-5xl items-center justify-between gap-3">
         <p className="text-sm">
-          <span className="font-semibold">{rupeesPerMin(p.price_per_min_paise, locale)}</span>{" "}
+          <span className="font-semibold">{formatPaise(p.price_per_min_paise, locale)}</span>{" "}
           {t("perMin")}
           {!p.consult.chat_enabled && (
             <span className="block text-xs text-muted">{tb("chatOff")}</span>

@@ -12,16 +12,9 @@ moons = st.floats(0, 360, exclude_max=True)
 @given(groom=moons, bride=moons)
 def test_total_is_sum_of_eight_kootas_and_within_maxima(groom: float, bride: float) -> None:
     r = ashtakoota(placement(groom), placement(bride))
-    assert [k["koota"] for k in r["kootas"]] == [
-        "varna",
-        "vashya",
-        "tara",
-        "yoni",
-        "graha_maitri",
-        "gana",
-        "bhakoot",
-        "nadi",
-    ]
+    assert [k["koota"] for k in r["kootas"]] == (
+        ["varna", "vashya", "tara", "yoni", "graha_maitri", "gana", "bhakoot", "nadi"]
+    )
     assert [k["max"] for k in r["kootas"]] == [1, 2, 3, 4, 5, 6, 7, 8]
     assert r["total"] == sum(k["points"] for k in r["kootas"])
     for k in r["kootas"]:

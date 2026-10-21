@@ -1,4 +1,4 @@
-from datetime import UTC, date, datetime, timedelta
+from datetime import date, datetime, timedelta
 from itertools import pairwise
 from typing import Any
 
@@ -77,10 +77,8 @@ def test_elements_tile_the_day_and_match_the_definitions(
 
 def test_local_date_is_the_sunrise_date() -> None:
     p = _p(date(2026, 1, 5))
-    rise_local = ts(p["sunrise"]).astimezone(datetime.now(UTC).astimezone().tzinfo)
     assert p["vaara"]["en"] == "Monday"
     assert ts(p["sunrise"]).date() in (date(2026, 1, 5), date(2026, 1, 4))  # UTC date
-    assert rise_local is not None
 
 
 def test_today_and_tomorrow_differ() -> None:  # fixtures A27/A28

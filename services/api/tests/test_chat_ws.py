@@ -8,7 +8,6 @@ from typing import Any
 
 import pytest
 from sqlalchemy import select
-from starlette.testclient import WebSocketTestSession
 from starlette.websockets import WebSocketDisconnect
 
 from astro_api.chat_crypto import Sealed, aad
@@ -18,38 +17,18 @@ from services.api.tests.money_fakes import (  # noqa: F401 - fixtures
     PRICE,
     FakeMoney,
     World,
+    closed_with,
+    connect,
     deps_for,
     fake_money_fixture,
     money_fixture,
+    until,
     world_fixture,
 )
 
 pytestmark = pytest.mark.integration
 
 SECRET_TEXT = "My question is about career in 2027, please"
-
-
-def connect(w: World, sid: str, headers: dict[str, str], origin: str = ORIGIN) -> Any:
-    ticket = w.ticket(sid, headers)
-    return w.client.websocket_connect(
-        f"/v1/sessions/{sid}/ws?ticket={ticket}", headers={"origin": origin}
-    )
-
-
-def until(ws: WebSocketTestSession, kind: str) -> dict[str, Any]:
-    """Next frame of this type (skips others, e.g. `state` updates)."""
-    for _ in range(20):
-        frame: dict[str, Any] = ws.receive_json()
-        if frame["type"] == kind:
-            return frame
-    raise AssertionError(f"no {kind} frame")
-
-
-def closed_with(ws: WebSocketTestSession) -> int:
-    with pytest.raises(WebSocketDisconnect) as e:
-        for _ in range(20):
-            ws.receive_json()
-    return int(e.value.code)
 
 
 def rows(w: World, sid: str) -> list[ChatMessage]:

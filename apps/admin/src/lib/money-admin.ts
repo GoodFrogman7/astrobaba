@@ -1,7 +1,6 @@
 import { calendarDate, IST } from "@astro/shared";
 import type { ActionResult } from "./result";
 import { rupeesToPaise } from "./money";
-import type { AdminWalletView, ReconCheck, Wallet, WalletTxn } from "./types";
 
 /* ---------- Idempotency keys (billing.md: 8–128 chars of [A-Za-z0-9_-]) ---------- */
 
@@ -93,48 +92,12 @@ export function yesterdayIst(now: Date = new Date()): string {
   return calendarDate(new Date(now.getTime() - 24 * 3600 * 1000), IST);
 }
 
-/* ---------- Response shapes (tolerant: the API is being built against the same contract) ---------- */
-
-/** Lists come as `{items: [...]}` (paged) or a bare array. */
-export function asItems<T>(body: unknown): { items: T[]; next_cursor: string | null } {
-  if (Array.isArray(body)) return { items: body as T[], next_cursor: null };
-  if (body && typeof body === "object" && Array.isArray((body as { items?: unknown }).items)) {
-    const b = body as { items: T[]; next_cursor?: string | null };
-    return { items: b.items, next_cursor: b.next_cursor ?? null };
-  }
-  return { items: [], next_cursor: null };
-}
-
-/**
- * `GET /v1/admin/money/users/{id}/wallet` is "Wallet + recent WalletTxn": accept either
- * `{wallet, transactions}` or the Wallet fields at the top level with `transactions`/`items`.
- */
-export function normaliseWallet(body: unknown): AdminWalletView {
-  const b = (body ?? {}) as Record<string, unknown>;
-  const wallet = (b.wallet && typeof b.wallet === "object" ? b.wallet : b) as Wallet;
-  const txns = (
-    Array.isArray(b.transactions)
-      ? b.transactions
-      : Array.isArray(b.recent_transactions)
-        ? b.recent_transactions
-        : Array.isArray(b.items)
-          ? b.items
-          : []
-  ) as WalletTxn[];
-  return { wallet, transactions: txns };
-}
-
-export function checkView(c: ReconCheck | string): ReconCheck {
-  return typeof c === "string" ? { name: c, status: "ok" } : c;
-}
-
 /* ---------- Display ---------- */
 
 const RULES: Record<string, string> = {
   manual: "Manual (goodwill)",
   failed_connect: "Failed to connect",
   astrologer_drop: "Astrologer dropped",
-  astrologer_dropped: "Astrologer dropped",
   service_unavailable: "Voice service outage",
   low_rating: "Low rating",
 };

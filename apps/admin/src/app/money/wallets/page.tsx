@@ -6,7 +6,8 @@ import { NotAuthorised } from "@/components/NotAuthorised";
 import { api } from "@/lib/api";
 import { adminPage } from "@/lib/guard";
 import { tryLoad } from "@/lib/load";
-import { formatIst, ID, normaliseWallet, txnLabel } from "@/lib/money-admin";
+import { formatIst, ID, txnLabel } from "@/lib/money-admin";
+import type { AdminWalletView } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "User wallet" };
@@ -21,10 +22,8 @@ export default async function WalletPage({
   const userId = ID.test(raw) ? raw : "";
   const { access, data } = await adminPage(async () =>
     userId
-      ? tryLoad(async () =>
-          normaliseWallet(
-            await api.get(`/v1/admin/money/users/${encodeURIComponent(userId)}/wallet`),
-          ),
+      ? tryLoad(() =>
+          api.get<AdminWalletView>(`/v1/admin/money/users/${encodeURIComponent(userId)}/wallet`),
         )
       : null,
   );
@@ -73,17 +72,15 @@ export default async function WalletPage({
                 </div>
               ))}
             </dl>
-            {data.value.wallet.free_session && (
-              <p className="mt-3 text-sm">
-                Free session:{" "}
-                {!data.value.wallet.free_session.enabled
-                  ? "programme off"
-                  : data.value.wallet.free_session.eligible
-                    ? `eligible (${data.value.wallet.free_session.minutes} min)`
-                    : `not eligible${data.value.wallet.free_session.reason ? ` (${data.value.wallet.free_session.reason})` : ""}`}
-              </p>
-            )}
-            {(data.value.wallet.promo_lots ?? []).length > 0 && (
+            <p className="mt-3 text-sm">
+              Free session:{" "}
+              {!data.value.wallet.free_session.enabled
+                ? "programme off"
+                : data.value.wallet.free_session.eligible
+                  ? `eligible (${data.value.wallet.free_session.minutes} min)`
+                  : `not eligible${data.value.wallet.free_session.reason ? ` (${data.value.wallet.free_session.reason})` : ""}`}
+            </p>
+            {data.value.wallet.promo_lots.length > 0 && (
               <ul className="mt-3 space-y-1 text-sm">
                 {data.value.wallet.promo_lots.map((l) => (
                   <li key={l.id}>

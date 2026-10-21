@@ -72,6 +72,7 @@ export function ScheduleEditor({ initial }: { initial: AvailabilitySlot[] }) {
       const body = (await r.json().catch(() => ({}))) as Partial<Availability> & {
         code?: string;
         message?: string;
+        index?: unknown;
       };
       if (r.status === 401) {
         router.replace("/login");
@@ -85,7 +86,7 @@ export function ScheduleEditor({ initial }: { initial: AvailabilitySlot[] }) {
         return;
       }
       if (body.code === "invalid_slots") {
-        const index = invalidSlotIndex(body, slots.length);
+        const index = invalidSlotIndex(body.index, slots.length);
         const message = body.message || "This slot is not valid.";
         if (index !== null) setServerIssue({ index, message });
         setStatus({

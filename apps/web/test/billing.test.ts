@@ -12,7 +12,7 @@ import { IDEMPOTENCY_KEY, IntentKeys, newIdempotencyKey } from "../src/lib/billi
 import { pollDelay, pollOrder } from "../src/lib/billing/poll";
 import { outcomeFor } from "../src/lib/billing/start";
 import type { RechargeOrder } from "../src/lib/billing/types";
-import { clock, formatPaise, rupeesPerMin } from "../src/lib/marketplace/format";
+import { clock, formatPaise } from "../src/lib/marketplace/format";
 
 const bounds = { min_paise: 10000, max_paise: 5000000 };
 
@@ -23,7 +23,6 @@ describe("money formatting (one helper for every price)", () => {
     expect(formatPaise(5000000, "en")).toBe("₹50,000");
     expect(formatPaise(10000050, "en")).toBe("₹1,00,000.50");
     expect(formatPaise(0, "en")).toBe("₹0");
-    expect(rupeesPerMin(1250, "en")).toBe("₹12.50");
   });
 
   it("signs transactions from the user's view", () => {

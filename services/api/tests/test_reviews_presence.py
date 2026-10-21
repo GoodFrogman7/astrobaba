@@ -158,7 +158,7 @@ def test_presence_and_wait_time(client: TestClient, live, login) -> None:  # typ
     listed = client.get("/v1/astrologers", params={"online": "true"}).json()
     assert [i["slug"] for i in listed["items"]] == [slug]
 
-    # Busy (set by sessions in Phase 4) is not overridden by a heartbeat and carries a wait time.
+    # Busy (set by sessions) is not overridden by a heartbeat and carries a wait time.
     redis = client.app.state.redis  # type: ignore[attr-defined]
     until = dt.datetime.now(dt.UTC) + dt.timedelta(minutes=12, seconds=30)
 

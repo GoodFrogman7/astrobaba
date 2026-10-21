@@ -80,8 +80,8 @@ end (`busy_until:{id}`); never invented.
 | POST | `/v1/consult-sessions/{id}/review` | `{rating: 1-5, text ≤ 1000}`; only the session's user, only `completed`, one per session (409 `already_reviewed`, 409 `session_not_completed`, 404 otherwise). Text with banned terms → `flagged` (held for moderation), else `published` |
 | POST | `/v1/reviews/{id}/report` | `{reason}` → `flagged`; stays visible until a moderator acts |
 
-`consult_sessions` (minimal now, extended in Phase 4): `id, user_id, astrologer_id, kind
-chat|call, status requested|active|completed|cancelled|failed, started_at, ended_at, created_at`.
+`consult_sessions`: `id, user_id, astrologer_id, kind chat|call, status, started_at, ended_at,
+created_at`; Phase 4 statuses and billing fields: [billing.md](billing.md).
 
 ## Admin (`admin` role)
 

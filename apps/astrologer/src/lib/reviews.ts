@@ -1,39 +1,27 @@
 /** Review list helpers for the portal (docs/api/portal.md §2.4, marketplace.md reviews). */
+import type { PortalReview } from "./types";
 
 /** Same as the API's limit (data/marketplace/taxonomy.json `review.max_text_chars`). */
 export const REPLY_MAX_CHARS = 1000;
 
-export const REVIEW_FILTERS = ["all", "unreplied"] as const;
-export type ReviewFilter = (typeof REVIEW_FILTERS)[number];
+export type ReviewFilter = "all" | "unreplied";
 
 export function reviewFilter(v: string | undefined): ReviewFilter {
   return v === "unreplied" ? "unreplied" : "all";
 }
 
 /** Held reviews are not public yet and cannot be replied to until a moderator publishes them. */
-const HELD = new Set(["held", "pending_moderation"]);
-
-export function reviewStatus(status: string): {
+export function reviewStatus(status: PortalReview["status"]): {
   label: string;
   held: boolean;
   note: string | null;
 } {
   if (status === "published") return { label: "Published", held: false, note: null };
-  if (status === "flagged") {
-    return {
-      label: "Reported",
-      held: false,
-      note: "Someone reported this review. It stays visible while a moderator checks it.",
-    };
-  }
-  if (HELD.has(status)) {
-    return {
-      label: "Held for moderation",
-      held: true,
-      note: "Not shown on your profile. A moderator will publish or remove it.",
-    };
-  }
-  return { label: status.replace(/_/g, " "), held: true, note: null };
+  return {
+    label: "Held for moderation",
+    held: true,
+    note: "Not shown on your profile. A moderator will publish or remove it.",
+  };
 }
 
 /** "★★★★☆" for display; screen readers get the text alternative from `ratingLabel`. */

@@ -191,8 +191,8 @@ payouts check in `test_reconciliation.py`).
   (`SELECT … FOR UPDATE`), checks the key again under the lock, and refuses an amount above the
   projected payable balance (`PayoutExceedsPayable`, API `409 exceeds_payable`). The payout row
   is locked too, so concurrent or repeated mark-paid calls post once; the same reference and
-  date again returns the paid payout. Migration 0006 adds `payout` to the transaction kinds;
-  `models_ledger.TXN_KINDS` should list it too (wallet-owned file).
+  date again returns the paid payout. Migration 0006 adds `payout` to the transaction kinds
+  (`models_ledger.TXN_KINDS`).
 - **Earnings are read from the ledger only** (`earnings.py`): per transaction of kind
   `consultation`/`refund` that touches the astrologer's payable, by `occurred_at` on IST
   boundaries: gross = payable credit + commission credit of consultation transactions,

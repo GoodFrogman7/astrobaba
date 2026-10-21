@@ -1,5 +1,5 @@
-"""First free session eligibility and abuse heuristics. Owned by the wallet work; the session
-work calls `check` before creating a free session and `claim` in the same transaction.
+"""First free session eligibility and abuse heuristics. Session creation calls `check` first and
+`claim` in the same transaction.
 
 Rules (billing.json `free_session`), in order:
 1. flag `first_free_session` off → flag_off
@@ -20,7 +20,6 @@ import hashlib
 import hmac
 import uuid
 from dataclasses import dataclass
-from zoneinfo import ZoneInfo
 
 from redis.asyncio import Redis
 from sqlalchemy import any_, delete, func, literal, select, text
@@ -30,11 +29,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from astro_api import billing_config
 from astro_api.audit import audit
 from astro_api.config import get_settings
+from astro_api.earnings import IST
 from astro_api.flags import flag_enabled
 from astro_api.models import User
 from astro_api.models_ledger import FreeSessionClaim, FreeSessionOverride
 
-IST = ZoneInfo("Asia/Kolkata")
 ACTIONS = ("allow", "block", "reset")
 
 

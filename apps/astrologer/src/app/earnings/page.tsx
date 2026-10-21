@@ -1,8 +1,8 @@
 import type { Earnings } from "@astro/shared";
 import type { Metadata } from "next";
 import Link from "next/link";
-import { StatusNotice } from "@/components/StatusNotice";
-import { api, ApiError } from "@/lib/api";
+import { EarningRows } from "@/components/EarningRows";
+import { tryGet } from "@/lib/api";
 import {
   dayBars,
   earningsHref,
@@ -22,17 +22,6 @@ import type { Balance } from "@/lib/types";
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Earnings" };
 
-type Loaded<T> = { ok: true; value: T } | { ok: false; error: string };
-
-async function load<T>(path: string): Promise<Loaded<T>> {
-  try {
-    return { ok: true, value: await api.get<T>(path) };
-  } catch (e) {
-    if (e instanceof ApiError) return { ok: false, error: e.message || e.code };
-    throw e;
-  }
-}
-
 const one = (v: string | string[] | undefined) => (typeof v === "string" ? v.slice(0, 200) : "");
 
 const PERIODS: { value: PeriodKind; label: string }[] = [
@@ -49,18 +38,15 @@ export default async function EarningsPage({
   const sp = await searchParams;
   const period = resolvePeriod({ period: one(sp.period), from: one(sp.from), to: one(sp.to) });
   const cursor = one(sp.cursor);
-  const { access, data } = await consolePage(async () => {
+  const page = await consolePage(async () => {
     const [earnings, balance] = await Promise.all([
-      load<Earnings>(`/v1/astrologer/me/earnings?${earningsQuery(period, cursor)}`),
-      load<Balance>("/v1/astrologer/me/balance"),
+      tryGet<Earnings>(`/v1/astrologer/me/earnings?${earningsQuery(period, cursor)}`),
+      tryGet<Balance>("/v1/astrologer/me/balance"),
     ]);
     return { earnings, balance };
   });
-  if (access.kind === "anon") return null;
-  if (access.kind !== "live" || !data) {
-    return access.kind === "live" ? null : <StatusNotice access={access} />;
-  }
-  const { earnings, balance } = data;
+  if (!page.live) return page.notice;
+  const { earnings, balance } = page.data;
 
   return (
     <main id="main" className="mx-auto max-w-5xl px-4 py-8">
@@ -177,7 +163,7 @@ function EarningsBody({
   period: ReturnType<typeof resolvePeriod>;
 }) {
   const t = e.totals;
-  const days = dayBars(e.by_day ?? []);
+  const days = dayBars(e.by_day);
   const cards = [
     { label: "Gross", value: formatRupees(t.gross_paise) },
     { label: "Commission", value: formatDeduction(t.commission_paise) },
@@ -278,60 +264,7 @@ function EarningsBody({
         {e.sessions.items.length === 0 ? (
           <p className="mt-2 text-sm text-muted">No sessions on this page.</p>
         ) : (
-          <div className="mt-3 overflow-x-auto">
-            <table className="w-full text-left text-sm">
-              <thead className="border-b border-border text-muted">
-                <tr>
-                  <th scope="col" className="py-2 pr-4 font-medium">
-                    Started (IST)
-                  </th>
-                  <th scope="col" className="py-2 pr-4 font-medium">
-                    Client
-                  </th>
-                  <th scope="col" className="py-2 pr-4 font-medium">
-                    Type
-                  </th>
-                  <th scope="col" className="py-2 pr-4 text-right font-medium">
-                    Minutes
-                  </th>
-                  <th scope="col" className="py-2 pr-4 text-right font-medium">
-                    Gross
-                  </th>
-                  <th scope="col" className="py-2 pr-4 text-right font-medium">
-                    Commission
-                  </th>
-                  <th scope="col" className="py-2 pr-4 text-right font-medium">
-                    Refunds
-                  </th>
-                  <th scope="col" className="py-2 text-right font-medium">
-                    Net
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {e.sessions.items.map((r) => (
-                  <tr key={r.session_id} className="border-b border-border">
-                    <td className="py-2 pr-4 whitespace-nowrap">{formatIst(r.started_at)}</td>
-                    <td className="py-2 pr-4">{r.client_label}</td>
-                    <td className="py-2 pr-4">{r.kind === "call" ? "Call" : "Chat"}</td>
-                    <td className="py-2 pr-4 text-right tabular-nums">{r.billed_minutes}</td>
-                    <td className="py-2 pr-4 text-right tabular-nums">
-                      {formatRupees(r.gross_paise)}
-                    </td>
-                    <td className="py-2 pr-4 text-right tabular-nums">
-                      {formatDeduction(r.commission_paise)}
-                    </td>
-                    <td className="py-2 pr-4 text-right tabular-nums">
-                      {formatDeduction(r.refunds_paise)}
-                    </td>
-                    <td className="py-2 text-right font-medium tabular-nums">
-                      {formatRupees(r.net_paise)}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <EarningRows rows={e.sessions.items} boldNet />
         )}
         <div className="mt-4 flex gap-4 text-sm">
           {cursor && (

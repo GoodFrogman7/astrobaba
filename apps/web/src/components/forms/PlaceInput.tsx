@@ -24,13 +24,11 @@ export function PlaceInput({
   value,
   onChange,
   invalid,
-  describedBy,
   inputId,
 }: {
   value: PlaceValue | null;
   onChange: (v: PlaceValue | null) => void;
   invalid?: boolean;
-  describedBy?: string;
   inputId?: string;
 }) {
   const t = useTranslations("toolsUi.form");
@@ -94,7 +92,6 @@ export function PlaceInput({
         aria-controls={listId}
         aria-activedescendant={active >= 0 ? `${id}-opt-${active}` : undefined}
         aria-invalid={invalid || undefined}
-        aria-describedby={describedBy}
         autoComplete="off"
         placeholder={t("placeHint")}
         value={query}

@@ -251,7 +251,7 @@ def test_transitions_roles_and_presence(world: World, fake_money: FakeMoney) -> 
     assert fake_money.refunded() == [uuid.UUID(sid)]
     assert world.row(sid).settled_at is not None
 
-    # Reviews (Phase 3) work on a completed session; can_review flips after reviewing.
+    # Reviews work on a completed session; can_review flips after reviewing.
     assert world.client.get(f"/v1/sessions/{sid}", headers=headers).json()["can_review"] is True
     r = world.client.post(f"/v1/consult-sessions/{sid}/review", json={"rating": 5}, headers=headers)
     assert r.status_code == 201, r.text

@@ -4,7 +4,6 @@ import {
   activeSlot,
   addSlot,
   copyDay,
-  formatSlot,
   fromMinutes,
   groupByDay,
   invalidSlotIndex,
@@ -148,7 +147,6 @@ describe("editing", () => {
       ),
     ).toBe(true);
     expect(sameSchedule([slot(0, "09:00", "10:00")], [slot(0, "09:00", "10:15")])).toBe(false);
-    expect(formatSlot(slot(6, "22:00", "24:00"))).toBe("Sun 22:00–24:00");
   });
 });
 
@@ -174,12 +172,11 @@ describe("the running slot, in IST", () => {
 });
 
 describe("422 invalid_slots", () => {
-  it("reads the slot index tolerantly and bounds it", () => {
-    expect(invalidSlotIndex({ code: "invalid_slots", index: 2 }, 3)).toBe(2);
-    expect(invalidSlotIndex({ slot_index: 0 }, 3)).toBe(0);
-    expect(invalidSlotIndex({ errors: [{ index: 1 }] }, 3)).toBe(1);
-    expect(invalidSlotIndex({ index: 5 }, 3)).toBeNull();
-    expect(invalidSlotIndex({ index: "1" }, 3)).toBeNull();
-    expect(invalidSlotIndex(null, 3)).toBeNull();
+  it("reads the slot index and bounds it", () => {
+    expect(invalidSlotIndex(2, 3)).toBe(2);
+    expect(invalidSlotIndex(0, 3)).toBe(0);
+    expect(invalidSlotIndex(5, 3)).toBeNull();
+    expect(invalidSlotIndex("1", 3)).toBeNull();
+    expect(invalidSlotIndex(undefined, 3)).toBeNull();
   });
 });

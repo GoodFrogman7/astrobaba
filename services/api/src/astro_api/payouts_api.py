@@ -1,25 +1,23 @@
-"""Admin payouts: generate, approve, mark paid, void (Phase 5, portal work).
-docs/api/portal.md §3. Every action is audited (astro_api.payouts) with ids and amounts only."""
+"""Admin payouts: generate, approve, mark paid, void (docs/api/portal.md §3). Every action is
+audited (astro_api.payouts) with ids and amounts only."""
 
 import datetime as dt
 import uuid
-from typing import Annotated, Any, Literal
+from typing import Any, Literal
 
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Request
 from pydantic import BaseModel, Field
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from astro_api import payouts
-from astro_api.config import Settings
-from astro_api.db import get_db
+from astro_api.db import Db, settings_of
 from astro_api.errors import ApiError
 from astro_api.models import Astrologer
 from astro_api.models_portal import Payout
 from astro_api.roles import AdminUser, actor
 
 router = APIRouter(prefix="/v1/admin/payouts", tags=["admin-payouts"])
-Db = Annotated[AsyncSession, Depends(get_db)]
 
 BANK_PLACEHOLDER = {
     "account_holder": None,
@@ -41,11 +39,6 @@ class MarkPaidIn(BaseModel):
 
 class VoidIn(BaseModel):
     note: str = Field(default="", max_length=500)
-
-
-def _settings(request: Request) -> Settings:
-    settings: Settings = request.app.state.settings
-    return settings
 
 
 def _api_error(exc: payouts.PayoutError) -> ApiError:
@@ -106,7 +99,7 @@ async def get_payout(
     a = await db.get(Astrologer, p.astrologer_id)
     assert a is not None  # foreign key
     return {
-        **await payouts.detail(db, _settings(request), p),
+        **await payouts.detail(db, settings_of(request), p),
         "astrologer": _astrologer(a),
         "bank": BANK_PLACEHOLDER,
     }

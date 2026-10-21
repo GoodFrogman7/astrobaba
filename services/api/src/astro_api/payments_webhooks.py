@@ -1,4 +1,4 @@
-"""Razorpay webhooks: signature-verified, idempotent (Phase 4, wallet work).
+"""Razorpay webhooks: signature-verified, idempotent.
 
 1. Verify X-Razorpay-Signature = HMAC-SHA256(webhook secret, raw body), constant time. Bad or
    missing → 400, nothing stored.
@@ -18,21 +18,19 @@ import hashlib
 import json
 import logging
 import uuid
-from typing import Annotated, Any, Literal
+from typing import Any, Literal
 
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Request
 from pydantic import BaseModel
-from redis.asyncio import Redis
 from sqlalchemy import select, update
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from astro_api import billing_config, payments, wallet
-from astro_api.auth import current_user
+from astro_api.auth import CurrentUser
 from astro_api.config import Settings
-from astro_api.db import get_db
+from astro_api.db import Db, redis_of, settings_of
 from astro_api.errors import ApiError
-from astro_api.models import User
 from astro_api.models_ledger import PaymentEvent, RechargeOrder
 from astro_api.roles import AdminUser
 
@@ -132,7 +130,6 @@ async def _captured(db: AsyncSession, event_id: str, payment: dict[str, Any]) ->
         user_id=order.user_id,
         payment_id=payment_id,
         amount_paise=amount,
-        order_id=order.id,
         occurred_at=payments.epoch_to_dt(payment.get("created_at")) or now,
     )
     if order.bonus_paise > 0:
@@ -238,13 +235,11 @@ async def process_webhook(
 
 
 @router.post("/v1/payments/razorpay/webhook")
-async def razorpay_webhook(
-    request: Request, db: Annotated[AsyncSession, Depends(get_db)]
-) -> dict[str, str]:
+async def razorpay_webhook(request: Request, db: Db) -> dict[str, str]:
     raw = await request.body()
     status = await process_webhook(
         db,
-        request.app.state.settings,
+        settings_of(request),
         raw,
         request.headers.get("x-razorpay-signature"),
         request.headers.get("x-razorpay-event-id"),
@@ -260,20 +255,15 @@ class SimulateIn(BaseModel):
 
 
 def _fake_gateway(request: Request) -> payments.FakeGateway:
-    settings: Settings = request.app.state.settings
+    settings = settings_of(request)
     if settings.app_env not in ("development", "test") or settings.payments_provider != "fake":
         raise ApiError(404, "not_found", "Not found.")
-    redis: Redis = request.app.state.redis
-    return payments.FakeGateway(settings, redis)
+    return payments.FakeGateway(settings, redis_of(request))
 
 
 @router.post("/v1/dev/payments/{order_id}/simulate", tags=["dev"])
 async def simulate_payment(
-    order_id: uuid.UUID,
-    body: SimulateIn,
-    request: Request,
-    user: Annotated[User, Depends(current_user)],
-    db: Annotated[AsyncSession, Depends(get_db)],
+    order_id: uuid.UUID, body: SimulateIn, request: Request, user: CurrentUser, db: Db
 ) -> dict[str, Any]:
     """Fake provider only: pay (or fail) one of your orders, through the real webhook path."""
     gateway = _fake_gateway(request)
@@ -284,21 +274,19 @@ async def simulate_payment(
         raise ApiError(409, "order_already_paid", "This order is already paid.")
     signed = await gateway.simulate(order.provider_order_id, body.outcome)
     status = await process_webhook(
-        db, request.app.state.settings, signed.raw, signed.signature, signed.event_id
+        db, settings_of(request), signed.raw, signed.signature, signed.event_id
     )
     return {"status": status, "provider_payment_id": signed.payment_id}
 
 
 @router.post("/v1/dev/payments/settle", tags=["dev"])
-async def simulate_settlement(
-    request: Request, _: AdminUser, db: Annotated[AsyncSession, Depends(get_db)]
-) -> dict[str, Any]:
+async def simulate_settlement(request: Request, _: AdminUser, db: Db) -> dict[str, Any]:
     """Fake provider only: settle every captured, unsettled payment (for reconciliation)."""
     gateway = _fake_gateway(request)
     signed = await gateway.settle()
     if signed is None:
         return {"status": "nothing_to_settle"}
     status = await process_webhook(
-        db, request.app.state.settings, signed.raw, signed.signature, signed.event_id
+        db, settings_of(request), signed.raw, signed.signature, signed.event_id
     )
     return {"status": status}

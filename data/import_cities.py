@@ -38,18 +38,11 @@ COLUMNS = [
 ]
 
 
-DEVANAGARI = ("\u0900", "\u097f")
-
-
-def _is_deva(name: str) -> bool:
-    return any(DEVANAGARI[0] <= c <= DEVANAGARI[1] for c in name)
-
-
 def _alts(names: list[str], country: str) -> str:
     """Alternate names kept for search: Devanagari everywhere (Hindi users), Latin spellings only
     for South Asia, where transliterations vary most (Banaras/Benares/Varanasi)."""
     names = [n for n in names if n and len(n) <= 60 and "|" not in n and "\t" not in n]
-    deva = [n for n in names if _is_deva(n)][:4]
+    deva = [n for n in names if any("\u0900" <= c <= "\u097f" for c in n)][:4]
     latin = [n for n in names if n.isascii()][:8] if country in ("IN", "NP", "LK", "BD") else []
     return "|".join(deva + latin)
 

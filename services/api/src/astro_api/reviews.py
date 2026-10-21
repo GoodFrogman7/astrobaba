@@ -3,23 +3,21 @@ signed in can report. Text that fails automatic moderation is held for a moderat
 
 import datetime as dt
 import uuid
-from typing import Annotated, Any
+from typing import Any
 
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Request
 from pydantic import BaseModel, Field
-from redis.asyncio import Redis
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from astro_api import refunds
 from astro_api.audit import audit
-from astro_api.auth import current_user
-from astro_api.config import Settings
-from astro_api.db import get_db
+from astro_api.auth import CurrentUser
+from astro_api.db import Db, redis_of, settings_of
 from astro_api.errors import ApiError
 from astro_api.logs import redact
 from astro_api.marketplace import is_public
-from astro_api.models import Astrologer, ConsultSession, Review, User
+from astro_api.models import Astrologer, ConsultSession, Review
 from astro_api.moderation import moderation_reasons
 from astro_api.roles import actor
 from astro_api.taxonomy import taxonomy
@@ -59,10 +57,7 @@ def own_review_view(r: Review) -> dict[str, Any]:
 
 @router.post("/consult-sessions/{session_id}/review", status_code=201)
 async def create_review(
-    session_id: uuid.UUID,
-    body: ReviewIn,
-    user: Annotated[User, Depends(current_user)],
-    db: Annotated[AsyncSession, Depends(get_db)],
+    session_id: uuid.UUID, body: ReviewIn, user: CurrentUser, db: Db
 ) -> dict[str, Any]:
     text = body.text.strip()
     if len(text) > _max_chars():
@@ -102,7 +97,7 @@ async def create_review(
     return own_review_view(review)
 
 
-async def _review_for_update(db: AsyncSession, review_id: uuid.UUID) -> Review:
+async def review_for_update(db: AsyncSession, review_id: uuid.UUID) -> Review:
     r = (
         await db.execute(select(Review).where(Review.id == review_id).with_for_update())
     ).scalar_one_or_none()
@@ -113,14 +108,10 @@ async def _review_for_update(db: AsyncSession, review_id: uuid.UUID) -> Review:
 
 @router.post("/reviews/{review_id}/reply")
 async def reply(
-    review_id: uuid.UUID,
-    body: ReplyIn,
-    request: Request,
-    user: Annotated[User, Depends(current_user)],
-    db: Annotated[AsyncSession, Depends(get_db)],
+    review_id: uuid.UUID, body: ReplyIn, request: Request, user: CurrentUser, db: Db
 ) -> dict[str, Any]:
-    settings: Settings = request.app.state.settings
-    r = await _review_for_update(db, review_id)
+    settings = settings_of(request)
+    r = await review_for_update(db, review_id)
     a = await db.get(Astrologer, r.astrologer_id)
     if a is None or a.user_id != user.id or not is_public(a, settings):
         raise ApiError(404, "not_found", "Review not found.")
@@ -148,15 +139,11 @@ async def reply(
 
 @router.post("/reviews/{review_id}/report", status_code=202)
 async def report(
-    review_id: uuid.UUID,
-    body: ReportIn,
-    request: Request,
-    user: Annotated[User, Depends(current_user)],
-    db: Annotated[AsyncSession, Depends(get_db)],
+    review_id: uuid.UUID, body: ReportIn, request: Request, user: CurrentUser, db: Db
 ) -> dict[str, Any]:
-    settings: Settings = request.app.state.settings
-    redis: Redis = request.app.state.redis
-    r = await _review_for_update(db, review_id)
+    settings = settings_of(request)
+    redis = redis_of(request)
+    r = await review_for_update(db, review_id)
     a = await db.get(Astrologer, r.astrologer_id)
     visible = r.status == "published" or (r.status == "flagged" and r.auto_flag_reason is None)
     if a is None or not is_public(a, settings) or not visible:

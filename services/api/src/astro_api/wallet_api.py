@@ -1,4 +1,4 @@
-"""Wallet: balances, transactions, recharge orders (Phase 4, wallet work; docs/api/billing.md).
+"""Wallet: balances, transactions, recharge orders (docs/api/billing.md).
 
 Credit only ever comes from the signed webhook. The Checkout result is verified and recorded but
 never credits. Bonus is decided when the order is created (flag + tiers at that moment).
@@ -12,25 +12,21 @@ from fastapi import APIRouter, Depends, Query, Request
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
-from redis.asyncio import Redis
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from astro_api import billing_config, free_session, payments, wallet
-from astro_api.auth import client_ip, current_session
+from astro_api.auth import CurrentSession, client_ip
 from astro_api.config import Settings
-from astro_api.db import get_db
+from astro_api.db import Db, redis_of, settings_of
 from astro_api.errors import ApiError
 from astro_api.flags import flag_enabled
 from astro_api.idempotency import Idempotency, idempotency_key
-from astro_api.models import AuthSession, User
+from astro_api.models import User
 from astro_api.models_ledger import RechargeOrder
 
 router = APIRouter(prefix="/v1/wallet", tags=["wallet"])
-
-SessionUser = Annotated[tuple[AuthSession, User], Depends(current_session)]
-Db = Annotated[AsyncSession, Depends(get_db)]
 
 
 class RechargeIn(BaseModel):
@@ -40,16 +36,6 @@ class RechargeIn(BaseModel):
 class CheckoutResultIn(BaseModel):
     provider_payment_id: str = Field(min_length=4, max_length=64, pattern=r"^[A-Za-z0-9_]+$")
     provider_signature: str = Field(min_length=16, max_length=256)
-
-
-def _settings(request: Request) -> Settings:
-    settings: Settings = request.app.state.settings
-    return settings
-
-
-def _redis(request: Request) -> Redis:
-    redis: Redis = request.app.state.redis
-    return redis
 
 
 def order_view(o: RechargeOrder, settings: Settings) -> dict[str, Any]:
@@ -101,14 +87,14 @@ async def wallet_view(
 
 
 @router.get("")
-async def get_wallet(request: Request, su: SessionUser, db: Db) -> dict[str, Any]:
+async def get_wallet(request: Request, su: CurrentSession, db: Db) -> dict[str, Any]:
     auth_session, user = su
     free = await free_session.check(
         db,
-        _redis(request),
+        redis_of(request),
         user_id=user.id,
         device_id=auth_session.device_id or "",
-        client_ip=client_ip(request, _settings(request)),
+        client_ip=client_ip(request, settings_of(request)),
     )
     return await wallet_view(db, user.id, free)
 
@@ -123,7 +109,7 @@ def parse_cursor(cursor: str | None) -> int | None:
 
 @router.get("/transactions")
 async def transactions(
-    su: SessionUser,
+    su: CurrentSession,
     db: Db,
     cursor: str | None = None,
     limit: Annotated[int, Query(ge=1, le=50)] = 20,
@@ -133,9 +119,9 @@ async def transactions(
 
 
 @router.get("/recharge-options")
-async def recharge_options(request: Request, su: SessionUser) -> dict[str, Any]:
+async def recharge_options(request: Request, su: CurrentSession) -> dict[str, Any]:
     cfg = billing_config.recharge()
-    settings = _settings(request)
+    settings = settings_of(request)
     return {
         "currency": billing_config.currency(),
         "min_paise": int(cfg["min_paise"]),
@@ -153,13 +139,13 @@ async def recharge_options(request: Request, su: SessionUser) -> dict[str, Any]:
 async def create_recharge_order(
     body: RechargeIn,
     request: Request,
-    su: SessionUser,
+    su: CurrentSession,
     db: Db,
     key: Annotated[str, Depends(idempotency_key)],
 ) -> JSONResponse:
     user = su[1]
-    settings = _settings(request)
-    redis = _redis(request)
+    settings = settings_of(request)
+    redis = redis_of(request)
     idem = Idempotency(redis, scope=f"recharge:{user.id}", key=key, payload=body.model_dump())
     if (hit := await idem.begin()) is not None:
         return JSONResponse(hit.body, status_code=hit.status)
@@ -237,20 +223,20 @@ async def _own_order(db: AsyncSession, order_id: uuid.UUID, user: User) -> Recha
 
 @router.get("/recharge-orders/{order_id}")
 async def get_recharge_order(
-    order_id: uuid.UUID, request: Request, su: SessionUser, db: Db
+    order_id: uuid.UUID, request: Request, su: CurrentSession, db: Db
 ) -> dict[str, Any]:
-    return order_view(await _own_order(db, order_id, su[1]), _settings(request))
+    return order_view(await _own_order(db, order_id, su[1]), settings_of(request))
 
 
 @router.post("/recharge-orders/{order_id}/checkout-result")
 async def checkout_result(
-    order_id: uuid.UUID, body: CheckoutResultIn, request: Request, su: SessionUser, db: Db
+    order_id: uuid.UUID, body: CheckoutResultIn, request: Request, su: CurrentSession, db: Db
 ) -> dict[str, Any]:
     """Verify Razorpay Checkout's signature HMAC-SHA256(key_secret, order_id|payment_id) and
     record it. Never credits: only the webhook does."""
-    settings = _settings(request)
+    settings = settings_of(request)
     order = await _own_order(db, order_id, su[1])
-    gateway = payments.make_gateway(settings, _redis(request))
+    gateway = payments.make_gateway(settings, redis_of(request))
     if order.provider_order_id is None or not gateway.verify_checkout(
         order.provider_order_id, body.provider_payment_id, body.provider_signature
     ):

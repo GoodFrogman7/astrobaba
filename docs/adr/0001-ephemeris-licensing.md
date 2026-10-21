@@ -94,11 +94,11 @@ If the lawyer says no, switch to option A (buy the licence; no code change) or B
 - Ephemeris files: Swiss Ephemeris `sepl_18.se1` and `semo_18.se1` (1800–2399 CE) shipped in
   the astro image. The Moshier fallback is refused unless `ALLOW_MOSHIER` is set outside
   production, so precision never silently drops: a call that falls back raises an error.
-- Every response carries `engine`, `engine_version`, `ayanamsha`, `node_type` so results are
+- Every response carries `engine`, `engine_version`, `ayanamsha` and `node`, so results are
   reproducible.
 
 ## Consequences
 
-- Founder action: decide A/B/C; if A, buy before Phase 1 ships anything public.
-- House-system choice goes in its own ADR in Phase 1. Whole-sign is the default for Vedic charts
-  and works at any latitude; Placidus fails above the polar circles (fixture C11).
+- The founder decided (C, above); its conditions are tracked in COMPLIANCE.md.
+- House system: whole sign ([ADR-0004](0004-astro-conventions.md)). It works at any latitude;
+  Placidus fails above the polar circles (fixture C11).

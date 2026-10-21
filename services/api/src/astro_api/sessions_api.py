@@ -10,16 +10,15 @@ from typing import Annotated, Any, Literal
 from fastapi import APIRouter, Depends, Query, Request
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
-from redis.asyncio import Redis
-from sqlalchemy import case, select
+from sqlalchemy import Select, case, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from astro_api import free_session, wallet
+from astro_api import billing_config, free_session, wallet
 from astro_api import session_service as svc
 from astro_api.audit import audit
-from astro_api.auth import client_ip, current_session
-from astro_api.db import get_db
+from astro_api.auth import CurrentSession, client_ip
+from astro_api.db import Db, redis_of
 from astro_api.errors import ApiError
 from astro_api.flags import flag_enabled
 from astro_api.idempotency import Idempotency, body_hash, idempotency_key
@@ -31,7 +30,7 @@ from astro_api.models import (
     ConsultSession,
     User,
 )
-from astro_api.roles import actor, require_admin
+from astro_api.roles import AdminUser, actor
 from astro_api.ws_tickets import TICKET_TTL_S, issue
 
 router = APIRouter(prefix="/v1", tags=["sessions"])
@@ -48,15 +47,6 @@ class SessionIn(BaseModel):
 
 def _deps(request: Request) -> svc.Deps:
     return svc.Deps.of(request.app)
-
-
-def _redis(request: Request) -> Redis:
-    redis: Redis = request.app.state.redis
-    return redis
-
-
-SessionUser = Annotated[tuple[AuthSession, User], Depends(current_session)]
-Db = Annotated[AsyncSession, Depends(get_db)]
 
 
 async def _astrologer_of(db: AsyncSession, user: User) -> Astrologer | None:
@@ -124,14 +114,14 @@ async def _open_session(db: AsyncSession, user: User) -> ConsultSession | None:
 async def create_session(
     body: SessionIn,
     request: Request,
-    session_user: SessionUser,
+    session_user: CurrentSession,
     db: Db,
     key: Annotated[str, Depends(idempotency_key)],
 ) -> JSONResponse:
     auth_session, user = session_user
     deps = _deps(request)
     payload = body.model_dump(mode="json")
-    idem = Idempotency(_redis(request), scope=f"session:{user.id}", key=key, payload=payload)
+    idem = Idempotency(redis_of(request), scope=f"session:{user.id}", key=key, payload=payload)
     if (hit := await idem.begin()) is not None:
         return JSONResponse(hit.body, status_code=hit.status)
     try:
@@ -168,7 +158,7 @@ async def _create(
     ).scalar_one_or_none()
     if a is None or not is_public(a, deps.settings):
         raise ApiError(404, "not_found", "Astrologer not found.")
-    bps = svc.commission_bps(a.tier)
+    bps = billing_config.commission_bps(a.tier)
     price = a.price_per_min_paise
     priced = price is not None and price > 0 and a.tier is not None
     if body.kind == "call":
@@ -290,10 +280,24 @@ async def _create(
 # ---------------------------------------------------------------- reads
 
 
+async def _page(
+    db: AsyncSession,
+    query: Select[ConsultSession],
+    status: list[Status] | None,
+    offset: int,
+    limit: int,
+) -> list[ConsultSession]:
+    """Newest first, one row more than `limit` so the caller knows whether another page exists."""
+    if status:
+        query = query.where(ConsultSession.status.in_(status))
+    query = query.order_by(ConsultSession.created_at.desc(), ConsultSession.id.desc())
+    return list((await db.execute(query.offset(offset).limit(limit + 1))).scalars())
+
+
 @router.get("/sessions")
 async def list_sessions(
     request: Request,
-    session_user: SessionUser,
+    session_user: CurrentSession,
     db: Db,
     role: Literal["user", "astrologer"] = "user",
     status: Annotated[list[Status] | None, Query()] = None,
@@ -311,17 +315,7 @@ async def list_sessions(
         if mine is None:
             return {"items": [], "next_cursor": None}
         query = query.where(ConsultSession.astrologer_id == mine.id)
-    if status:
-        query = query.where(ConsultSession.status.in_(status))
-    rows = list(
-        (
-            await db.execute(
-                query.order_by(ConsultSession.created_at.desc(), ConsultSession.id.desc())
-                .offset(offset)
-                .limit(limit + 1)
-            )
-        ).scalars()
-    )
+    rows = await _page(db, query, status, offset, limit)
     items = [await svc.view(db, deps, s, role) for s in rows[:limit]]
     return {
         "items": items,
@@ -332,7 +326,7 @@ async def list_sessions(
 @router.get("/admin/sessions")
 async def admin_sessions(
     request: Request,
-    _: Annotated[User, Depends(require_admin)],
+    _: AdminUser,
     db: Db,
     status: Annotated[list[Status] | None, Query()] = None,
     cursor: str | None = None,
@@ -342,17 +336,7 @@ async def admin_sessions(
     deps = _deps(request)
     offset = decode_cursor(cursor)
     query = select(ConsultSession)
-    if status:
-        query = query.where(ConsultSession.status.in_(status))
-    rows = list(
-        (
-            await db.execute(
-                query.order_by(ConsultSession.created_at.desc(), ConsultSession.id.desc())
-                .offset(offset)
-                .limit(limit + 1)
-            )
-        ).scalars()
-    )
+    rows = await _page(db, query, status, offset, limit)
     items = []
     for s in rows[:limit]:
         v = await svc.view(db, deps, s, "astrologer")
@@ -368,14 +352,14 @@ async def admin_sessions(
 
 @router.get("/sessions/{session_id}")
 async def get_session(
-    session_id: uuid.UUID, request: Request, session_user: SessionUser, db: Db
+    session_id: uuid.UUID, request: Request, session_user: CurrentSession, db: Db
 ) -> dict[str, Any]:
     s, role = await participant(db, session_id, session_user[1])
     return await svc.view(db, _deps(request), s, role)
 
 
 @router.get("/astrologer/me/sessions/incoming")
-async def incoming(request: Request, session_user: SessionUser, db: Db) -> dict[str, Any]:
+async def incoming(request: Request, session_user: CurrentSession, db: Db) -> dict[str, Any]:
     mine = await _astrologer_of(db, session_user[1])
     if mine is None:
         raise ApiError(404, "not_applied", "You have not applied as an astrologer.")
@@ -403,7 +387,7 @@ async def incoming(request: Request, session_user: SessionUser, db: Db) -> dict[
 async def messages(
     session_id: uuid.UUID,
     request: Request,
-    session_user: SessionUser,
+    session_user: CurrentSession,
     db: Db,
     after_seq: Annotated[int, Query(ge=0)] = 0,
     limit: Annotated[int, Query(ge=1, le=200)] = 100,
@@ -414,11 +398,11 @@ async def messages(
 
 @router.post("/sessions/{session_id}/ws-ticket")
 async def ws_ticket(
-    session_id: uuid.UUID, request: Request, session_user: SessionUser, db: Db
+    session_id: uuid.UUID, request: Request, session_user: CurrentSession, db: Db
 ) -> dict[str, Any]:
     user = session_user[1]
     s, role = await participant(db, session_id, user)
-    ticket = await issue(_redis(request), user_id=user.id, session_id=s.id, role=role)
+    ticket = await issue(redis_of(request), user_id=user.id, session_id=s.id, role=role)
     return {"ticket": ticket, "expires_in": TICKET_TTL_S, "path": f"/v1/sessions/{s.id}/ws"}
 
 
@@ -436,7 +420,7 @@ async def _done(
 
 @router.post("/sessions/{session_id}/accept")
 async def accept(
-    session_id: uuid.UUID, request: Request, session_user: SessionUser, db: Db
+    session_id: uuid.UUID, request: Request, session_user: CurrentSession, db: Db
 ) -> dict[str, Any]:
     user = session_user[1]
     deps = _deps(request)
@@ -456,7 +440,7 @@ async def accept(
 
 @router.post("/sessions/{session_id}/decline")
 async def decline(
-    session_id: uuid.UUID, request: Request, session_user: SessionUser, db: Db
+    session_id: uuid.UUID, request: Request, session_user: CurrentSession, db: Db
 ) -> dict[str, Any]:
     user = session_user[1]
     deps = _deps(request)
@@ -472,7 +456,7 @@ async def decline(
 
 @router.post("/sessions/{session_id}/cancel")
 async def cancel(
-    session_id: uuid.UUID, request: Request, session_user: SessionUser, db: Db
+    session_id: uuid.UUID, request: Request, session_user: CurrentSession, db: Db
 ) -> dict[str, Any]:
     user = session_user[1]
     deps = _deps(request)
@@ -490,7 +474,7 @@ async def cancel(
 
 @router.post("/sessions/{session_id}/end")
 async def end(
-    session_id: uuid.UUID, request: Request, session_user: SessionUser, db: Db
+    session_id: uuid.UUID, request: Request, session_user: CurrentSession, db: Db
 ) -> dict[str, Any]:
     user = session_user[1]
     deps = _deps(request)

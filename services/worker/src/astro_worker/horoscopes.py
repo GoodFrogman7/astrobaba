@@ -16,10 +16,9 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from astro_api.audit import audit
 from astro_api.horoscope_rules import AREAS, WORDS_PROMPT, text_errors
-from astro_api.horoscopes import SIGNS, apply_approval
+from astro_api.horoscopes import apply_approval
 from astro_api.models import HoroscopeEntry
-from astro_api.shared_files import data_dir
-from astro_worker.llm import LlmProvider, LlmRequest, ProviderError
+from astro_worker.llm import LlmProvider, LlmRequest, ProviderError, table
 
 PROMPT_VERSION = "horoscope-v1"
 LANGUAGE = {"en": "English", "hi": "Hindi, in natural Devanagari script"}
@@ -47,11 +46,9 @@ class Report:
 
 
 def _names(locale: str) -> dict[str, dict[str, str]]:
-    grahas = json.loads((data_dir() / "grahas.json").read_text(encoding="utf-8"))["grahas"]
-    signs = json.loads((data_dir() / "signs.json").read_text(encoding="utf-8"))["signs"]
     return {
-        "planets": {g["id"]: g[locale] for g in grahas},
-        "signs": {s["id"]: s[locale] for s in signs},
+        "planets": {k: g[locale] for k, g in table("grahas").items()},
+        "signs": {k: s[locale] for k, s in table("signs").items()},
     }
 
 
@@ -101,17 +98,9 @@ async def _write(
 ) -> tuple[dict[str, str] | None, str, list[str]]:
     """Ask the provider, validate, retry once with the errors. Returns (sections, model, errors)."""
     user = build_prompt(facts, locale)
+    prompt, model = user, provider.name
     errors: list[str] = []
-    model = provider.name
-    for attempt in range(2):
-        prompt = (
-            user
-            if attempt == 0
-            else (
-                f"{user}\n\nYour previous answer was rejected for these reasons; "
-                "fix all of them:\n- " + "\n- ".join(errors)
-            )
-        )
+    for _ in range(2):
         try:
             result = await provider.generate(LlmRequest(SYSTEM, prompt, facts, locale))
         except ProviderError as exc:
@@ -122,6 +111,10 @@ async def _write(
             errors = text_errors(sections, facts)
         if not errors:
             return {a: str(sections[a]) for a in AREAS}, model, []
+        prompt = (
+            f"{user}\n\nYour previous answer was rejected for these reasons; "
+            "fix all of them:\n- " + "\n- ".join(errors)
+        )
     return None, model, errors
 
 
@@ -281,14 +274,3 @@ async def review_reject(
         audit(db, f"cli:{reviewer}", "horoscope.reject", "horoscope_entry", str(e.id))
         await db.commit()
         return []
-
-
-__all__ = [
-    "SIGNS",
-    "Report",
-    "generate",
-    "review_approve",
-    "review_list",
-    "review_reject",
-    "review_show",
-]

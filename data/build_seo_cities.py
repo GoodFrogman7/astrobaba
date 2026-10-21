@@ -102,7 +102,7 @@ def main() -> int:
                 "slug": slugify(name),
                 "geonameid": city.id,
                 "name_en": name,
-                "name_hi": name_hi or deva[0],
+                "name_hi": name_hi,
                 "geonames_hi": deva[0] if deva else None,
                 "lat": city.lat,
                 "lon": city.lon,

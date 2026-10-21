@@ -4,7 +4,7 @@ import { cookies } from "next/headers";
 import { SESSION_COOKIE } from "./cookies";
 import type { Me } from "./types";
 
-const API_URL = (process.env.API_URL ?? "http://localhost:8000").replace(/\/$/, "");
+export const API_URL = (process.env.API_URL ?? "http://localhost:8000").replace(/\/$/, "");
 
 export class ApiError extends Error {
   constructor(
@@ -52,18 +52,19 @@ async function parse<T>(res: Response): Promise<T> {
     let message = res.statusText;
     let errors: string[] = [];
     try {
-      const body = (await res.json()) as {
-        detail?: { code?: string; message?: string; errors?: string[] } | unknown;
-      };
-      const d = body.detail;
-      if (d && typeof d === "object" && !Array.isArray(d)) {
-        const det = d as { code?: string; message?: string; errors?: string[] };
-        code = det.code ?? code;
-        message = det.message ?? message;
-        errors = det.errors ?? [];
-      } else if (Array.isArray(d)) {
+      const d = (
+        (await res.json()) as {
+          detail?: { code?: string; message?: string; errors?: string[] } | { msg?: string }[];
+        }
+      ).detail;
+      if (Array.isArray(d)) {
+        // FastAPI request validation: a list of {msg, loc, ...}.
         code = "validation_error";
-        message = d.map((e: { msg?: string }) => e.msg ?? "").join("; ");
+        message = d.map((e) => e.msg ?? "").join("; ");
+      } else if (d && typeof d === "object") {
+        code = d.code ?? code;
+        message = d.message ?? message;
+        errors = d.errors ?? [];
       }
     } catch {
       /* not JSON */

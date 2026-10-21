@@ -7,9 +7,12 @@ import argparse
 import asyncio
 import datetime as dt
 import sys
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
 
 from redis.asyncio import Redis
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from astro_api import earnings, payments, payouts, reconciliation, wallet
 from astro_api.config import get_settings
@@ -20,64 +23,61 @@ from astro_api.phone import mask_phone, normalize_phone
 from astro_api.roles import ROLES
 
 
-async def set_role(phone: str, role: str, grant: bool) -> str:
+@asynccontextmanager
+async def _db() -> AsyncIterator[AsyncSession]:
     engine = make_engine(get_settings().database_url.get_secret_value())
     try:
         async with make_sessionmaker(engine)() as db:
-            user = (await db.execute(select(User).where(User.phone == phone))).scalar_one_or_none()
-            if user is None:
-                if not grant:
-                    return f"no user {mask_phone(phone)}; nothing to revoke"
-                user = User(phone=phone, device_ids=[], roles=[])
-                db.add(user)
-            roles = set(user.roles or [])
-            roles = roles | {role} if grant else roles - {role}
-            user.roles = sorted(roles)
-            await db.commit()
-            return f"{mask_phone(phone)}: roles = {user.roles}"
+            yield db
     finally:
         await engine.dispose()
+
+
+async def set_role(phone: str, role: str, grant: bool) -> str:
+    async with _db() as db:
+        user = (await db.execute(select(User).where(User.phone == phone))).scalar_one_or_none()
+        if user is None:
+            if not grant:
+                return f"no user {mask_phone(phone)}; nothing to revoke"
+            user = User(phone=phone, device_ids=[], roles=[])
+            db.add(user)
+        roles = set(user.roles or [])
+        roles = roles | {role} if grant else roles - {role}
+        user.roles = sorted(roles)
+        await db.commit()
+        return f"{mask_phone(phone)}: roles = {user.roles}"
 
 
 async def reconcile(day: dt.date) -> tuple[str, int]:
     settings = get_settings()
-    engine = make_engine(settings.database_url.get_secret_value())
     redis = Redis.from_url(settings.redis_url.get_secret_value())
     try:
-        async with make_sessionmaker(engine)() as db:
-            gateway = payments.make_gateway(settings, redis)
-            run = await reconciliation.run(db, gateway, day, trigger="cli")
+        async with _db() as db:
+            run = await reconciliation.run(
+                db, payments.make_gateway(settings, redis), day, trigger="cli"
+            )
             await db.commit()
             return run.status, run.drift_paise
     finally:
         await redis.aclose()
-        await engine.dispose()
 
 
 async def expire_promo() -> int:
-    engine = make_engine(get_settings().database_url.get_secret_value())
     total = 0
-    try:
-        async with make_sessionmaker(engine)() as db:
-            while True:
-                expired = await wallet.expire_due_lots(db, now=dt.datetime.now(dt.UTC), limit=200)
-                await db.commit()
-                if expired == 0:
-                    return total
-                total += expired
-    finally:
-        await engine.dispose()
+    async with _db() as db:
+        while True:
+            expired = await wallet.expire_due_lots(db, now=dt.datetime.now(dt.UTC), limit=200)
+            await db.commit()
+            if expired == 0:
+                return total
+            total += expired
 
 
 async def generate_payouts(period: str) -> payouts.GenerateResult:
-    engine = make_engine(get_settings().database_url.get_secret_value())
-    try:
-        async with make_sessionmaker(engine)() as db:
-            result = await payouts.generate(db, period, actor=payouts.SYSTEM_ACTOR)
-            await db.commit()
-            return result
-    finally:
-        await engine.dispose()
+    async with _db() as db:
+        result = await payouts.generate(db, period, actor=payouts.SYSTEM_ACTOR)
+        await db.commit()
+        return result
 
 
 def main(argv: list[str] | None = None) -> int:

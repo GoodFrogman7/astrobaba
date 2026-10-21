@@ -251,8 +251,7 @@ async def _completed_session(url: str, user_phone: str, astrologer_id: str, stat
 
 @pytest.fixture
 def consult(clean):  # type: ignore[no-untyped-def]
-    """consult(user_phone, astrologer_id, status="completed") -> session id (Phase 4 creates
-    sessions for real; here they are inserted directly)."""
+    """consult(user_phone, astrologer_id, status="completed") -> session id, inserted directly."""
 
     def _consult(phone: str, astrologer_id: str, status: str = "completed") -> str:
         return asyncio.run(

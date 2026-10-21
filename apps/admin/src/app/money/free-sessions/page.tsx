@@ -7,8 +7,8 @@ import { NotAuthorised } from "@/components/NotAuthorised";
 import { api } from "@/lib/api";
 import { adminPage } from "@/lib/guard";
 import { tryLoad } from "@/lib/load";
-import { asItems, formatIst } from "@/lib/money-admin";
-import type { FreeSessionClaim } from "@/lib/types";
+import { formatIst } from "@/lib/money-admin";
+import type { FreeSessionClaim, Page } from "@/lib/types";
 import { overrideFreeSession } from "../actions";
 
 export const dynamic = "force-dynamic";
@@ -33,7 +33,7 @@ export default async function FreeSessionsPage({
       const params = new URLSearchParams({ limit: "25" });
       if (flagged) params.set("flagged", "true");
       if (cursor) params.set("cursor", cursor);
-      return asItems<FreeSessionClaim>(await api.get(`/v1/admin/money/free-sessions?${params}`));
+      return api.get<Page<FreeSessionClaim>>(`/v1/admin/money/free-sessions?${params}`);
     }),
   );
   if (access.kind !== "admin" || !data) return <NotAuthorised />;
@@ -72,17 +72,12 @@ export default async function FreeSessionsPage({
       ) : (
         <ul className="mt-6 space-y-4">
           {data.value.items.map((c) => {
-            const reasons = c.reasons?.length ? c.reasons.join(", ") : c.reason;
+            const reasons = c.reasons.join(", ");
             return (
               <li key={c.user_id} className="rounded-md border border-border bg-surface p-4">
                 <div className="flex flex-wrap items-baseline justify-between gap-2 text-sm">
                   <span>
                     User <span className="font-mono">{c.user_id}</span>
-                    {c.flagged && (
-                      <span className="ml-2 rounded-sm bg-danger px-1.5 py-0.5 text-xs text-primary-fg">
-                        Flagged
-                      </span>
-                    )}
                   </span>
                   <span className="text-muted">
                     Claimed {formatIst(c.claimed_at)}
@@ -97,13 +92,10 @@ export default async function FreeSessionsPage({
                 <p className="mt-2 text-sm">
                   Abuse score <strong className="tabular-nums">{c.abuse_score}</strong>
                   {reasons ? <> · {reasons}</> : null}
-                  {c.status ? <> · status: {c.status}</> : null}
                 </p>
                 {c.override && (
                   <p className="mt-1 text-sm text-muted">
-                    Override: {c.override.action}
-                    {c.override.actor ? ` by ${c.override.actor}` : ""} on{" "}
-                    {formatIst(c.override.at)}
+                    Override: {c.override.action} on {formatIst(c.override.at)}
                     {c.override.note ? ` (${c.override.note})` : ""}
                   </p>
                 )}

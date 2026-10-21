@@ -17,18 +17,18 @@ from typing import Any
 import jwt
 import pytest
 from livekit import api
-from starlette.testclient import WebSocketTestSession
-from starlette.websockets import WebSocketDisconnect
 
 from astro_api import chat_bus
 from astro_api.livekit_client import FakeCalls, room_name
 from astro_api.models import Astrologer
 from services.api.tests.money_fakes import (  # noqa: F401 - fixtures
-    ORIGIN,
     World,
+    closed_with,
+    connect,
     deps_for,
     fake_money_fixture,
     money_fixture,
+    until,
     world_fixture,
 )
 
@@ -103,28 +103,6 @@ def post_webhook(w: World, event: dict[str, Any], **sign: str) -> Any:
         content=body,
         headers={"Authorization": token, "Content-Type": "application/webhook+json"},
     )
-
-
-def connect(w: World, sid: str, headers: dict[str, str]) -> Any:
-    ticket = w.ticket(sid, headers)
-    return w.client.websocket_connect(
-        f"/v1/sessions/{sid}/ws?ticket={ticket}", headers={"origin": ORIGIN}
-    )
-
-
-def until(ws: WebSocketTestSession, kind: str) -> dict[str, Any]:
-    for _ in range(20):
-        frame: dict[str, Any] = ws.receive_json()
-        if frame["type"] == kind:
-            return frame
-    raise AssertionError(f"no {kind} frame")
-
-
-def closed_with(ws: WebSocketTestSession) -> int:
-    with pytest.raises(WebSocketDisconnect) as e:
-        for _ in range(20):
-            ws.receive_json()
-    return int(e.value.code)
 
 
 def code(r: Any) -> str:

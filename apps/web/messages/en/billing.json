@@ -1,7 +1,6 @@
 {
   "billing": {
     "nav": {
-      "wallet": "Wallet",
       "balance": "Wallet balance: {amount}"
     },
     "wallet": {

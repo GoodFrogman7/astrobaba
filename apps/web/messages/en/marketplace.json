@@ -12,7 +12,6 @@
       "new": "New",
       "reviews": "{count, plural, one {# review} other {# reviews}}",
       "demo": "Demo profile",
-      "view": "View profile",
       "languages": "Languages",
       "skills": "Skills"
     },
@@ -82,8 +81,6 @@
     },
     "consult": {
       "title": "Consult {name}",
-      "chat": "Chat",
-      "call": "Call",
       "perMin": "per minute",
       "billing": "You pay per minute from your wallet. You can end anytime."
     },
@@ -110,7 +107,6 @@
       }
     },
     "apply": {
-      "start": "Start your application",
       "signInFirst": "Sign in to apply. Your phone number becomes your astrologer login.",
       "already": "You have already applied.",
       "seeStatus": "See your application status",
@@ -178,7 +174,6 @@
         "qualification": "Qualification proof",
         "other": "Other"
       },
-      "upload": "Upload a document",
       "kindLabel": "Document type",
       "file": "File (PDF, JPEG or PNG, up to 5 MB)",
       "uploadButton": "Upload",

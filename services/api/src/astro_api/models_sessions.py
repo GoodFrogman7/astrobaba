@@ -1,4 +1,4 @@
-"""Chat message table (migration 0005). Owned by the sessions work.
+"""Chat message table (migration 0005).
 
 Message text is never stored in clear: `ciphertext` is AES-256-GCM over the UTF-8 text with
 AAD `{session_id}:{seq}` (chat_crypto.py). `key_id` names the key so keys can rotate.
@@ -6,6 +6,7 @@ AAD `{session_id}:{seq}` (chat_crypto.py). `key_id` names the key so keys can ro
 
 import datetime as dt
 import uuid
+from uuid import uuid4
 
 from sqlalchemy import (
     CheckConstraint,
@@ -22,12 +23,6 @@ from sqlalchemy.orm import Mapped, mapped_column
 
 from astro_api.db import Base
 
-MESSAGE_SENDERS = ("user", "astrologer", "system")
-
-
-def _uuid() -> uuid.UUID:
-    return uuid.uuid4()
-
 
 class ChatMessage(Base):
     __tablename__ = "chat_messages"
@@ -39,7 +34,7 @@ class ChatMessage(Base):
         CheckConstraint("seq > 0", name="chat_seq_pos"),
     )
 
-    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=_uuid)
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid4)
     session_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("consult_sessions.id", ondelete="CASCADE")
     )

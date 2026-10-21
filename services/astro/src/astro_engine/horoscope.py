@@ -12,6 +12,7 @@ from zoneinfo import ZoneInfo
 from astro_engine.ephemeris import GRAHA_ORDER, Ayanamsha, EphemerisBackend
 from astro_engine.tables import get_table, get_tables
 from astro_engine.timeutil import iso_z, jd_from_utc, utc_from_jd
+from astro_engine.transits import sign_at, sign_changes
 from astro_engine.zodiac import placement
 
 Period = Literal["daily", "weekly", "monthly"]
@@ -37,33 +38,16 @@ def window(period: Period, day: date) -> tuple[date, date]:
     return first, nxt - timedelta(days=1)
 
 
-def _sign_index(backend: EphemerisBackend, jd: float, graha: str, ayanamsha: Ayanamsha) -> int:
-    return math.floor(backend.body(jd, graha, ayanamsha, "mean").sidereal / 30.0) % 12
-
-
 def ingresses(
     backend: EphemerisBackend, graha: str, jd0: float, jd1: float, ayanamsha: Ayanamsha
 ) -> list[dict[str, Any]]:
     """Sign changes of a graha in (jd0, jd1], refined by bisection to about a minute."""
     step = _SCAN_STEP.get(graha, _DEFAULT_STEP)
     signs = get_tables().signs
-    out = []
-    jd, sign = jd0, _sign_index(backend, jd0, graha, ayanamsha)
-    while jd < jd1:
-        nxt = min(jd + step, jd1)
-        nsign = _sign_index(backend, nxt, graha, ayanamsha)
-        if nsign != sign:
-            lo, hi = jd, nxt
-            while hi - lo > 5e-4:
-                mid = (lo + hi) / 2
-                if _sign_index(backend, mid, graha, ayanamsha) == sign:
-                    lo = mid
-                else:
-                    hi = mid
-            out.append({"at": iso_z(utc_from_jd(hi)), "to_sign": signs[nsign]["id"]})
-            sign = nsign
-        jd = nxt
-    return out
+    return [
+        {"at": iso_z(utc_from_jd(at)), "to_sign": signs[sign]["id"]}
+        for at, sign in sign_changes(backend, graha, jd0, jd1, ayanamsha, step, 5e-4)
+    ]
 
 
 def _score(r: float, thresholds: list[float]) -> int:
@@ -109,7 +93,7 @@ def compute_horoscope_facts(
     jd_moon = jd_from_utc(datetime.combine(day, time(12, 0), tzinfo=IST).astimezone(UTC))
 
     def house(graha: str, jd: float) -> int:
-        return (_sign_index(backend, jd, graha, ayanamsha) - sign_index) % 12 + 1
+        return (sign_at(backend, jd, graha, ayanamsha) - sign_index) % 12 + 1
 
     # Positions in `transits` are taken at the same instants the scores use (window midpoint;
     # 12:00 IST for the daily Moon), so the table and the score reasons always agree.

@@ -76,7 +76,7 @@ function Status({ me, reload }: { me: ApplicantMe; reload: () => Promise<void> }
     const res = await fetch(`/api/astrologer/documents/${encodeURIComponent(id)}`, {
       method: "DELETE",
     }).catch(() => null);
-    if (res && (res.ok || res.status === 204)) await reload();
+    if (res?.ok) await reload();
     else setMsg(t("errors.generic"));
   }
 

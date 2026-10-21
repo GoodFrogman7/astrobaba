@@ -8,8 +8,6 @@ import type { AdminPayout } from "./types";
  * integer paise and only becomes ₹ text for display.
  */
 
-export { PAYOUT_STATUSES };
-
 const PERIOD = /^(\d{4})-(0[1-9]|1[0-2])$/;
 
 /** The IST month of an instant, "YYYY-MM". */
@@ -92,13 +90,8 @@ const ERRORS: Record<string, string> = {
     "Not marked paid: the net amount is more than the astrologer's payable balance in the ledger (for example, a refund was posted after the statement was made). Nothing was posted. Check the balance, then void the statement if it is wrong.",
   invalid_transition:
     "This statement is no longer in a state that allows that (someone may have just changed it). Reload the page.",
-  invalid_status:
-    "This statement is no longer in a state that allows that (someone may have just changed it). Reload the page.",
   not_found: "This statement no longer exists. Reload the list.",
-  already_paid: "This statement is already marked paid.",
   invalid_period: "That month can't be used for statements.",
-  period_not_closed: "That month has not ended yet (IST).",
-  idempotency_conflict: "A different request with the same key was already processed. Reload.",
 };
 
 /** Plain-language message for a payout API error; falls back to the API's own message. */
@@ -156,7 +149,7 @@ export function sumPayouts(rows: readonly AdminPayout[]): PayoutTotals {
     t.commission_paise += r.commission_paise;
     t.refunds_paise += r.refunds_paise;
     t.net_paise += r.net_paise;
-    t.carried_forward_paise += r.carried_forward_paise ?? 0;
+    t.carried_forward_paise += r.carried_forward_paise;
     if (r.status !== "void") t.payable_net_paise += r.net_paise;
   }
   return t;
@@ -172,14 +165,9 @@ export function formatPeriod(period: string): string {
   }).format(new Date(`${period}-01T00:00:00Z`));
 }
 
-export function astrologerName(p: AdminPayout): string {
-  return p.astrologer?.display_name ?? p.astrologer_id ?? p.astrologer?.id ?? "Unknown astrologer";
-}
-
 /** The ledger posting that "Mark paid" creates (portal.md §3), spelled out for the confirm step. */
 export function markPaidConsequence(p: AdminPayout): string {
-  const acct = p.astrologer?.id ?? p.astrologer_id ?? "{astrologer}";
-  return `This posts ledger transaction payout:${p.id} for ${formatRupees(p.net_paise)}: debit astrologer:${acct}:payable, credit bank:payouts. It is recorded in the audit log under your account and cannot be undone from here.`;
+  return `This posts ledger transaction payout:${p.id} for ${formatRupees(p.net_paise)}: debit astrologer:${p.astrologer.id}:payable, credit bank:payouts. It is recorded in the audit log under your account and cannot be undone from here.`;
 }
 
 export const TAX_NOTE =

@@ -25,7 +25,7 @@ describe("tool registry", () => {
   });
 
   it("every tool and page has content in both locales", () => {
-    for (const key of [...TOOLS.map((t) => t.contentKey), "kundli", "kundli-matching", "tools"]) {
+    for (const key of [...TOOLS.map((t) => t.slug), "kundli", "kundli-matching", "tools"]) {
       expect(exists("en", key), `en/${key}`).toBe(true);
       expect(exists("hi", key), `hi/${key}`).toBe(true);
     }

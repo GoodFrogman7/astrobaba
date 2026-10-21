@@ -47,11 +47,6 @@ const ACTION_ERRORS: Record<string, string> = {
   api_unavailable: "The service is unreachable. Try again in a moment.",
 };
 
-/** "chat" or "call" in plain words, for labels and announcements. */
-function kindWord(s: Pick<SessionView, "kind">): "chat" | "call" {
-  return s.kind === "call" ? "call" : "chat";
-}
-
 export function Console({ slots = [] }: { slots?: AvailabilitySlot[] }) {
   const router = useRouter();
   const [presence, setPresence] = useState<Presence>("offline");
@@ -141,7 +136,7 @@ export function Console({ slots = [] }: { slots?: AvailabilitySlot[] }) {
         const s = body.items.find((x) => x.id === fresh[0]);
         setAnnouncement(
           fresh.length === 1 && s
-            ? `New ${kindWord(s)} request from ${s.client_label} (${s.is_free ? "free" : formatRate(s.price_per_min_paise)}).`
+            ? `New ${s.kind} request from ${s.client_label} (${s.is_free ? "free" : formatRate(s.price_per_min_paise)}).`
             : `${fresh.length} new requests.`,
         );
       }

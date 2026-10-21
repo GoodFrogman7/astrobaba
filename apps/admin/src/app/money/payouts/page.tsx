@@ -1,3 +1,4 @@
+import { PAYOUT_STATUSES } from "@astro/shared";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ActionForm } from "@/components/ActionForm";
@@ -8,11 +9,9 @@ import { PayoutStatus } from "@/components/PayoutStatus";
 import { api } from "@/lib/api";
 import { adminPage } from "@/lib/guard";
 import { tryLoad } from "@/lib/load";
-import { asItems, formatIst } from "@/lib/money-admin";
+import { formatIst } from "@/lib/money-admin";
 import {
-  astrologerName,
   formatPeriod,
-  PAYOUT_STATUSES,
   periodFilter,
   previousIstMonth,
   STATUS_LABEL,
@@ -38,7 +37,7 @@ export default async function PayoutsPage({
     tryLoad(async () => {
       const q = new URLSearchParams({ period });
       if (status) q.set("status", status);
-      return asItems<AdminPayout>(await api.get(`/v1/admin/payouts?${q}`));
+      return api.get<{ items: AdminPayout[] }>(`/v1/admin/payouts?${q}`);
     }),
   );
   if (access.kind !== "admin" || !data) return <NotAuthorised />;
@@ -174,7 +173,7 @@ export default async function PayoutsPage({
                 <tr key={p.id} className="border-b border-border align-top">
                   <th scope="row" className="py-2 pr-4 font-normal">
                     <Link href={`/money/payouts/${encodeURIComponent(p.id)}`} className="underline">
-                      {astrologerName(p)}
+                      {p.astrologer.display_name}
                     </Link>
                   </th>
                   <td className="py-2 pr-4">

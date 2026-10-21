@@ -104,8 +104,6 @@ export function Waiting({
   const t = useTranslations("billing.chat");
   const tc = useTranslations("billing.call");
   const isCall = s.kind === "call";
-  const [busy, setBusy] = useState(false);
-  const [failed, setFailed] = useState(false);
   const name = s.astrologer.display_name;
   return (
     <section
@@ -128,6 +126,23 @@ export function Waiting({
         <p className="text-sm text-muted">{(isCall ? tc : t)("notCharged")}</p>
       </div>
       {conn === "forbidden" && <p role="alert">{t("conn.forbidden")}</p>}
+      <CancelButton label={t("cancel")} onCancel={onCancel} />
+    </section>
+  );
+}
+
+export function CancelButton({
+  label,
+  onCancel,
+}: {
+  label: string;
+  onCancel: () => Promise<boolean>;
+}) {
+  const t = useTranslations("billing.chat");
+  const [busy, setBusy] = useState(false);
+  const [failed, setFailed] = useState(false);
+  return (
+    <>
       <button
         type="button"
         disabled={busy}
@@ -138,10 +153,71 @@ export function Waiting({
         }}
         className="rounded-sm border border-border px-4 py-2 text-sm"
       >
-        {t("cancel")}
+        {label}
       </button>
       {failed && <p role="alert">{t("cancelError")}</p>}
-    </section>
+    </>
+  );
+}
+
+/** Paid sessions: minutes the balance still covers, and whether to warn about it. */
+export function balanceWarning(s: SessionView, state: ChatState) {
+  const minutesLeft = s.minutes_left ?? state.lowBalanceMinutes;
+  const low =
+    !s.is_free &&
+    (state.lowBalanceMinutes !== null ||
+      (minutesLeft !== null && minutesLeft <= BILLING.lowBalanceWarningMinutes));
+  return { minutesLeft, low };
+}
+
+export function LowBalance({ text }: { text: string }) {
+  const t = useTranslations("billing.chat");
+  return (
+    <div role="status" className="rounded-sm border border-border bg-surface px-3 py-2 text-sm">
+      {text}{" "}
+      <Link
+        href="/wallet"
+        target="_blank"
+        rel="noopener"
+        className="font-medium text-accent underline"
+      >
+        {t("rechargeNewTab")}
+      </Link>
+    </div>
+  );
+}
+
+/** Confirm before ending; on failure the dialog stays open and says so. */
+export function EndDialog({
+  ns,
+  open,
+  onClose,
+  onEnd,
+}: {
+  ns: "billing.chat" | "billing.call";
+  open: boolean;
+  onClose: () => void;
+  onEnd: () => Promise<boolean>;
+}) {
+  const t = useTranslations(ns);
+  const [failed, setFailed] = useState(false);
+  return (
+    <Dialog open={open} onClose={onClose} title={t("endTitle")} closeLabel={t("keep")}>
+      <p>{t("endBody")}</p>
+      {failed && <p role="alert">{t("endError")}</p>}
+      <button
+        type="button"
+        onClick={async () => {
+          const ok = await onEnd();
+          setFailed(!ok);
+          if (ok) onClose();
+        }}
+        className="mr-2 rounded-sm px-4 py-2 text-sm font-medium text-primary-fg"
+        style={{ background: "var(--color-danger)" }}
+      >
+        {t("endConfirm")}
+      </button>
+    </Dialog>
   );
 }
 
@@ -157,7 +233,6 @@ function ActiveChat({
   const now = useNow(1000);
   const { state } = chat;
   const [confirm, setConfirm] = useState(false);
-  const [endFailed, setEndFailed] = useState(false);
   const input = useRef<HTMLTextAreaElement>(null);
   const box = useRef<HTMLDivElement>(null);
   const name = s.astrologer.display_name;
@@ -171,11 +246,7 @@ function ActiveChat({
     if (box.current) box.current.scrollTop = box.current.scrollHeight;
   }, [count]);
 
-  const minutesLeft = s.minutes_left ?? state.lowBalanceMinutes;
-  const low =
-    !s.is_free &&
-    (state.lowBalanceMinutes !== null ||
-      (minutesLeft !== null && minutesLeft <= BILLING.lowBalanceWarningMinutes));
+  const { minutesLeft, low } = balanceWarning(s, state);
   const errorKey = state.lastError
     ? t.has(`errors.${state.lastError}`)
       ? `errors.${state.lastError}`
@@ -217,19 +288,7 @@ function ActiveChat({
 
       <ConnBanner conn={chat.conn} onUseHere={chat.reconnect} />
 
-      {low && (
-        <div role="status" className="rounded-sm border border-border bg-surface px-3 py-2 text-sm">
-          {t("lowBalance", { minutes: minutesLeft ?? 0 })}{" "}
-          <Link
-            href="/wallet"
-            target="_blank"
-            rel="noopener"
-            className="font-medium text-accent underline"
-          >
-            {t("rechargeNewTab")}
-          </Link>
-        </div>
-      )}
+      {low && <LowBalance text={t("lowBalance", { minutes: minutesLeft ?? 0 })} />}
 
       <div
         ref={box}
@@ -263,27 +322,12 @@ function ActiveChat({
         onTyping={chat.typing}
       />
 
-      <Dialog
+      <EndDialog
+        ns="billing.chat"
         open={confirm}
         onClose={() => setConfirm(false)}
-        title={t("endTitle")}
-        closeLabel={t("keep")}
-      >
-        <p>{t("endBody")}</p>
-        {endFailed && <p role="alert">{t("endError")}</p>}
-        <button
-          type="button"
-          onClick={async () => {
-            const ok = await chat.act("end");
-            setEndFailed(!ok);
-            if (ok) setConfirm(false);
-          }}
-          className="mr-2 rounded-sm px-4 py-2 text-sm font-medium text-primary-fg"
-          style={{ background: "var(--color-danger)" }}
-        >
-          {t("endConfirm")}
-        </button>
-      </Dialog>
+        onEnd={() => chat.act("end")}
+      />
     </section>
   );
 }

@@ -39,11 +39,6 @@ RATE_LIMIT = 5
 RATE_WINDOW_S = 5
 
 
-class Closed(Exception):
-    def __init__(self, code: int) -> None:
-        self.code = code
-
-
 async def _role_of(deps: svc.Deps, ticket: ws_tickets.Ticket) -> ConsultSession | None:
     """The session if the ticket's user still holds the ticket's role in it."""
     async with deps.sessionmaker() as db:

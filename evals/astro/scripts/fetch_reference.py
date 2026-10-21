@@ -15,11 +15,11 @@ reachable (GitHub Actions: .github/workflows/reference-data.yml):
 
 import json
 import sys
-import time
 import urllib.parse
 import urllib.request
-from datetime import UTC, date, datetime, timedelta
+from datetime import UTC, date, datetime, time, timedelta
 from pathlib import Path
+from time import sleep
 from typing import Any
 from zoneinfo import ZoneInfo
 
@@ -51,7 +51,7 @@ def _get(url: str, params: dict[str, str], retries: int = 4) -> Any:
         except (OSError, json.JSONDecodeError) as exc:
             if attempt == retries - 1:
                 raise RuntimeError(f"{url} failed: {exc}") from exc
-            time.sleep(2 ** (attempt + 1))
+            sleep(2 ** (attempt + 1))
     raise AssertionError("unreachable")
 
 
@@ -93,7 +93,7 @@ def horizons(body: str, extra: dict[str, str]) -> list[dict[str, Any]]:
         rows.append(
             {"jd_ut": float(parts[i_jd]), "lon": float(parts[i_lon]), "lat": float(parts[i_lat])}
         )
-    time.sleep(1)  # be polite to JPL
+    sleep(1)  # be polite to JPL
     return rows
 
 
@@ -106,7 +106,7 @@ def fetch_charts() -> dict[str, Any]:
         "charts"
     ]
     timed = [c for c in charts if c.get("utc")]
-    jds = {c["id"]: jd(datetime.fromisoformat(c["utc"].replace("Z", "+00:00"))) for c in timed}
+    jds = {c["id"]: jd(datetime.fromisoformat(c["utc"])) for c in timed}
     tlist = " ".join(f"{v:.9f}" for v in jds.values())
     out: dict[str, Any] = {c: {} for c in jds}
     for body in BODIES:
@@ -131,10 +131,8 @@ def fetch_almanac() -> dict[str, Any]:
         place = places[row["place"]]
         day = date.fromisoformat(row["date"])
         zi = ZoneInfo(place["tz"])
-        midnight = datetime.combine(day, datetime.min.time(), tzinfo=zi).astimezone(UTC)
-        noon_offset = datetime.combine(
-            day, datetime.min.time().replace(hour=12), tzinfo=zi
-        ).utcoffset()
+        midnight = datetime.combine(day, time(), tzinfo=zi).astimezone(UTC)
+        noon_offset = datetime.combine(day, time(12), tzinfo=zi).utcoffset()
         assert noon_offset is not None
         tz_hours = noon_offset.total_seconds() / 3600
 
@@ -164,7 +162,7 @@ def fetch_almanac() -> dict[str, Any]:
             },
             "horizons": {b: horizons(b, window) for b in ("sun", "moon")},
         }
-        time.sleep(1)
+        sleep(1)
     return out
 
 

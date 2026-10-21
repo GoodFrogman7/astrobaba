@@ -1,4 +1,4 @@
-"""Astrologer portal tables (migration 0006). Owned by the portal work.
+"""Astrologer portal tables (migration 0006).
 
 `astrologer_availability`: the weekly schedule (informational; presence comes from the online
 toggle). Times are IST minutes since midnight in 15-minute steps; `end_minute` may be 1440
@@ -13,6 +13,7 @@ not stored here (manual transfers in v1); the bank UTR goes in `reference` once 
 import datetime as dt
 import uuid
 from typing import Any
+from uuid import uuid4
 
 from sqlalchemy import (
     BigInteger,
@@ -39,10 +40,6 @@ IST_ZONE = "Asia/Kolkata"
 PAYOUT_STATUSES = ("draft", "approved", "paid", "void")
 SLOT_STEP_MINUTES = 15
 MAX_SLOTS = 21
-
-
-def _uuid() -> uuid.UUID:
-    return uuid.uuid4()
 
 
 class AstrologerAvailability(Base):
@@ -102,7 +99,7 @@ class Payout(Base):
         Index("ix_payouts_period_status", "period", "status"),
     )
 
-    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=_uuid)
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid4)
     astrologer_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("astrologers.id"), index=True)
     period: Mapped[str] = mapped_column(Text)  # "YYYY-MM", IST month
     status: Mapped[str] = mapped_column(Text)

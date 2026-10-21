@@ -1,5 +1,5 @@
 import { useLocale, useTranslations } from "next-intl";
-import { monthYear, rupeesPerMin } from "@/lib/marketplace/format";
+import { formatPaise, monthYear } from "@/lib/marketplace/format";
 import { languageName, skillName, tierName } from "@/lib/marketplace/taxonomy";
 import type { AstrologerProfile } from "@/lib/marketplace/types";
 import { AvailabilityList } from "./AvailabilityList";
@@ -56,7 +56,7 @@ export function ProfileHeader({ p }: { p: AstrologerProfile }) {
         <div>
           <dt className="text-muted">{t("price")}</dt>
           <dd>
-            {tc("perMin", { price: rupeesPerMin(p.price_per_min_paise, locale) })} · {t("tier")}:{" "}
+            {tc("perMin", { price: formatPaise(p.price_per_min_paise, locale) })} · {t("tier")}:{" "}
             {tierName(p.tier, locale)}
           </dd>
         </div>

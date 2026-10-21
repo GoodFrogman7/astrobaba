@@ -1,5 +1,5 @@
 import { AVAILABILITY_LIMITS } from "@astro/shared";
-import { forward, json, NO_STORE_HEADERS, OPAQUE_ID, type ForwardDeps } from "./forward";
+import { errorBody, forward, json, NO_STORE, OPAQUE_ID, type ForwardDeps } from "./forward";
 import { REPLY_MAX_CHARS } from "./reviews";
 
 /**
@@ -89,17 +89,13 @@ export async function statementCsvRoute(id: string, deps: ForwardDeps): Promise<
   }
   if (!upstream.ok) {
     const text = await upstream.text().catch(() => "");
-    let detail: unknown = null;
+    let parsed: unknown = null;
     try {
-      detail = (JSON.parse(text) as { detail?: unknown }).detail;
+      parsed = JSON.parse(text);
     } catch {
       /* not JSON */
     }
-    const body =
-      detail && typeof detail === "object" && !Array.isArray(detail)
-        ? detail
-        : { code: "api_error" };
-    return json(body, upstream.status);
+    return json(errorBody(parsed), upstream.status);
   }
   const type = upstream.headers.get("content-type") ?? "";
   if (!/^text\/csv\b/i.test(type) || !upstream.body) {
@@ -111,7 +107,7 @@ export async function statementCsvRoute(id: string, deps: ForwardDeps): Promise<
     headers: {
       "content-type": type,
       "content-disposition": safeDisposition(upstream.headers.get("content-disposition"), id),
-      ...NO_STORE_HEADERS,
+      ...NO_STORE,
     },
   });
 }

@@ -3,18 +3,14 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
-from astro_api.shared_files import data_dir
 from astro_worker.horoscopes import _write, build_prompt
-from astro_worker.llm import LlmRequest, LlmResult
+from astro_worker.llm import LlmRequest, LlmResult, table
 
 FACTS: dict[str, Any] = json.loads(
     (Path(__file__).resolve().parents[2] / "api/tests/fixtures/facts_aries_daily.json").read_text()
 )
-# --- Sample text built from the fixture's facts, so tests survive regenerating the fixture. ---
-_TABLES = data_dir()
-GRAHAS = {g["id"]: g for g in json.loads((_TABLES / "grahas.json").read_text())["grahas"]}
-SIGNS = {s["id"]: s for s in json.loads((_TABLES / "signs.json").read_text())["signs"]}
-AREAS = ("overall", "love", "career", "money", "health")
+# Sample text is built from the fixture's facts, so tests survive regenerating the fixture.
+GRAHAS, SIGNS = table("grahas"), table("signs")
 FILLER = (
     "Take the day one step at a time, listen closely, and keep plans flexible while you sort out "
     "what matters most to you. A calm pace suits you, and small, steady choices add up over the "
@@ -33,10 +29,6 @@ def true_claim(facts: dict[str, Any]) -> str:
     return f"With {g} in {s}, in your {ordinal(t['house_from_sign'])} house, effort is noticed."
 
 
-def valid_text(facts: dict[str, Any]) -> str:
-    return f"{true_claim(facts)} {FILLER}"
-
-
 def false_pair(facts: dict[str, Any]) -> tuple[str, str]:
     """A (graha, sign) placement the facts do NOT contain (and not the subject sign)."""
     for t in facts["transits"]:
@@ -47,13 +39,7 @@ def false_pair(facts: dict[str, Any]) -> tuple[str, str]:
     raise AssertionError("facts place every planet everywhere")
 
 
-def false_house(facts: dict[str, Any]) -> tuple[str, int]:
-    t = facts["transits"][0]
-    houses = {x["house_from_sign"] for x in facts["transits"] if x["graha"] == t["graha"]}
-    return t["graha"], next(h for h in range(1, 13) if h not in houses)
-
-
-GOOD = valid_text(FACTS)
+GOOD = f"{true_claim(FACTS)} {FILLER}"
 _g, _s = false_pair(FACTS)
 BAD = f"{GRAHAS[_g]['en']} in {SIGNS[_s]['en']} guarantees a lucky break. {FILLER}"
 

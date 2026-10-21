@@ -1,4 +1,4 @@
-/** Wallet shapes from docs/api/billing.md (Phase 4 contract). Money is integer paise. */
+/** Wallet shapes from docs/api/billing.md. Money is integer paise. */
 export interface PromoLot {
   id: string;
   remaining_paise: number;

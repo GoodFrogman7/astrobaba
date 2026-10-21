@@ -1,19 +1,17 @@
 "use client";
 
-import { CHAT_LIMITS, type ChatMessage, type SessionView } from "@astro/shared";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useEffect, useReducer, useRef, useState } from "react";
+import { CHAT_LIMITS, type SessionView } from "@astro/shared";
+import { useEffect, useRef, useState } from "react";
+import { canSend, isPeerTyping, isTerminal } from "@/lib/chat/reducer";
 import {
-  canSend,
-  chatReducer,
-  initialChatState,
-  isPeerTyping,
-  isTerminal,
-  type ChatState,
-} from "@/lib/chat/reducer";
-import { ChatConnection, loadAll, TicketError, type SocketLike } from "@/lib/chat/socket";
-import { endReasonText, formatElapsed, formatRate, formatRupees } from "@/lib/format";
+  ConnectionBanner,
+  EndedSummary,
+  LowBalance,
+  RoomHeader,
+  useEndSession,
+  useNow,
+  useSessionSocket,
+} from "./room";
 
 const SYSTEM_TEXT: Record<string, string> = {
   session_started: "Chat started. Billing runs per minute from now.",
@@ -21,76 +19,16 @@ const SYSTEM_TEXT: Record<string, string> = {
   session_ended: "Chat ended.",
 };
 
-function newClientId(): string {
-  return crypto.randomUUID();
-}
-
 export function ChatRoom({ initial }: { initial: SessionView }) {
-  const id = initial.id;
-  const router = useRouter();
-  const [state, dispatch] = useReducer(chatReducer, initial, (s) =>
-    initialChatState("astrologer", s),
+  const { state, dispatch, conn } = useSessionSocket(initial);
+  const { confirmEnd, setConfirmEnd, endError, ending, end } = useEndSession(
+    initial.id,
+    dispatch,
+    "Could not end the chat. Try again.",
   );
-  const stateRef = useRef<ChatState>(state);
-  const conn = useRef<ChatConnection | null>(null);
   const [draft, setDraft] = useState("");
-  const [now, setNow] = useState(() => Date.now());
-  const [confirmEnd, setConfirmEnd] = useState(false);
-  const [endError, setEndError] = useState<string | null>(null);
-  const [ending, setEnding] = useState(false);
+  const now = useNow();
   const bottom = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    stateRef.current = state;
-  });
-
-  useEffect(() => {
-    const base = `/api/sessions/${encodeURIComponent(id)}`;
-    const fetchMessages = async (after: number, limit: number): Promise<ChatMessage[]> => {
-      const r = await fetch(`${base}/messages?after_seq=${after}&limit=${limit}`, {
-        cache: "no-store",
-      });
-      if (r.status === 401) router.replace("/login");
-      if (!r.ok) throw new Error(String(r.status));
-      return ((await r.json()) as { items: ChatMessage[] }).items;
-    };
-    const c = new ChatConnection({
-      getSocketUrl: async () => {
-        const r = await fetch(`${base}/ws-ticket`, { method: "POST" });
-        if (!r.ok) throw new TicketError(r.status);
-        return ((await r.json()) as { url: string }).url;
-      },
-      fetchMessages,
-      createSocket: (url) => new WebSocket(url) as unknown as SocketLike,
-      dispatch,
-      getState: () => stateRef.current,
-      now: () => Date.now(),
-    });
-    conn.current = c;
-    let cancelled = false;
-    if (isTerminal(initial.status)) {
-      // Finished chat: read-only transcript, no socket.
-      void loadAll(fetchMessages, dispatch, 0, () => !cancelled).catch(() => undefined);
-    } else {
-      c.start();
-    }
-    const wake = () => {
-      if (document.visibilityState === "visible") c.reconnectNow();
-    };
-    window.addEventListener("online", wake);
-    document.addEventListener("visibilitychange", wake);
-    return () => {
-      cancelled = true;
-      window.removeEventListener("online", wake);
-      document.removeEventListener("visibilitychange", wake);
-      c.stop();
-    };
-  }, [id, initial.status, router]);
-
-  useEffect(() => {
-    const t = setInterval(() => setNow(Date.now()), 1000);
-    return () => clearInterval(t);
-  }, []);
 
   useEffect(() => {
     bottom.current?.scrollIntoView({ block: "end" });
@@ -98,66 +36,25 @@ export function ChatRoom({ initial }: { initial: SessionView }) {
 
   const s = state.session ?? initial;
   const ended = isTerminal(s.status);
-  const serverNow = now + state.serverOffsetMs;
-  const elapsed = s.started_at
-    ? (s.ended_at ? Date.parse(s.ended_at) : serverNow) - Date.parse(s.started_at)
-    : 0;
   const sendable = canSend(state);
   const trimmed = draft.trim();
   const tooLong = trimmed.length > CHAT_LIMITS.maxMessageChars;
 
   function send() {
     if (!sendable || !trimmed || tooLong) return;
-    const client_id = newClientId();
+    const client_id = crypto.randomUUID();
     dispatch({ type: "send", client_id, text: trimmed });
     conn.current?.sendMessage(client_id, trimmed);
     setDraft("");
   }
 
-  async function end() {
-    setEnding(true);
-    setEndError(null);
-    try {
-      const r = await fetch(`/api/sessions/${encodeURIComponent(id)}/end`, { method: "POST" });
-      if (r.ok) {
-        const body = (await r.json().catch(() => null)) as SessionView | null;
-        if (body && body.id === id) dispatch({ type: "session", session: body });
-      } else {
-        setEndError("Could not end the chat. Try again.");
-      }
-    } catch {
-      setEndError("Network error. Try again.");
-    } finally {
-      setEnding(false);
-      setConfirmEnd(false);
-    }
-  }
-
   return (
     <main id="main" className="mx-auto flex max-w-3xl flex-col px-4 py-6">
-      <header className="flex flex-wrap items-start justify-between gap-3 border-b border-border pb-4">
-        <div>
-          <h1 className="text-xl font-semibold">Chat with {s.client_label}</h1>
-          <p className="text-sm text-muted">
-            {s.is_free
-              ? `Free session${s.free_minutes ? ` (up to ${s.free_minutes} min)` : ""}`
-              : `Paid · ${formatRate(s.price_per_min_paise)}`}
-          </p>
-        </div>
-        <dl className="grid grid-cols-2 gap-x-6 gap-y-1 text-sm sm:text-right">
-          <dt className="text-muted">Elapsed</dt>
-          <dd className="font-mono tabular-nums" aria-live="off">
-            {s.started_at ? formatElapsed(elapsed) : "–"}
-          </dd>
-          <dt className="text-muted">Billed</dt>
-          <dd className="tabular-nums">
-            {s.billed_minutes} min
-            {!s.is_free && s.billed_paise > 0 && ` · ${formatRupees(s.billed_paise)}`}
-          </dd>
-        </dl>
-      </header>
+      <RoomHeader s={s} serverNow={now + state.serverOffsetMs} />
 
-      <ConnectionBanner state={state} ended={ended} onRetry={() => conn.current?.start()} />
+      {!ended && (
+        <ConnectionBanner state={state} kind="chat" onRetry={() => conn.current?.start()} />
+      )}
 
       {s.status === "accepted" && (
         <p className="mt-3 rounded-md border border-border bg-surface px-4 py-3 text-sm">
@@ -165,12 +62,7 @@ export function ChatRoom({ initial }: { initial: SessionView }) {
           connected.
         </p>
       )}
-      {state.lowBalanceMinutes !== null && !ended && (
-        <p className="mt-3 text-sm text-accent">
-          The client has about {state.lowBalanceMinutes} minute
-          {state.lowBalanceMinutes === 1 ? "" : "s"} of balance left.
-        </p>
-      )}
+      {!ended && <LowBalance minutes={state.lowBalanceMinutes} />}
 
       <div
         role="log"
@@ -238,21 +130,7 @@ export function ChatRoom({ initial }: { initial: SessionView }) {
       )}
 
       {ended ? (
-        <section className="mt-4 rounded-md border border-border bg-surface p-4">
-          <h2 className="font-semibold">Chat ended</h2>
-          <p className="mt-1 text-sm">{endReasonText(s.end_reason)}</p>
-          <p className="mt-1 text-sm text-muted">
-            Billed {s.billed_minutes} min
-            {!s.is_free && ` · ${formatRupees(s.billed_paise)}`}. Your share appears under{" "}
-            <Link href="/earnings" className="underline">
-              Earnings
-            </Link>
-            .
-          </p>
-          <Link href="/" className="mt-3 inline-block underline">
-            Back to the console
-          </Link>
-        </section>
+        <EndedSummary s={s} className="mt-4" />
       ) : (
         <>
           <form
@@ -353,38 +231,5 @@ function Bubble({
         {children}
       </div>
     </div>
-  );
-}
-
-function ConnectionBanner({
-  state,
-  ended,
-  onRetry,
-}: {
-  state: ChatState;
-  ended: boolean;
-  onRetry: () => void;
-}) {
-  if (ended) return null;
-  let text: string | null = null;
-  let retry = false;
-  if (state.connection === "connecting") text = "Connecting…";
-  else if (state.connection === "reconnecting") text = "Connection lost. Reconnecting…";
-  else if (state.connection === "closed" && state.closeReason === "replaced") {
-    text = "This chat is open in another tab or device, so this tab stopped updating.";
-    retry = true;
-  } else if (state.connection === "closed" && state.closeReason === "forbidden") {
-    text = "You can't open this chat.";
-  }
-  if (!text) return null;
-  return (
-    <p role="status" className="mt-3 rounded-md border border-border bg-surface px-4 py-2 text-sm">
-      {text}{" "}
-      {retry && (
-        <button type="button" className="underline" onClick={onRetry}>
-          Use this tab instead
-        </button>
-      )}
-    </p>
   );
 }

@@ -1,8 +1,7 @@
 "use client";
 
-import type { CallToken, ChatMessage, SessionView } from "@astro/shared";
+import type { CallToken, SessionView } from "@astro/shared";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useEffect, useReducer, useRef, useState } from "react";
 import { CallAudio, CallTokenError } from "@/lib/call/audio";
 import { createLiveKitRoom, requestMicrophone } from "@/lib/call/livekit-room";
@@ -16,9 +15,16 @@ import {
   wantsAudio,
   type MicProblem,
 } from "@/lib/call/state";
-import { chatReducer, initialChatState, isTerminal, type ChatState } from "@/lib/chat/reducer";
-import { ChatConnection, TicketError, type SocketLike } from "@/lib/chat/socket";
-import { endReasonText, formatElapsed, formatRate, formatRupees } from "@/lib/format";
+import { isTerminal } from "@/lib/chat/reducer";
+import {
+  ConnectionBanner,
+  EndedSummary,
+  LowBalance,
+  RoomHeader,
+  useEndSession,
+  useNow,
+  useSessionSocket,
+} from "./room";
 
 const MIC_PROBLEMS: readonly string[] = ["denied", "not_found", "in_use", "error"];
 
@@ -29,61 +35,17 @@ const MIC_PROBLEMS: readonly string[] = ["denied", "not_found", "in_use", "error
  */
 export function CallRoom({ initial }: { initial: SessionView }) {
   const id = initial.id;
-  const router = useRouter();
-  const [state, dispatch] = useReducer(chatReducer, initial, (s) =>
-    initialChatState("astrologer", s),
+  const { state, dispatch, conn } = useSessionSocket(initial);
+  const { confirmEnd, setConfirmEnd, endError, ending, end } = useEndSession(
+    id,
+    dispatch,
+    "Could not end the call. Try again.",
   );
   const [audio, audioDispatch] = useReducer(callAudioReducer, initialCallAudio);
-  const stateRef = useRef<ChatState>(state);
-  const conn = useRef<ChatConnection | null>(null);
   const call = useRef<CallAudio | null>(null);
   const sink = useRef<HTMLDivElement>(null);
-  const [now, setNow] = useState(() => Date.now());
-  const [confirmEnd, setConfirmEnd] = useState(false);
-  const [endError, setEndError] = useState<string | null>(null);
-  const [ending, setEnding] = useState(false);
+  const now = useNow();
   const [muted, setMuted] = useState(false);
-
-  useEffect(() => {
-    stateRef.current = state;
-  });
-
-  // Control socket: same ticket flow as chat. Messages are only system markers on a call.
-  useEffect(() => {
-    const base = `/api/sessions/${encodeURIComponent(id)}`;
-    const fetchMessages = async (after: number, limit: number): Promise<ChatMessage[]> => {
-      const r = await fetch(`${base}/messages?after_seq=${after}&limit=${limit}`, {
-        cache: "no-store",
-      });
-      if (r.status === 401) router.replace("/login");
-      if (!r.ok) throw new Error(String(r.status));
-      return ((await r.json()) as { items: ChatMessage[] }).items;
-    };
-    const c = new ChatConnection({
-      getSocketUrl: async () => {
-        const r = await fetch(`${base}/ws-ticket`, { method: "POST" });
-        if (!r.ok) throw new TicketError(r.status);
-        return ((await r.json()) as { url: string }).url;
-      },
-      fetchMessages,
-      createSocket: (url) => new WebSocket(url) as unknown as SocketLike,
-      dispatch,
-      getState: () => stateRef.current,
-      now: () => Date.now(),
-    });
-    conn.current = c;
-    if (!isTerminal(initial.status)) c.start();
-    const wake = () => {
-      if (document.visibilityState === "visible") c.reconnectNow();
-    };
-    window.addEventListener("online", wake);
-    document.addEventListener("visibilitychange", wake);
-    return () => {
-      window.removeEventListener("online", wake);
-      document.removeEventListener("visibilitychange", wake);
-      c.stop();
-    };
-  }, [id, initial.status, router]);
 
   // Audio controller, created once per call and torn down with the page.
   useEffect(() => {
@@ -126,15 +88,6 @@ export function CallRoom({ initial }: { initial: SessionView }) {
     else a.leave();
   }, [want]);
 
-  useEffect(() => {
-    const t = setInterval(() => setNow(Date.now()), 1000);
-    return () => clearInterval(t);
-  }, []);
-
-  const serverNow = now + state.serverOffsetMs;
-  const elapsed = s.started_at
-    ? (s.ended_at ? Date.parse(s.ended_at) : serverNow) - Date.parse(s.started_at)
-    : 0;
   const who = joinedText(state.callJoined, s.client_label);
   const micProblem = MIC_PROBLEMS.includes(audio.mic) ? (audio.mic as MicProblem) : null;
   const connected = audio.status === "connected";
@@ -145,49 +98,9 @@ export function CallRoom({ initial }: { initial: SessionView }) {
     if (call.current) setMuted(call.current.isMuted);
   }
 
-  async function end() {
-    setEnding(true);
-    setEndError(null);
-    try {
-      const r = await fetch(`/api/sessions/${encodeURIComponent(id)}/end`, { method: "POST" });
-      if (r.ok) {
-        const body = (await r.json().catch(() => null)) as SessionView | null;
-        if (body && body.id === id) dispatch({ type: "session", session: body });
-      } else {
-        setEndError("Could not end the call. Try again.");
-      }
-    } catch {
-      setEndError("Network error. Try again.");
-    } finally {
-      setEnding(false);
-      setConfirmEnd(false);
-    }
-  }
-
   return (
     <main id="main" className="mx-auto flex max-w-3xl flex-col px-4 py-6">
-      <header className="flex flex-wrap items-start justify-between gap-3 border-b border-border pb-4">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-wide text-accent">Voice call</p>
-          <h1 className="text-xl font-semibold">Call with {s.client_label}</h1>
-          <p className="text-sm text-muted">
-            {s.is_free
-              ? `Free session${s.free_minutes ? ` (up to ${s.free_minutes} min)` : ""}`
-              : `Paid · ${formatRate(s.price_per_min_paise)}`}
-          </p>
-        </div>
-        <dl className="grid grid-cols-2 gap-x-6 gap-y-1 text-sm sm:text-right">
-          <dt className="text-muted">Elapsed</dt>
-          <dd className="font-mono tabular-nums" aria-live="off">
-            {s.started_at ? formatElapsed(elapsed) : "–"}
-          </dd>
-          <dt className="text-muted">Billed</dt>
-          <dd className="tabular-nums">
-            {s.billed_minutes} min
-            {!s.is_free && s.billed_paise > 0 && ` · ${formatRupees(s.billed_paise)}`}
-          </dd>
-        </dl>
-      </header>
+      <RoomHeader s={s} serverNow={now + state.serverOffsetMs} />
 
       {/* Remote audio elements are attached here by the LiveKit adapter. */}
       <div ref={sink} hidden />
@@ -196,7 +109,9 @@ export function CallRoom({ initial }: { initial: SessionView }) {
         {callPhaseText(s.status, audio.status, state.callJoined)}
       </p>
 
-      <SocketBanner state={state} ended={ended} onRetry={() => conn.current?.start()} />
+      {!ended && (
+        <ConnectionBanner state={state} kind="call" onRetry={() => conn.current?.start()} />
+      )}
 
       {!ended && (
         <section aria-labelledby="who-h" className="mt-4 rounded-md border border-border p-4">
@@ -230,7 +145,7 @@ export function CallRoom({ initial }: { initial: SessionView }) {
         </div>
       )}
 
-      {lowBalance(state, ended)}
+      {!ended && <LowBalance minutes={state.lowBalanceMinutes} />}
 
       {!ended && audio.status === "failed" && audio.failure && (
         <div role="alert" className="mt-4 rounded-md border border-danger p-4 text-sm">
@@ -258,21 +173,7 @@ export function CallRoom({ initial }: { initial: SessionView }) {
       )}
 
       {ended ? (
-        <section className="mt-6 rounded-md border border-border bg-surface p-4">
-          <h2 className="font-semibold">Call ended</h2>
-          <p className="mt-1 text-sm">{endReasonText(s.end_reason, "call")}</p>
-          <p className="mt-1 text-sm text-muted">
-            Billed {s.billed_minutes} min
-            {!s.is_free && ` · ${formatRupees(s.billed_paise)}`}. Your share appears under{" "}
-            <Link href="/earnings" className="underline">
-              Earnings
-            </Link>
-            .
-          </p>
-          <Link href="/" className="mt-3 inline-block underline">
-            Back to the console
-          </Link>
-        </section>
+        <EndedSummary s={s} className="mt-6" />
       ) : (
         <div className="mt-6 flex flex-wrap items-center gap-3">
           <button
@@ -326,55 +227,11 @@ export function CallRoom({ initial }: { initial: SessionView }) {
   );
 }
 
-function lowBalance(state: ChatState, ended: boolean) {
-  if (state.lowBalanceMinutes === null || ended) return null;
-  return (
-    <p className="mt-3 text-sm text-accent">
-      The client has about {state.lowBalanceMinutes} minute
-      {state.lowBalanceMinutes === 1 ? "" : "s"} of balance left.
-    </p>
-  );
-}
-
 function Dot({ on }: { on: boolean }) {
   return (
     <span
       aria-hidden="true"
       className={`inline-block size-2.5 rounded-full ${on ? "bg-success" : "border border-muted"}`}
     />
-  );
-}
-
-function SocketBanner({
-  state,
-  ended,
-  onRetry,
-}: {
-  state: ChatState;
-  ended: boolean;
-  onRetry: () => void;
-}) {
-  if (ended) return null;
-  let text: string | null = null;
-  let retry = false;
-  if (state.connection === "connecting") text = "Connecting to the call service…";
-  else if (state.connection === "reconnecting") {
-    text = "Connection to the call service lost. Reconnecting…";
-  } else if (state.connection === "closed" && state.closeReason === "replaced") {
-    text = "This call is open in another tab or device, so this tab left the call.";
-    retry = true;
-  } else if (state.connection === "closed" && state.closeReason === "forbidden") {
-    text = "You can't open this call.";
-  }
-  if (!text) return null;
-  return (
-    <p role="status" className="mt-3 rounded-md border border-border bg-surface px-4 py-2 text-sm">
-      {text}{" "}
-      {retry && (
-        <button type="button" className="underline" onClick={onRetry}>
-          Use this tab instead
-        </button>
-      )}
-    </p>
   );
 }

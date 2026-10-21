@@ -1,10 +1,8 @@
 import "server-only";
 
-import { api, UpstreamError } from "@/lib/upstream";
+import { api, API_URL, UpstreamError } from "@/lib/upstream";
 import { type Filters, toApiQuery } from "./filters";
 import type { AstrologerCard, AstrologerProfile, ListResponse, ReviewsResponse } from "./types";
-
-const API_URL = (process.env.API_URL ?? "http://localhost:8000").replace(/\/$/, "");
 
 export type Loaded<T> = { ok: true; data: T } | { ok: false; status: number; code: string };
 

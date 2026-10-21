@@ -85,7 +85,8 @@ null}`.
 
 `GET /v1/astrologer/me/reviews?cursor&limit&filter=all|unreplied` → `{items: [Review +
 {session_id, status}], next_cursor}` (published and held, never removed ones; no client
-identity). Reply: existing `POST /v1/reviews/{id}/reply` (once; moderated like reviews).
+identity; held reviews show rating and status with `text: null`). Reply: existing
+`POST /v1/reviews/{id}/reply` (once; moderated like reviews).
 
 ### 2.5 Payout statements
 
@@ -96,19 +97,17 @@ identity). Reply: existing `POST /v1/reviews/{id}/reply` (once; moderated like r
 ## 3. Payouts (monthly; transfers are manual in v1)
 
 `Payout`: `{id, period: "YYYY-MM", status: draft|approved|paid|void, gross_paise,
-commission_paise, refunds_paise, net_paise, carried_forward_paise, sessions, minutes,
-generated_at, approved_at, paid_at, reference (bank UTR, paid only)}`.
-
-Fields added by the implementation: `carried_in_paise` (earned before the period and not yet
-paid out: every earlier void payout plus earnings before the first statement, minus refunds
-after a payout, so it can be negative), `void_reason` (`below_minimum` | `admin`), `paid_on`,
-`tax_note`. `net = gross − commission − refunds + carried_in`. Detail `adjustments`:
+commission_paise, refunds_paise, carried_in_paise, net_paise, carried_forward_paise,
+void_reason (below_minimum | admin), sessions, minutes, generated_at, approved_at, paid_at,
+paid_on, reference (bank UTR, paid only), tax_note}`. `carried_in_paise` is what was earned
+before the period and not yet paid out: every earlier void payout plus earnings before the first
+statement, minus refunds after a payout, so it can be negative.
+`net = gross − commission − refunds + carried_in`. Detail `adjustments`:
 `{kind: carried_forward_in | carried_forward_out, amount_paise, period}`. Generate returns
 `{period, generated, updated, skipped, carried_forward}`; only ended IST months
 (`422 period_open`). Wrong-status approve / mark-paid / void → `409 invalid_transition`. A UTR is
-`[A-Za-z0-9-]{6,40}` (`422 invalid_reference`); `paid_on` cannot be in the future. Held reviews
-in the portal list show rating and status with `text: null`. CSV cells that start with
-`= + - @`, tab or CR are prefixed with `'`.
+`[A-Za-z0-9-]{6,40}` (`422 invalid_reference`); `paid_on` cannot be in the future. CSV cells
+that start with `= + - @`, tab or CR are prefixed with `'`.
 
 Generation: `python -m astro_api.cli payouts generate --period YYYY-MM` (worker cron on the 1st,
 for the previous IST month) and `POST /v1/admin/payouts/generate {period}`. One payout per

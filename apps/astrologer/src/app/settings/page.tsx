@@ -1,7 +1,6 @@
 import type { ConsultSettings } from "@astro/shared";
 import type { Metadata } from "next";
-import { StatusNotice } from "@/components/StatusNotice";
-import { api, ApiError } from "@/lib/api";
+import { api, tryGet } from "@/lib/api";
 import { tierLabel } from "@/lib/consult";
 import { formatRate } from "@/lib/format";
 import { consolePage } from "@/lib/guard";
@@ -12,21 +11,15 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Settings" };
 
 export default async function SettingsPage() {
-  const { access, data } = await consolePage(async () => {
+  const page = await consolePage(async () => {
     const [consult, profile] = await Promise.all([
-      api.get<ConsultSettings>("/v1/astrologer/me/consult").catch((e: unknown) => {
-        if (e instanceof ApiError) return { error: e.message || e.code };
-        throw e;
-      }),
+      tryGet<ConsultSettings>("/v1/astrologer/me/consult"),
       api.get<AstrologerProfile>("/v1/astrologer/me").catch(() => null),
     ]);
     return { consult, profile };
   });
-  if (access.kind === "anon") return null;
-  if (access.kind !== "live" || !data) {
-    return access.kind === "live" ? null : <StatusNotice access={access} />;
-  }
-  const { consult, profile } = data;
+  if (!page.live) return page.notice;
+  const { consult, profile } = page.data;
   return (
     <main id="main" className="mx-auto max-w-3xl px-4 py-8">
       <h1 className="text-2xl font-semibold">Settings</h1>
@@ -42,12 +35,12 @@ export default async function SettingsPage() {
           Choose how clients can reach you. Changes apply to new requests; a consultation in
           progress is not affected. Every change is recorded.
         </p>
-        {"error" in consult ? (
+        {consult.ok ? (
+          <ConsultToggles initial={consult.value} />
+        ) : (
           <p role="alert" className="mt-4 text-sm text-danger">
             Could not load your settings: {consult.error}. Reload the page to try again.
           </p>
-        ) : (
-          <ConsultToggles initial={consult} />
         )}
       </section>
 

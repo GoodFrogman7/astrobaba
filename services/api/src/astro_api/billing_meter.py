@@ -194,10 +194,7 @@ class Drop:
 
 
 async def _drop(
-    deps: svc.Deps,
-    s: ConsultSession,
-    now: dt.datetime,
-    verify: chat_bus.VerifyState | None = None,
+    deps: svc.Deps, s: ConsultSession, now: dt.datetime, verify: chat_bus.VerifyState | None = None
 ) -> Drop | None:
     """The earliest side gone for longer than the grace period, with its last-seen time. Also
     copies the heartbeats into the row (they survive a Redis loss and feed the refund rules)."""

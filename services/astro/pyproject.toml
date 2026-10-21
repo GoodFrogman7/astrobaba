@@ -1,7 +1,7 @@
 [project]
 name = "astro-engine"
 version = "0.0.0"
-description = "Astro engine: kundli, panchang, dasha, doshas, matching, transits (Phase 1)."
+description = "Astro engine: kundli, panchang, dasha, doshas, matching, transits."
 requires-python = ">=3.12"
 license = "AGPL-3.0-only"
 dependencies = [

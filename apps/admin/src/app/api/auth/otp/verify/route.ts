@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { decideAccess } from "@/lib/access";
-import { api, ApiError } from "@/lib/api";
+import { api, API_URL, ApiError } from "@/lib/api";
 import { isHttps, SESSION_COOKIE, sessionCookieFlags } from "@/lib/cookies";
 import { deviceId } from "@/lib/device";
 import type { Me } from "@/lib/types";
@@ -26,10 +26,10 @@ export async function POST(req: NextRequest) {
       { challenge_id, code, device_id: device.id },
       "",
     );
-    const me = await fetch(
-      `${(process.env.API_URL ?? "http://localhost:8000").replace(/\/$/, "")}/v1/me`,
-      { headers: { authorization: `Bearer ${session.token}` }, cache: "no-store" },
-    ).then((r) => (r.ok ? (r.json() as Promise<Me>) : null));
+    const me = await fetch(`${API_URL}/v1/me`, {
+      headers: { authorization: `Bearer ${session.token}` },
+      cache: "no-store",
+    }).then((r) => (r.ok ? (r.json() as Promise<Me>) : null));
     if (decideAccess(me).kind !== "admin") {
       await api.post("/v1/auth/logout", undefined, session.token).catch(() => undefined);
       return NextResponse.json({ code: "not_admin" }, { status: 403 });

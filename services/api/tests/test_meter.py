@@ -19,32 +19,21 @@ from services.api.tests.money_fakes import (  # noqa: F401 - fixtures
     PRICE,
     FakeMoney,
     World,
+    alive,
+    at,
     deps_for,
     fake_money_fixture,
+    fast,
     money_fixture,
     world_fixture,
 )
 
 pytestmark = pytest.mark.integration
-GRACE = 90.0
-
-
-def at(t0: dt.datetime, seconds: float) -> dt.datetime:
-    return t0 + dt.timedelta(seconds=seconds)
-
-
-async def alive(deps: svc.Deps, sid: uuid.UUID, now: dt.datetime, *roles: str) -> None:
-    for role in roles or ("user", "astrologer"):
-        await chat_bus.touch(deps.redis, sid, role, now, GRACE)
 
 
 async def start(deps: svc.Deps, sid: uuid.UUID, t0: dt.datetime) -> None:
     await alive(deps, sid, t0)
     assert await svc.activate(deps, sid, t0)
-
-
-def fast(w: World) -> Any:
-    return deps_for(w.settings, billing_minute_seconds=1.0)
 
 
 def test_minutes_are_prepaid_at_each_boundary(world: World, money: Any) -> None:

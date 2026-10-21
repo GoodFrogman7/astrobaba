@@ -34,10 +34,6 @@ export function formatWaiting(fromIso: string, now: number): string {
   return `${Math.floor(m / 60)} h ${m % 60} min`;
 }
 
-export function minutesLabel(n: number): string {
-  return `${n} min`;
-}
-
 /** Date and time in IST, the product's single display zone. */
 export function formatIst(iso: string | null): string {
   if (!iso) return "–";

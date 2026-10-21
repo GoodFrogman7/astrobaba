@@ -11,11 +11,9 @@ describe("review helpers", () => {
     expect(reviewFilter(undefined)).toBe("all");
   });
 
-  it("labels published, reported and held reviews", () => {
+  it("labels published and held reviews", () => {
     expect(reviewStatus("published")).toEqual({ label: "Published", held: false, note: null });
-    expect(reviewStatus("flagged")).toMatchObject({ label: "Reported", held: false });
     expect(reviewStatus("held")).toMatchObject({ label: "Held for moderation", held: true });
-    expect(reviewStatus("pending_moderation").held).toBe(true);
   });
 
   it("shows stars with a text alternative", () => {

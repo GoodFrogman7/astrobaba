@@ -15,10 +15,17 @@ BIRTH = {
 }
 
 
-def test_meta() -> None:
+def test_healthz_and_meta() -> None:
+    assert client.get("/healthz").json()["status"] == "ok"
     body = client.get("/v1/meta").json()
     assert body["ephemeris_backend"] == "swiss_ephemeris"
     assert body["license"] == "AGPL-3.0-only"
+    assert (body["default_ayanamsha"], body["default_node"], body["house_system"]) == (
+        "lahiri",
+        "mean",
+        "whole_sign",
+    )
+    assert body["tables_review_status"]["matching"] == "needs_astrologer_review"
     assert client.get("/v1/source").json()["source"].startswith("https://github.com/")
 
 

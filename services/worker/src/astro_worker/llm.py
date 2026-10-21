@@ -6,7 +6,7 @@ Use paid, no-training API tiers only (PLAN.md §6). Keys are SecretStr and never
 
 import json
 from dataclasses import dataclass
-from typing import Any, Protocol
+from typing import Any, Protocol, TypeGuard
 
 import anthropic
 import httpx
@@ -28,9 +28,15 @@ class ProviderError(RuntimeError):
     pass
 
 
-def _present(key: SecretStr | None) -> bool:
+def _present(key: SecretStr | None) -> TypeGuard[SecretStr]:
     """An empty value (e.g. `GEMINI_API_KEY=` in .env) counts as unset."""
     return key is not None and bool(key.get_secret_value().strip())
+
+
+def table(name: str) -> dict[str, dict[str, Any]]:
+    """data/astro/{name}.json rows (grahas, signs) by id."""
+    rows = json.loads((data_dir() / f"{name}.json").read_text(encoding="utf-8"))[name]
+    return {r["id"]: r for r in rows}
 
 
 @dataclass(frozen=True)
@@ -63,7 +69,7 @@ class AnthropicProvider:
     ) -> None:
         if client is None:
             key = settings.anthropic_api_key
-            if key is None or not _present(key):
+            if not _present(key):
                 raise ProviderError("ANTHROPIC_API_KEY is not set")
             client = anthropic.AsyncAnthropic(
                 api_key=key.get_secret_value(),
@@ -111,7 +117,7 @@ class GeminiProvider:
 
     def __init__(self, settings: WorkerSettings, http: httpx.AsyncClient | None = None) -> None:
         key = settings.gemini_api_key
-        if key is None or not _present(key):
+        if not _present(key):
             raise ProviderError("GEMINI_API_KEY is not set")
         self.key = key
         self.model = settings.gemini_model
@@ -158,11 +164,7 @@ class FakeProvider:
     def __init__(self, settings: WorkerSettings) -> None:
         if settings.is_production:
             raise ProviderError("the fake LLM provider is not allowed in staging/production")
-        tables = data_dir()
-        self.grahas = {
-            g["id"]: g for g in json.loads((tables / "grahas.json").read_text())["grahas"]
-        }
-        self.signs = {s["id"]: s for s in json.loads((tables / "signs.json").read_text())["signs"]}
+        self.grahas, self.signs = table("grahas"), table("signs")
 
     def _line(self, facts: dict[str, Any], area: str, locale: str) -> str:
         transits = {t["graha"]: t for t in facts["transits"]}
@@ -177,7 +179,7 @@ class FakeProvider:
                 "लिए गए फ़ैसले दिन को आसान बनाते हैं। अपने लिए थोड़ा आराम का समय रखें और उन "
                 "लोगों के साथ समय बिताएँ जिनसे आपको सुकून मिलता है।"
             )
-        suffix = {1: "st", 2: "nd", 3: "rd"}.get(house if house < 20 else house % 10, "th")
+        suffix = {1: "st", 2: "nd", 3: "rd"}.get(house, "th")  # houses are 1-12
         return (
             f"With {graha['en']} in {sign['en']}, in your {house}{suffix} house, this part of life "
             "asks for patience. Take the day one step at a time, listen closely, and keep plans "

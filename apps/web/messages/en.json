@@ -5,7 +5,6 @@
   },
   "nav": {
     "skipToContent": "Skip to content",
-    "language": "Language",
     "switchTo": "हिन्दी",
     "main": "Main",
     "kundli": "Kundli",
@@ -15,31 +14,7 @@
     "tools": "Free tools"
   },
   "home": {
-    "eyebrow": "Today in India · {date}",
-    "heading": "Clear answers from your birth chart",
-    "lede": "Every planetary position, tithi and nakshatra on this site is calculated from astronomical data for your exact place and time. We explain what it means in plain language, and you can talk to a vetted astrologer whenever you want more depth.",
-    "toolsHeading": "Coming first",
-    "tools": {
-      "kundli": {
-        "title": "Birth chart",
-        "body": "Your chart in North or South Indian style, with planets, houses and dasha periods."
-      },
-      "matching": {
-        "title": "Kundli matching",
-        "body": "All eight kootas scored out of 36, with dosha checks explained koota by koota."
-      },
-      "panchang": {
-        "title": "Daily panchang",
-        "body": "Tithi, nakshatra, sunrise, sunset and Rahu Kaal for your city, in your city's time zone."
-      }
-    },
-    "principlesHeading": "How we work",
-    "principles": {
-      "computed": "Astrological values come from the calculation engine, never from guesswork or AI.",
-      "labelled": "Anything written by AI is labelled as AI. It is never presented as a person.",
-      "honest": "No countdown timers, no fake online counts, no fear-based offers."
-    },
-    "status": "We are building this now. The tools above open soon."
+    "eyebrow": "Today in India · {date}"
   },
   "footer": {
     "rights": "© {year} {brand}",

@@ -52,17 +52,9 @@ def test_scores_in_range_and_consistent(sign: str, period: str, day: date) -> No
         for r in area["reasons"]:
             fav = r["house_from_sign"] in rules["favourable_houses"][r["graha"]]
             assert r["effect"] == ("favourable" if fav else "challenging")
-    assert [t["graha"] for t in f["transits"]] == [
-        "sun",
-        "moon",
-        "mars",
-        "mercury",
-        "jupiter",
-        "venus",
-        "saturn",
-        "rahu",
-        "ketu",
-    ]
+    assert [t["graha"] for t in f["transits"]] == (
+        ["sun", "moon", "mars", "mercury", "jupiter", "venus", "saturn", "rahu", "ketu"]
+    )
     for t in f["transits"]:
         for i in t["ingresses"]:
             assert f["window"]["start"] < i["at"] <= f["window"]["end"]

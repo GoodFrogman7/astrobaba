@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { api, deviceId, errorResponse, setDevice } from "@/lib/tools/proxy";
+import { deviceId, errorResponse, setDevice } from "@/lib/tools/proxy";
+import { api } from "@/lib/upstream";
 
 /** Ask the API to text a one-time code. The phone number is passed through, never logged. */
 export async function POST(req: NextRequest) {

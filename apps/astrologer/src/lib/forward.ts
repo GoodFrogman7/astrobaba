@@ -10,15 +10,10 @@ export interface ForwardDeps {
   timeoutMs?: number;
 }
 
-const NO_STORE = { "cache-control": "no-store, max-age=0" };
+export const NO_STORE = { "cache-control": "no-store, max-age=0" };
 
-/** Session ids are opaque but short and URL-safe; anything else never reaches the API. */
-export const SESSION_ID = /^[A-Za-z0-9_-]{1,64}$/;
-
-/** Review and payout ids: the same opaque, URL-safe shape. */
-export const OPAQUE_ID = SESSION_ID;
-
-export const NO_STORE_HEADERS: Readonly<Record<string, string>> = NO_STORE;
+/** Session, review and payout ids are short and URL-safe; anything else never reaches the API. */
+export const OPAQUE_ID = /^[A-Za-z0-9_-]{1,64}$/;
 
 export function json(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), {
@@ -61,15 +56,14 @@ export async function forward(
   } catch {
     return json({ code: "bad_upstream" }, 502);
   }
-  return json(errorShape(parsed, upstream.ok), upstream.status);
+  const ok = upstream.ok || !parsed || typeof parsed !== "object";
+  return json(ok ? parsed : errorBody(parsed), upstream.status);
 }
 
 /** API errors are `{detail: {code, message}}`; the browser gets `{code, message, ...extra}`. */
-function errorShape(body: unknown, ok: boolean): unknown {
-  if (ok || !body || typeof body !== "object") return body;
-  const d = (body as { detail?: unknown }).detail;
-  if (d && typeof d === "object" && !Array.isArray(d)) return d;
-  return { code: "api_error" };
+export function errorBody(body: unknown): unknown {
+  const d = (body as { detail?: unknown } | null)?.detail;
+  return d && typeof d === "object" && !Array.isArray(d) ? d : { code: "api_error" };
 }
 
 /**

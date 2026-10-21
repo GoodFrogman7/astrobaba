@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
-import { api, errorResponse, sessionToken } from "@/lib/tools/proxy";
+import { errorResponse, sessionToken } from "@/lib/tools/proxy";
+import { api } from "@/lib/upstream";
 
 /** Whether the visitor is signed in (used by "Save my kundli" to skip the OTP step). */
 export async function GET() {

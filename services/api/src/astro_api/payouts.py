@@ -40,7 +40,7 @@ from astro_api.audit import audit
 from astro_api.config import Settings
 from astro_api.models import Astrologer
 from astro_api.models_portal import Payout
-from astro_api.session_service import client_label
+from astro_api.session_service import client_label, iso
 
 SYSTEM_ACTOR = "system:payouts"
 OPEN_STATUSES = ("draft", "approved", "paid")  # statuses whose net is no longer carried
@@ -323,10 +323,6 @@ async def void(db: AsyncSession, payout_id: uuid.UUID, *, note: str, actor: str)
 # ---------------------------------------------------------------- views
 
 
-def _iso(v: dt.datetime | None) -> str | None:
-    return v.astimezone(dt.UTC).isoformat() if v is not None else None
-
-
 def payout_view(p: Payout) -> dict[str, Any]:
     return {
         "id": str(p.id),
@@ -340,9 +336,9 @@ def payout_view(p: Payout) -> dict[str, Any]:
         "carried_forward_paise": p.carried_forward_paise,
         "sessions": p.sessions,
         "minutes": p.minutes,
-        "generated_at": _iso(p.generated_at),
-        "approved_at": _iso(p.approved_at),
-        "paid_at": _iso(p.paid_at),
+        "generated_at": iso(p.generated_at),
+        "approved_at": iso(p.approved_at),
+        "paid_at": iso(p.paid_at),
         "paid_on": p.paid_on.isoformat() if p.paid_on else None,
         "reference": p.reference if p.status == "paid" else None,
         "void_reason": p.void_reason,
@@ -355,8 +351,8 @@ def earning_row(line: earnings.SessionLine, settings: Settings) -> dict[str, Any
     return {
         "session_id": str(line.session_id),
         "kind": line.kind,
-        "started_at": _iso(line.started_at),
-        "ended_at": _iso(line.ended_at),
+        "started_at": iso(line.started_at),
+        "ended_at": iso(line.ended_at),
         "billed_minutes": t.minutes,
         "gross_paise": t.gross_paise,
         "commission_paise": t.commission_paise,

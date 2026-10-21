@@ -48,12 +48,10 @@ async function parse<T>(res: Response): Promise<T> {
     let code = "api_error";
     let message = res.statusText;
     try {
-      const body = (await res.json()) as { detail?: { code?: string; message?: string } | unknown };
-      const d = body.detail;
+      const d = ((await res.json()) as { detail?: { code?: string; message?: string } }).detail;
       if (d && typeof d === "object" && !Array.isArray(d)) {
-        const det = d as { code?: string; message?: string };
-        code = det.code ?? code;
-        message = det.message ?? message;
+        code = d.code ?? code;
+        message = d.message ?? message;
       }
     } catch {
       /* not JSON */
@@ -75,6 +73,18 @@ export const api = {
       ),
     ),
 };
+
+/** A GET whose API error is shown in place instead of failing the whole page. */
+export async function tryGet<T>(
+  path: string,
+): Promise<{ ok: true; value: T } | { ok: false; error: string }> {
+  try {
+    return { ok: true, value: await api.get<T>(path) };
+  } catch (e) {
+    if (e instanceof ApiError) return { ok: false, error: e.message || e.code };
+    throw e;
+  }
+}
 
 /** The signed-in user, or null (no cookie, expired or revoked session, API down). */
 export async function fetchMe(): Promise<Me | null> {

@@ -1,6 +1,6 @@
 import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
-import { rupeesPerMin } from "@/lib/marketplace/format";
+import { formatPaise } from "@/lib/marketplace/format";
 import { languageName, skillName } from "@/lib/marketplace/taxonomy";
 import type { AstrologerCard as Card } from "@/lib/marketplace/types";
 import { Avatar } from "./Avatar";
@@ -44,7 +44,7 @@ export function AstrologerCard({ a, showPresence = true }: { a: Card; showPresen
       </p>
       <div className="mt-auto flex flex-wrap items-center justify-between gap-2 pt-3">
         <span className="font-semibold">
-          {t("perMin", { price: rupeesPerMin(a.price_per_min_paise, locale) })}
+          {t("perMin", { price: formatPaise(a.price_per_min_paise, locale) })}
         </span>
         {showPresence && <PresenceBadge presence={a.presence} wait={a.wait_minutes} />}
       </div>

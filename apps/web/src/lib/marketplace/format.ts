@@ -21,10 +21,6 @@ export function formatPaise(
   return paise > 0 ? `+${s}` : `\u2212${s}`;
 }
 
-export function rupeesPerMin(paise: number, locale: "en" | "hi"): string {
-  return formatPaise(paise, locale);
-}
-
 /** Date and time in IST, e.g. "21 Oct 2026, 6:30 pm". */
 export function dateTimeIst(iso: string, locale: "en" | "hi"): string {
   const d = new Date(iso);
@@ -74,8 +70,4 @@ export function shortDate(iso: string, locale: "en" | "hi"): string {
     year: "numeric",
     timeZone: "Asia/Kolkata",
   }).format(d);
-}
-
-export function ratingText(average: number | null): string | null {
-  return average === null ? null : average.toFixed(1);
 }

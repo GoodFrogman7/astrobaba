@@ -21,6 +21,7 @@ import httpx
 
 from astro_api.config import get_settings
 from astro_api.db import make_engine, make_sessionmaker
+from astro_api.horoscopes import SIGNS
 from astro_worker import horoscopes
 from astro_worker.config import get_worker_settings
 from astro_worker.llm import ProviderError, make_provider
@@ -34,7 +35,7 @@ def _parser() -> argparse.ArgumentParser:
     g = h.add_parser("generate", help="generate pending horoscopes for review")
     g.add_argument("--period", choices=["daily", "weekly", "monthly"], required=True)
     g.add_argument("--date", type=dt.date.fromisoformat, help="IST date (default: today in IST)")
-    g.add_argument("--signs", default=",".join(horoscopes.SIGNS))
+    g.add_argument("--signs", default=",".join(SIGNS))
     g.add_argument("--locales", default="en,hi")
     g.add_argument(
         "--force", action="store_true", help="regenerate pending/rejected (never published)"
@@ -82,7 +83,7 @@ async def _run(args: argparse.Namespace) -> int:
                 report = await horoscopes.generate(
                     period=args.period,
                     day=day,
-                    signs=_split(args.signs, horoscopes.SIGNS),
+                    signs=_split(args.signs, SIGNS),
                     locales=_split(args.locales, ("en", "hi")),
                     force=args.force,
                     provider=provider,

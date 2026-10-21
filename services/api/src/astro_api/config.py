@@ -39,7 +39,7 @@ class Settings(BaseSettings):
     # Header carrying the client IP when the API sits behind a trusted proxy (e.g. X-Forwarded-For).
     client_ip_header: str | None = None
 
-    # Payments (Phase 4). "fake" simulates Razorpay for development/test only.
+    # Payments. "fake" simulates Razorpay for development/test only.
     payments_provider: Literal["razorpay", "fake"] = "fake"
     razorpay_key_id: str = ""
     razorpay_key_secret: SecretStr = SecretStr("")
@@ -50,7 +50,7 @@ class Settings(BaseSettings):
     # Length of a billed minute. 60 in every real environment; tests shorten it.
     billing_minute_seconds: float = 60.0
     meter_tick_seconds: float = 5.0
-    # Voice calls (Phase 5, flag voice_calls). LIVEKIT_URL is how the API reaches LiveKit's server
+    # Voice calls (flag voice_calls). LIVEKIT_URL is how the API reaches LiveKit's server
     # API; LIVEKIT_PUBLIC_URL is the wss:// URL browsers join.
     livekit_url: str = "http://localhost:7880"
     livekit_public_url: str = "ws://localhost:7880"

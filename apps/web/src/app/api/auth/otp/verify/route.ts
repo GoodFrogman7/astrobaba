@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { isHttps, SESSION_COOKIE, sessionCookieFlags } from "@/lib/tools/cookies";
-import { api, deviceId, errorResponse } from "@/lib/tools/proxy";
+import { deviceId, errorResponse } from "@/lib/tools/proxy";
+import { api } from "@/lib/upstream";
 
 /** Verify the code; the session token goes into an httpOnly cookie and never reaches page JS. */
 export async function POST(req: NextRequest) {

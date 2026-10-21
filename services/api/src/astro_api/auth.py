@@ -9,10 +9,9 @@ from typing import Annotated, Any
 from fastapi import APIRouter, Depends, Header, Request
 from pydantic import BaseModel, Field
 from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from astro_api.config import Settings
-from astro_api.db import get_db
+from astro_api.db import Db, settings_of
 from astro_api.errors import ApiError
 from astro_api.models import Astrologer, AuthSession, User
 from astro_api.otp import OtpService
@@ -85,24 +84,17 @@ def _otp(request: Request) -> OtpService:
     return service
 
 
-def _settings(request: Request) -> Settings:
-    settings: Settings = request.app.state.settings
-    return settings
-
-
 @router.post("/auth/otp/request", status_code=202, response_model=OtpRequested)
 async def request_otp(body: OtpRequest, request: Request) -> OtpRequested:
     phone = normalize_phone(body.phone)
     challenge = await _otp(request).request(
-        phone, body.device_id, client_ip(request, _settings(request))
+        phone, body.device_id, client_ip(request, settings_of(request))
     )
     return OtpRequested(**challenge.__dict__)
 
 
 @router.post("/auth/otp/verify", response_model=SessionOut)
-async def verify_otp(
-    body: OtpVerify, request: Request, db: Annotated[AsyncSession, Depends(get_db)]
-) -> SessionOut:
+async def verify_otp(body: OtpVerify, request: Request, db: Db) -> SessionOut:
     phone = await _otp(request).verify(body.challenge_id, body.code)
     now = dt.datetime.now(dt.UTC)
     user = (await db.execute(select(User).where(User.phone == phone))).scalar_one_or_none()
@@ -116,7 +108,7 @@ async def verify_otp(
     await db.flush()
 
     token = secrets.token_urlsafe(32)
-    expires = now + dt.timedelta(days=_settings(request).session_days)
+    expires = now + dt.timedelta(days=settings_of(request).session_days)
     db.add(
         AuthSession(
             user_id=user.id,
@@ -130,8 +122,7 @@ async def verify_otp(
 
 
 async def current_session(
-    db: Annotated[AsyncSession, Depends(get_db)],
-    authorization: Annotated[str | None, Header()] = None,
+    db: Db, authorization: Annotated[str | None, Header()] = None
 ) -> tuple[AuthSession, User]:
     scheme, _, token = (authorization or "").partition(" ")
     if scheme.lower() != "bearer" or not token:
@@ -149,17 +140,18 @@ async def current_session(
     return row[0], row[1]
 
 
-async def current_user(
-    session_user: Annotated[tuple[AuthSession, User], Depends(current_session)],
-) -> User:
+CurrentSession = Annotated[tuple[AuthSession, User], Depends(current_session)]
+
+
+async def current_user(session_user: CurrentSession) -> User:
     return session_user[1]
 
 
+CurrentUser = Annotated[User, Depends(current_user)]
+
+
 @router.post("/auth/logout", status_code=204)
-async def logout(
-    session_user: Annotated[tuple[AuthSession, User], Depends(current_session)],
-    db: Annotated[AsyncSession, Depends(get_db)],
-) -> None:
+async def logout(session_user: CurrentSession, db: Db) -> None:
     auth_session = await db.get(AuthSession, session_user[0].id)
     if auth_session is not None:
         auth_session.revoked_at = dt.datetime.now(dt.UTC)
@@ -167,9 +159,7 @@ async def logout(
 
 
 @router.get("/me", response_model=MeOut)
-async def me(
-    user: Annotated[User, Depends(current_user)], db: Annotated[AsyncSession, Depends(get_db)]
-) -> dict[str, Any]:
+async def me(user: CurrentUser, db: Db) -> dict[str, Any]:
     row = (
         await db.execute(
             select(Astrologer.id, Astrologer.status, Astrologer.slug).where(

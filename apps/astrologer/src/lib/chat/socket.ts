@@ -96,7 +96,7 @@ export async function loadAll(
   }
 }
 
-const browserTimers: Timers = {
+export const browserTimers: Timers = {
   setTimeout: (fn, ms) => globalThis.setTimeout(fn, ms),
   clearTimeout: (id) => globalThis.clearTimeout(id as ReturnType<typeof setTimeout>),
   setInterval: (fn, ms) => globalThis.setInterval(fn, ms),

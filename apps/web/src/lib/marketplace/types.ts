@@ -1,6 +1,6 @@
 import type { Availability } from "@astro/shared";
 
-/** Shapes from docs/api/marketplace.md (Phase 3 contract). Money is integer paise. */
+/** Shapes from docs/api/marketplace.md. Money is integer paise. */
 export type Presence = "online" | "busy" | "offline";
 export type Sort = "recommended" | "price_asc" | "price_desc" | "experience" | "rating";
 

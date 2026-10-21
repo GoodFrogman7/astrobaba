@@ -40,9 +40,9 @@ web page ── facts (always) + published prose (if any) ◄──────�
    skipped and reported.
 3. **QA queue**: entries are stored `pending_review`. A person approves (optionally editing),
    which publishes, or rejects with a reason. Each action is written to `audit_log`. The
-   public API returns published entries only. Until the admin panel (Phase 3), review happens
-   through `python -m astro_worker horoscopes review …` or the admin API (bearer
-   `ADMIN_TOKEN`).
+   public API returns published entries only. Review happens in the admin app's QA queue or
+   with `python -m astro_worker horoscopes review …` (the original bearer `ADMIN_TOKEN` was
+   replaced by the admin role, ADR-0006).
 4. **Pages never wait for prose.** Without a published entry, a page shows the computed facts
    and deterministic template sentences that restate them (template code, not an LLM), so no
    page is empty or thin and nothing unreviewed is published.

@@ -1,7 +1,6 @@
 {
   "almanac": {
     "panchang": {
-      "heading": "Panchang for {city}",
       "summary": "At a glance",
       "vaara": "Weekday (vaara)",
       "sunrise": "Sunrise",
@@ -51,7 +50,6 @@
       }
     },
     "horoscope": {
-      "heading": "{sign} {period} horoscope",
       "areas": {
         "overall": "Overall",
         "love": "Love and relationships",

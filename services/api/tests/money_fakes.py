@@ -9,18 +9,17 @@ interfaces in astro_api.wallet, astro_api.refunds and astro_api.free_session:
   only when the caller's AsyncSession commits, and vanish on rollback or close (a process that
   dies mid-transaction leaves nothing behind).
 
-Tests use the `money` fixture. When the real wallet lands, switching the session tests to it is
-one line in `money_fixture()` below (return a RealMoney adapter with the same `fund`,
-`charged_minutes`, `spent`, `balance` and `refunded` methods); assertions on fake-only details
-are guarded with `isinstance(money, FakeMoney)`.
+Session tests use the `money` fixture: the real ledger (RealMoney) by default, this fake when a
+test asks for `fake_money` or SESSION_TESTS_MONEY=fake.
 
 The rest of the module is the session test world (an approved astrologer, funded users, a
-`deps_for()` "process" with an injected clock) shared by test_sessions_*, test_chat_*,
-test_meter* and test_session_crash*.
+`deps_for()` "process" with an injected clock, socket and clock helpers) shared by
+test_sessions_*, test_chat_*, test_calls*, test_meter* and test_session_crash*.
 """
 
 import asyncio
 import copy
+import datetime as dt
 import os
 import uuid
 from collections import Counter
@@ -35,8 +34,10 @@ from redis.asyncio import Redis
 from sqlalchemy import event
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Session, SessionTransaction
+from starlette.testclient import WebSocketTestSession
+from starlette.websockets import WebSocketDisconnect
 
-from astro_api import free_session, refunds, wallet
+from astro_api import chat_bus, free_session, refunds, wallet
 from astro_api import session_service as svc
 from astro_api.chat_crypto import cipher_from_settings
 from astro_api.config import Settings
@@ -386,6 +387,7 @@ ORIGIN = "http://localhost:3000"
 ASTRO_PHONE = "+919844440100"
 USER_PHONE = "+919844440001"
 PRICE = 2000  # make_live default (tier rising: 4000 bps)
+GRACE = 90.0  # heartbeat_grace_s (billing.json)
 
 
 @asynccontextmanager
@@ -479,3 +481,41 @@ def world_fixture(
 ) -> World:
     astro, aid, slug = make_live(ASTRO_PHONE)
     return World(client, login, money, astro, aid, slug, clean)
+
+
+def fast(w: World, calls: CallBackend | None = None) -> Any:
+    """deps_for() with one-second billed minutes."""
+    return deps_for(w.settings, calls, billing_minute_seconds=1.0)
+
+
+def at(t0: dt.datetime, seconds: float) -> dt.datetime:
+    return t0 + dt.timedelta(seconds=seconds)
+
+
+async def alive(deps: svc.Deps, sid: uuid.UUID, now: dt.datetime, *roles: str) -> None:
+    """Socket traffic (ping) from these sides (default: both)."""
+    for role in roles or svc.ROLES:
+        await chat_bus.touch(deps.redis, sid, role, now, GRACE)
+
+
+def connect(w: World, sid: str, headers: dict[str, str], origin: str = ORIGIN) -> Any:
+    ticket = w.ticket(sid, headers)
+    return w.client.websocket_connect(
+        f"/v1/sessions/{sid}/ws?ticket={ticket}", headers={"origin": origin}
+    )
+
+
+def until(ws: WebSocketTestSession, kind: str) -> dict[str, Any]:
+    """Next frame of this type (skips others, e.g. `state` updates)."""
+    for _ in range(20):
+        frame: dict[str, Any] = ws.receive_json()
+        if frame["type"] == kind:
+            return frame
+    raise AssertionError(f"no {kind} frame")
+
+
+def closed_with(ws: WebSocketTestSession) -> int:
+    with pytest.raises(WebSocketDisconnect) as e:
+        for _ in range(20):
+            ws.receive_json()
+    return int(e.value.code)

@@ -1,6 +1,7 @@
-"""Locate files in packages/shared (flags, analytics schema) from Python.
+"""Locate packages/shared and data/ from Python.
 
-Set SHARED_DIR in containers; locally we walk up from this file to the repo root.
+Containers set SHARED_DIR, DATA_DIR and MARKETPLACE_DIR; locally we walk up from this file to the
+repo root.
 """
 
 import os
@@ -8,42 +9,32 @@ from functools import cache
 from pathlib import Path
 
 
-@cache
-def shared_dir() -> Path:
-    env = os.environ.get("SHARED_DIR")
+def _locate(env_var: str, *parts: str) -> Path:
+    env = os.environ.get(env_var)
     if env:
         return Path(env)
     for parent in Path(__file__).resolve().parents:
-        candidate = parent / "packages" / "shared"
+        candidate = parent.joinpath(*parts)
         if candidate.is_dir():
             return candidate
-    raise FileNotFoundError("packages/shared not found; set SHARED_DIR")
+    raise FileNotFoundError(f"{'/'.join(parts)} not found; set {env_var}")
+
+
+@cache
+def shared_dir() -> Path:
+    return _locate("SHARED_DIR", "packages", "shared")
 
 
 @cache
 def data_dir() -> Path:
-    """data/astro (Jyotish tables). Set DATA_DIR in containers."""
-    env = os.environ.get("DATA_DIR")
-    if env:
-        return Path(env)
-    for parent in Path(__file__).resolve().parents:
-        candidate = parent / "data" / "astro"
-        if candidate.is_dir():
-            return candidate
-    raise FileNotFoundError("data/astro not found; set DATA_DIR")
+    """data/astro (Jyotish tables)."""
+    return _locate("DATA_DIR", "data", "astro")
 
 
 @cache
 def marketplace_dir() -> Path:
-    """data/marketplace (taxonomy). Set MARKETPLACE_DIR in containers."""
-    env = os.environ.get("MARKETPLACE_DIR")
-    if env:
-        return Path(env)
-    for parent in Path(__file__).resolve().parents:
-        candidate = parent / "data" / "marketplace"
-        if candidate.is_dir():
-            return candidate
-    raise FileNotFoundError("data/marketplace not found; set MARKETPLACE_DIR")
+    """data/marketplace (taxonomy, billing)."""
+    return _locate("MARKETPLACE_DIR", "data", "marketplace")
 
 
 def repo_data_dir() -> Path | None:
