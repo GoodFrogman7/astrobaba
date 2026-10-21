@@ -1,5 +1,5 @@
 {
-  "$comment": "Phase 4 money settings. Integer paise everywhere. Values marked founder_decision are defaults to confirm (PLAN.md §9.3). Changing them never reprices posted ledger entries.",
+  "$comment": "Money settings. Integer paise everywhere. Values with `decided` were confirmed by the founder. Changing them never reprices posted ledger entries.",
   "currency": "INR",
   "spend_order": {
     "value": [
@@ -31,7 +31,6 @@
   "recharge_bonus_tiers": {
     "flag": "recharge_bonus_tiers",
     "promo_expiry_days": 30,
-    "founder_decision": true,
     "tiers": [
       {
         "min_paise": 50000,
@@ -45,7 +44,8 @@
         "min_paise": 200000,
         "bonus_bps": 1500
       }
-    ]
+    ],
+    "decided": "founder, 2026-10-21"
   },
   "real_credit_expiry_days": 365,
   "real_credit_expiry_note": "Long expiry per PLAN.md; the exact period and its legality need the Phase 7 policy/lawyer review.",
@@ -58,7 +58,8 @@
       "max_free_sessions_per_ip_per_day": 3,
       "score_threshold": 2
     },
-    "note": "Once per user. Funded as a promo lot sized to the astrologer's price x minutes; unused minutes expire when the session ends."
+    "note": "Once per user. Funded as a promo lot sized to the astrologer's price x minutes; unused minutes expire when the session ends.",
+    "decided": "founder, 2026-10-21: 5 minutes; abuse signals and threshold as configured"
   },
   "sessions": {
     "request_timeout_s": 180,
@@ -66,8 +67,9 @@
     "heartbeat_grace_s": 90,
     "average_session_minutes": 10,
     "min_start_minutes": 2,
-    "min_start_minutes_note": "founder_decision: minimum minutes the wallet must cover to start a paid chat",
-    "low_balance_warning_minutes": 1
+    "min_start_minutes_note": "Minimum minutes the wallet must cover to start a paid chat or call.",
+    "low_balance_warning_minutes": 1,
+    "decided": "founder, 2026-10-21: minimum 2 minutes to start"
   },
   "refund_rules": {
     "failed_connect": {
@@ -88,7 +90,8 @@
       "refund_bps": 5000,
       "cap_paise": 20000,
       "max_per_user_per_30_days": 1
-    }
+    },
+    "decided": "founder, 2026-10-21: rules as configured; no goodwill refunds above what was charged; free sessions never refunded; refunded promo credit expires after promo_expiry_days"
   },
   "reconciliation": {
     "tolerance_paise": 0
