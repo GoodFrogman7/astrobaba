@@ -1,4 +1,5 @@
-"""Tables (migration 0002). Birth details and phone numbers are personal data: never log them."""
+"""Tables (migrations 0002, 0003). Birth details, phone numbers and KYC documents are personal
+data: never log them."""
 
 import datetime as dt
 import uuid
@@ -7,6 +8,7 @@ from typing import Any
 from sqlalchemy import (
     BigInteger,
     Boolean,
+    CheckConstraint,
     Date,
     DateTime,
     Enum,
@@ -27,6 +29,24 @@ from astro_api.db import Base
 GENDERS = ("female", "male", "other")
 PERIODS = ("daily", "weekly", "monthly")
 HOROSCOPE_STATUSES = ("pending_review", "published", "rejected")
+ASTROLOGER_STATUSES = (
+    "applied",
+    "kyc_submitted",
+    "interview",
+    "probation",
+    "approved",
+    "suspended",
+    "rejected",
+)
+PUBLIC_STATUSES = ("probation", "approved")
+VERIFICATION_STEPS = ("identity", "qualification", "interview", "probation")
+VERIFICATION_STATUSES = ("pending", "passed", "failed")
+DOCUMENT_KINDS = ("identity", "qualification", "other")
+DOCUMENT_REVIEW = ("pending", "accepted", "rejected")
+SESSION_KINDS = ("chat", "call")
+SESSION_STATUSES = ("requested", "active", "completed", "cancelled", "failed")
+REVIEW_STATUSES = ("published", "flagged", "hidden")
+DEFAULT_FLAGS = {"chat_enabled": True, "call_enabled": False, "show_in_directory": True}
 
 
 def _uuid() -> uuid.UUID:
@@ -45,6 +65,7 @@ class User(Base):
     locale: Mapped[str] = mapped_column(Text, default="en", server_default="en")
     is_adult_confirmed: Mapped[bool] = mapped_column(Boolean, default=False, server_default="false")
     device_ids: Mapped[list[str]] = mapped_column(ARRAY(Text), default=list, server_default="{}")
+    roles: Mapped[list[str]] = mapped_column(ARRAY(Text), default=list, server_default="{}")
 
 
 class AuthSession(Base):
@@ -127,3 +148,146 @@ class AuditLog(Base):
     entity: Mapped[str] = mapped_column(Text)
     entity_id: Mapped[str | None] = mapped_column(Text)
     detail: Mapped[dict[str, Any]] = mapped_column(JSONB, default=dict, server_default="{}")
+
+
+def _now() -> dt.datetime:
+    return dt.datetime.now(dt.UTC)
+
+
+class Astrologer(Base):
+    __tablename__ = "astrologers"
+    __table_args__ = (
+        CheckConstraint("price_per_min_paise IS NULL OR price_per_min_paise > 0", name="price_pos"),
+        CheckConstraint("requested_price_per_min_paise > 0", name="requested_price_pos"),
+        CheckConstraint("experience_years BETWEEN 0 AND 80", name="experience_range"),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=_uuid)
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), unique=True
+    )
+    display_name: Mapped[str] = mapped_column(Text)
+    slug: Mapped[str] = mapped_column(Text, unique=True)
+    bio: Mapped[str] = mapped_column(Text)
+    bio_hi: Mapped[str | None] = mapped_column(Text)
+    skills: Mapped[list[str]] = mapped_column(ARRAY(Text))
+    languages: Mapped[list[str]] = mapped_column(ARRAY(Text))
+    gender: Mapped[str] = mapped_column(Enum(*GENDERS, name="gender"))
+    tier: Mapped[str | None] = mapped_column(Text)
+    price_per_min_paise: Mapped[int | None] = mapped_column(BigInteger)
+    requested_price_per_min_paise: Mapped[int] = mapped_column(BigInteger)
+    experience_years: Mapped[int] = mapped_column(Integer)
+    status: Mapped[str] = mapped_column(
+        Enum(*ASTROLOGER_STATUSES, name="astrologer_status"), default="applied"
+    )
+    status_before_suspension: Mapped[str | None] = mapped_column(Text)
+    probation_until: Mapped[dt.datetime | None] = mapped_column(DateTime(timezone=True))
+    flags: Mapped[dict[str, Any]] = mapped_column(JSONB, default=lambda: dict(DEFAULT_FLAGS))
+    is_seed: Mapped[bool] = mapped_column(Boolean, default=False, server_default="false")
+    accepts_terms_at: Mapped[dt.datetime] = mapped_column(DateTime(timezone=True))
+    created_at: Mapped[dt.datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+    updated_at: Mapped[dt.datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=_now
+    )
+    approved_at: Mapped[dt.datetime | None] = mapped_column(DateTime(timezone=True))
+    suspended_reason: Mapped[str | None] = mapped_column(Text)
+    rejected_reason: Mapped[str | None] = mapped_column(Text)
+
+
+class AstrologerVerification(Base):
+    __tablename__ = "astrologer_verifications"
+    __table_args__ = (UniqueConstraint("astrologer_id", "step"),)
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    astrologer_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("astrologers.id", ondelete="CASCADE"), index=True
+    )
+    step: Mapped[str] = mapped_column(Enum(*VERIFICATION_STEPS, name="verification_step"))
+    status: Mapped[str] = mapped_column(
+        Enum(*VERIFICATION_STATUSES, name="verification_status"), default="pending"
+    )
+    reviewer_user_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("users.id", ondelete="SET NULL")
+    )
+    note: Mapped[str | None] = mapped_column(Text)
+    at: Mapped[dt.datetime | None] = mapped_column(DateTime(timezone=True))
+
+
+class KycDocument(Base):
+    __tablename__ = "kyc_documents"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=_uuid)
+    astrologer_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("astrologers.id", ondelete="CASCADE"), index=True
+    )
+    kind: Mapped[str] = mapped_column(Enum(*DOCUMENT_KINDS, name="document_kind"))
+    filename: Mapped[str] = mapped_column(Text)
+    content_type: Mapped[str] = mapped_column(Text)
+    size: Mapped[int] = mapped_column(Integer)
+    sha256: Mapped[str] = mapped_column(Text)
+    storage_key: Mapped[str] = mapped_column(Text, unique=True)
+    uploaded_at: Mapped[dt.datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+    review_status: Mapped[str] = mapped_column(
+        Enum(*DOCUMENT_REVIEW, name="document_review_status"), default="pending"
+    )
+
+
+class ConsultSession(Base):
+    """Minimal consultation record (Phase 3: reviews need a completed session). Phase 4 adds
+    billing and chat."""
+
+    __tablename__ = "consult_sessions"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=_uuid)
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), index=True
+    )
+    astrologer_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("astrologers.id", ondelete="CASCADE"), index=True
+    )
+    kind: Mapped[str] = mapped_column(Enum(*SESSION_KINDS, name="session_kind"))
+    status: Mapped[str] = mapped_column(
+        Enum(*SESSION_STATUSES, name="session_status"), default="requested"
+    )
+    started_at: Mapped[dt.datetime | None] = mapped_column(DateTime(timezone=True))
+    ended_at: Mapped[dt.datetime | None] = mapped_column(DateTime(timezone=True))
+    created_at: Mapped[dt.datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+
+
+class Review(Base):
+    __tablename__ = "reviews"
+    __table_args__ = (CheckConstraint("rating BETWEEN 1 AND 5", name="rating_range"),)
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=_uuid)
+    session_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("consult_sessions.id", ondelete="CASCADE"), unique=True
+    )
+    astrologer_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("astrologers.id", ondelete="CASCADE"), index=True
+    )
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), index=True
+    )
+    rating: Mapped[int] = mapped_column(Integer)
+    text: Mapped[str] = mapped_column(Text, default="")
+    status: Mapped[str] = mapped_column(Enum(*REVIEW_STATUSES, name="review_status"))
+    reply_text: Mapped[str | None] = mapped_column(Text)
+    reply_at: Mapped[dt.datetime | None] = mapped_column(DateTime(timezone=True))
+    report_count: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
+    # Set when the text failed automatic moderation at creation: the review is held (not public)
+    # until a moderator acts. Reported reviews are flagged too but stay visible meanwhile.
+    auto_flag_reason: Mapped[str | None] = mapped_column(Text)
+    moderation_note: Mapped[str | None] = mapped_column(Text)
+    moderated_by: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("users.id", ondelete="SET NULL")
+    )
+    moderated_at: Mapped[dt.datetime | None] = mapped_column(DateTime(timezone=True))
+    created_at: Mapped[dt.datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )

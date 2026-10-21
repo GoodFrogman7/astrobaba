@@ -1,4 +1,5 @@
 from functools import cache
+from pathlib import Path
 from typing import Literal
 
 from pydantic import Field, SecretStr
@@ -29,8 +30,10 @@ class Settings(BaseSettings):
     secret_key: SecretStr = SecretStr(DEV_SECRET_KEY)
     # SMS delivery for OTP codes: "console" logs them (development/test only).
     sms_provider: Literal["console", "msg91"] = "console"
-    # Bearer token for /v1/admin/*. Unset disables the admin endpoints (they return 404).
-    admin_token: SecretStr | None = None
+    # KYC document storage: "local" (development/test; DOCUMENTS_DIR, default <repo>/data/uploads)
+    # or "s3" (production, SSE-KMS; not implemented until the bucket exists).
+    documents_backend: Literal["local", "s3"] = "local"
+    documents_dir: Path | None = None
     # Header carrying the client IP when the API sits behind a trusted proxy (e.g. X-Forwarded-For).
     client_ip_header: str | None = None
 
@@ -55,6 +58,8 @@ def check_production_settings(settings: Settings) -> None:
         problems.append("SECRET_KEY must be at least 32 characters")
     if settings.sms_provider == "console":
         problems.append("SMS_PROVIDER=console only logs codes; configure a real provider")
+    if settings.documents_backend == "local":
+        problems.append("DOCUMENTS_BACKEND=local keeps KYC documents on the container disk")
     if problems:
         raise RuntimeError("unsafe production settings: " + "; ".join(problems))
 

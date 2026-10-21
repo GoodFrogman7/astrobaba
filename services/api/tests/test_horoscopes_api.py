@@ -6,13 +6,11 @@ from typing import Any
 
 import pytest
 from fastapi.testclient import TestClient
-from pydantic import SecretStr
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import create_async_engine
 
 from astro_api.config import Settings
 from astro_api.db import make_sessionmaker
-from astro_api.main import create_app
 from astro_api.models import AuditLog, HoroscopeEntry
 from astro_api.shared_files import data_dir
 
@@ -182,21 +180,15 @@ def test_reject(client: TestClient, admin_headers: dict[str, str]) -> None:
     )
 
 
-def test_admin_requires_token(client: TestClient, admin_headers: dict[str, str]) -> None:
+def test_admin_requires_admin_role(client: TestClient, login) -> None:  # type: ignore[no-untyped-def]
     assert client.get("/v1/admin/horoscopes").status_code == 401
     assert (
         client.get("/v1/admin/horoscopes", headers={"Authorization": "Bearer wrong"}).status_code
         == 401
     )
-
-
-def test_admin_disabled_without_token(clean: Settings, admin_headers: dict[str, str]) -> None:
-    settings = clean.model_copy(update={"admin_token": None})
-    with TestClient(create_app(settings)) as c:
-        assert c.get("/v1/admin/horoscopes", headers=admin_headers).status_code == 404
-    empty = clean.model_copy(update={"admin_token": SecretStr("")})
-    with TestClient(create_app(empty)) as c:
-        assert c.get("/v1/admin/horoscopes", headers=admin_headers).status_code == 404
+    member = login("+919811111111")
+    r = client.get("/v1/admin/horoscopes", headers=member)
+    assert r.status_code == 403 and r.json()["detail"]["code"] == "forbidden"
 
 
 def test_validation_of_path_params(client: TestClient, admin_headers: dict[str, str]) -> None:

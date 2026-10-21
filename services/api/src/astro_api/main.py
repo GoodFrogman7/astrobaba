@@ -9,7 +9,16 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from redis.asyncio import Redis
 
-from astro_api import __version__, auth, horoscopes, kundlis
+from astro_api import (
+    __version__,
+    admin_marketplace,
+    applicant,
+    auth,
+    horoscopes,
+    kundlis,
+    marketplace,
+    reviews,
+)
 from astro_api.config import Settings, check_production_settings, get_settings
 from astro_api.db import make_engine, make_sessionmaker
 from astro_api.errors import ApiError, api_error_handler
@@ -18,6 +27,7 @@ from astro_api.health import check_dependencies
 from astro_api.logs import configure_logging
 from astro_api.otp import OtpService
 from astro_api.sms import make_sms_sender
+from astro_api.storage import make_storage
 
 log = logging.getLogger("astro_api")
 
@@ -27,6 +37,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     configure_logging(settings.log_level)
     check_production_settings(settings)
     sms = make_sms_sender(settings)
+    storage = make_storage(settings)
 
     @asynccontextmanager
     async def lifespan(app: FastAPI) -> AsyncIterator[None]:
@@ -35,6 +46,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         app.state.sessionmaker = make_sessionmaker(app.state.engine)
         app.state.redis = Redis.from_url(settings.redis_url.get_secret_value())
         app.state.otp = OtpService(app.state.redis, settings, sms)
+        app.state.storage = storage
         log.info("api started", extra={"env": settings.app_env, "version": __version__})
         try:
             yield
@@ -50,7 +62,16 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         redoc_url=None,
     )
     app.add_exception_handler(ApiError, api_error_handler)
-    for router in (auth.router, kundlis.router, horoscopes.public, horoscopes.admin):
+    for router in (
+        auth.router,
+        kundlis.router,
+        horoscopes.public,
+        horoscopes.admin,
+        marketplace.router,
+        applicant.router,
+        reviews.router,
+        admin_marketplace.router,
+    ):
         app.include_router(router)
     app.add_middleware(
         CORSMiddleware,

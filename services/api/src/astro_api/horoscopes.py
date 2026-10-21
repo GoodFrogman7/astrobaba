@@ -2,22 +2,21 @@
 (PLAN.md §6: no LLM output published without the QA queue)."""
 
 import datetime as dt
-import hmac
 import uuid
 from typing import Annotated, Any, Literal
 from zoneinfo import ZoneInfo
 
-from fastapi import APIRouter, Depends, Header, Query, Request
+from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel, Field
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from astro_api.audit import audit
-from astro_api.config import Settings
 from astro_api.db import get_db
 from astro_api.errors import ApiError
 from astro_api.horoscope_rules import AREAS, text_errors
 from astro_api.models import HoroscopeEntry
+from astro_api.roles import AdminUser, actor
 
 SIGNS = (
     "aries",
@@ -134,24 +133,9 @@ async def published(
     return _public(entry)
 
 
-def require_admin(request: Request, authorization: Annotated[str | None, Header()] = None) -> str:
-    """Bearer ADMIN_TOKEN. Without a configured token the admin API does not exist (404)."""
-    settings: Settings = request.app.state.settings
-    if settings.admin_token is None or not settings.admin_token.get_secret_value():
-        raise ApiError(404, "not_found", "Not found.")
-    scheme, _, token = (authorization or "").partition(" ")
-    expected = settings.admin_token.get_secret_value().encode()
-    if scheme.lower() != "bearer" or not hmac.compare_digest(token.strip().encode(), expected):
-        raise ApiError(401, "unauthenticated", "Admin token required.")
-    return "admin-token"
-
-
-Admin = Annotated[str, Depends(require_admin)]
-
-
 @admin.get("", response_model=list[AdminHoroscope])
 async def list_entries(
-    _: Admin,
+    _: AdminUser,
     db: Annotated[AsyncSession, Depends(get_db)],
     status: Literal["pending_review", "published", "rejected"] = "pending_review",
     limit: Annotated[int, Query(ge=1, le=200)] = 50,
@@ -179,7 +163,7 @@ async def _entry(db: AsyncSession, entry_id: uuid.UUID) -> HoroscopeEntry:
 
 @admin.get("/{entry_id}", response_model=AdminHoroscope)
 async def get_entry(
-    _: Admin, entry_id: uuid.UUID, db: Annotated[AsyncSession, Depends(get_db)]
+    _: AdminUser, entry_id: uuid.UUID, db: Annotated[AsyncSession, Depends(get_db)]
 ) -> dict[str, Any]:
     return _admin(await _entry(db, entry_id))
 
@@ -214,7 +198,10 @@ def apply_approval(
 
 @admin.post("/{entry_id}/approve", response_model=AdminHoroscope)
 async def approve(
-    actor: Admin, entry_id: uuid.UUID, body: Approve, db: Annotated[AsyncSession, Depends(get_db)]
+    admin_user: AdminUser,
+    entry_id: uuid.UUID,
+    body: Approve,
+    db: Annotated[AsyncSession, Depends(get_db)],
 ) -> dict[str, Any]:
     entry = await _entry(db, entry_id)
     errors = apply_approval(entry, body.reviewer, body.sections)
@@ -222,7 +209,7 @@ async def approve(
         raise ApiError(422, "invalid_sections", "; ".join(errors), errors=errors)
     audit(
         db,
-        f"{actor}:{body.reviewer}",
+        f"{actor(admin_user)}:{body.reviewer}",
         "horoscope.approve",
         "horoscope_entry",
         str(entry.id),
@@ -234,7 +221,10 @@ async def approve(
 
 @admin.post("/{entry_id}/reject", response_model=AdminHoroscope)
 async def reject(
-    actor: Admin, entry_id: uuid.UUID, body: Reject, db: Annotated[AsyncSession, Depends(get_db)]
+    admin_user: AdminUser,
+    entry_id: uuid.UUID,
+    body: Reject,
+    db: Annotated[AsyncSession, Depends(get_db)],
 ) -> dict[str, Any]:
     entry = await _entry(db, entry_id)
     if entry.status == "published":
@@ -243,6 +233,12 @@ async def reject(
     entry.reviewed_by = body.reviewer
     entry.reviewed_at = dt.datetime.now(dt.UTC)
     entry.review_note = body.reason
-    audit(db, f"{actor}:{body.reviewer}", "horoscope.reject", "horoscope_entry", str(entry.id))
+    audit(
+        db,
+        f"{actor(admin_user)}:{body.reviewer}",
+        "horoscope.reject",
+        "horoscope_entry",
+        str(entry.id),
+    )
     await db.commit()
     return _admin(entry)

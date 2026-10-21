@@ -13,8 +13,19 @@ from pydantic import SecretStr
 os.environ.setdefault("APP_ENV", "test")
 
 API_DIR = Path(__file__).resolve().parents[1]
-TABLES = ("audit_log", "horoscope_entries", "saved_kundlis", "auth_sessions", "users")
-ADMIN_TOKEN = "test-admin-token-0123456789abcdef"
+TABLES = (
+    "audit_log",
+    "horoscope_entries",
+    "saved_kundlis",
+    "reviews",
+    "consult_sessions",
+    "kyc_documents",
+    "astrologer_verifications",
+    "astrologers",
+    "auth_sessions",
+    "users",
+)
+ADMIN_PHONE = "+919000000001"
 
 
 def services_available() -> bool:
@@ -41,17 +52,26 @@ def migrated() -> None:
     subprocess.run([sys.executable, "-m", "alembic", "upgrade", "head"], cwd=API_DIR, check=True)
 
 
-@pytest.fixture
-def settings(migrated: None):  # type: ignore[no-untyped-def]
+@pytest.fixture(scope="session")
+def documents_dir(tmp_path_factory: pytest.TempPathFactory) -> Path:
+    return tmp_path_factory.mktemp("kyc-documents")
+
+
+def make_settings(documents_dir: Path):  # type: ignore[no-untyped-def]
     from astro_api.config import Settings
 
     return Settings(
         app_env="test",
         database_url=SecretStr(os.environ["DATABASE_URL"]),
         redis_url=SecretStr(_test_redis_url()),
-        admin_token=SecretStr(ADMIN_TOKEN),
         secret_key=SecretStr("test-secret-key-for-hmac-0123456789"),
+        documents_dir=documents_dir,
     )
+
+
+@pytest.fixture
+def settings(migrated: None, documents_dir: Path):  # type: ignore[no-untyped-def]
+    return make_settings(documents_dir)
 
 
 async def _truncate(url: str) -> None:
@@ -86,6 +106,159 @@ def client(clean) -> Iterator[TestClient]:  # type: ignore[no-untyped-def]
         yield c
 
 
+async def _session_for(url: str, phone: str, roles: tuple[str, ...]) -> str:
+    """Create (or reuse) a user and a fresh bearer session directly in the database, so tests can
+    sign in many users without the OTP rate limits."""
+    import datetime as dt
+    import secrets
+
+    from sqlalchemy import select
+    from sqlalchemy.ext.asyncio import create_async_engine
+
+    from astro_api.auth import hash_token
+    from astro_api.db import make_sessionmaker
+    from astro_api.models import AuthSession, User
+
+    engine = create_async_engine(url)
+    try:
+        async with make_sessionmaker(engine)() as db:
+            user = (await db.execute(select(User).where(User.phone == phone))).scalar_one_or_none()
+            if user is None:
+                user = User(phone=phone, device_ids=[], roles=list(roles))
+                db.add(user)
+            else:
+                user.roles = sorted(set(user.roles) | set(roles))
+            await db.flush()
+            token = secrets.token_urlsafe(32)
+            db.add(
+                AuthSession(
+                    user_id=user.id,
+                    token_hash=hash_token(token),
+                    expires_at=dt.datetime.now(dt.UTC) + dt.timedelta(days=1),
+                )
+            )
+            await db.commit()
+            return token
+    finally:
+        await engine.dispose()
+
+
 @pytest.fixture
-def admin_headers() -> dict[str, str]:
-    return {"Authorization": f"Bearer {ADMIN_TOKEN}"}
+def login(clean):  # type: ignore[no-untyped-def]
+    """login(phone, *roles) -> Authorization headers for that user."""
+
+    def _login(phone: str, *roles: str) -> dict[str, str]:
+        token = asyncio.run(_session_for(clean.database_url.get_secret_value(), phone, roles))
+        return {"Authorization": f"Bearer {token}"}
+
+    return _login
+
+
+@pytest.fixture
+def admin_headers(login) -> dict[str, str]:  # type: ignore[no-untyped-def]
+    return login(ADMIN_PHONE, "admin")  # type: ignore[no-any-return]
+
+
+# ---------------------------------------------------------------- marketplace helpers
+
+PDF = b"%PDF-1.4\n% test document\n"
+JPEG = b"\xff\xd8\xff\xe0" + b"\x00" * 64
+PNG = b"\x89PNG\r\n\x1a\n" + b"\x00" * 64
+
+
+def application(**overrides: object) -> dict[str, object]:
+    body: dict[str, object] = {
+        "display_name": "Asha Verma",
+        "bio": "Vedic astrologer with a calm, practical approach to chart reading.",
+        "skills": ["vedic", "numerology"],
+        "languages": ["hi", "en"],
+        "gender": "female",
+        "experience_years": 12,
+        "requested_price_per_min_paise": 2500,
+        "accepts_terms": True,
+    }
+    body.update(overrides)
+    return body
+
+
+@pytest.fixture
+def make_live(client: TestClient, login, admin_headers):  # type: ignore[no-untyped-def]
+    """make_live(phone, **application overrides) drives an application to `probation` (public)
+    and returns (applicant headers, astrologer id, slug)."""
+
+    def _make(
+        phone: str, tier: str = "rising", price: int = 2000, **overrides: object
+    ) -> tuple[dict[str, str], str, str]:
+        headers = login(phone)
+        r = client.post(
+            "/v1/astrologer/application", json=application(**overrides), headers=headers
+        )
+        assert r.status_code == 201, r.text
+        aid, slug = r.json()["id"], r.json()["slug"]
+        for kind, data in (("identity", PDF), ("qualification", PNG)):
+            r = client.post(
+                "/v1/astrologer/me/documents",
+                files={"file": (f"{kind}.bin", data, "application/octet-stream")},
+                data={"kind": kind},
+                headers=headers,
+            )
+            assert r.status_code == 201, r.text
+        for step in ("identity", "qualification", "interview"):
+            r = client.post(
+                f"/v1/admin/astrologers/{aid}/verifications/{step}",
+                json={"status": "passed"},
+                headers=admin_headers,
+            )
+            assert r.status_code == 200, r.text
+        r = client.post(
+            f"/v1/admin/astrologers/{aid}/approve",
+            json={"tier": tier, "price_per_min_paise": price},
+            headers=admin_headers,
+        )
+        assert r.status_code == 200, r.text
+        return headers, aid, slug
+
+    return _make
+
+
+async def _completed_session(url: str, user_phone: str, astrologer_id: str, status: str) -> str:
+    import datetime as dt
+    import uuid
+
+    from sqlalchemy import select
+    from sqlalchemy.ext.asyncio import create_async_engine
+
+    from astro_api.db import make_sessionmaker
+    from astro_api.models import ConsultSession, User
+
+    engine = create_async_engine(url)
+    try:
+        async with make_sessionmaker(engine)() as db:
+            user = (await db.execute(select(User).where(User.phone == user_phone))).scalar_one()
+            now = dt.datetime.now(dt.UTC)
+            s = ConsultSession(
+                user_id=user.id,
+                astrologer_id=uuid.UUID(astrologer_id),
+                kind="chat",
+                status=status,
+                started_at=now - dt.timedelta(minutes=20),
+                ended_at=now if status == "completed" else None,
+            )
+            db.add(s)
+            await db.commit()
+            return str(s.id)
+    finally:
+        await engine.dispose()
+
+
+@pytest.fixture
+def consult(clean):  # type: ignore[no-untyped-def]
+    """consult(user_phone, astrologer_id, status="completed") -> session id (Phase 4 creates
+    sessions for real; here they are inserted directly)."""
+
+    def _consult(phone: str, astrologer_id: str, status: str = "completed") -> str:
+        return asyncio.run(
+            _completed_session(clean.database_url.get_secret_value(), phone, astrologer_id, status)
+        )
+
+    return _consult

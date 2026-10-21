@@ -12,6 +12,8 @@ dependencies = [
   "asyncpg>=0.30",
   "alembic>=1.14",
   "redis>=5.2",
+  # multipart/form-data for KYC document uploads
+  "python-multipart>=0.0.18",
 ]
 
 [build-system]

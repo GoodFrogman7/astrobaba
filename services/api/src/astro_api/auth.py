@@ -14,7 +14,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from astro_api.config import Settings
 from astro_api.db import get_db
 from astro_api.errors import ApiError
-from astro_api.models import AuthSession, User
+from astro_api.models import Astrologer, AuthSession, User
 from astro_api.otp import OtpService
 from astro_api.phone import mask_phone, normalize_phone
 
@@ -51,12 +51,20 @@ class SessionOut(BaseModel):
     user: SessionUser
 
 
+class MeAstrologer(BaseModel):
+    id: uuid.UUID
+    status: str
+    slug: str
+
+
 class MeOut(BaseModel):
     id: uuid.UUID
     phone: str  # masked
     locale: str
     is_adult_confirmed: bool
     created_at: dt.datetime
+    roles: list[str]
+    astrologer: MeAstrologer | None
 
 
 def hash_token(token: str) -> bytes:
@@ -159,11 +167,22 @@ async def logout(
 
 
 @router.get("/me", response_model=MeOut)
-async def me(user: Annotated[User, Depends(current_user)]) -> dict[str, Any]:
+async def me(
+    user: Annotated[User, Depends(current_user)], db: Annotated[AsyncSession, Depends(get_db)]
+) -> dict[str, Any]:
+    row = (
+        await db.execute(
+            select(Astrologer.id, Astrologer.status, Astrologer.slug).where(
+                Astrologer.user_id == user.id
+            )
+        )
+    ).one_or_none()
     return {
         "id": user.id,
         "phone": mask_phone(user.phone),
         "locale": user.locale,
         "is_adult_confirmed": user.is_adult_confirmed,
         "created_at": user.created_at,
+        "roles": list(user.roles or []),
+        "astrologer": {"id": row[0], "status": row[1], "slug": row[2]} if row else None,
     }

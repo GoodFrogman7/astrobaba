@@ -31,3 +31,24 @@ def data_dir() -> Path:
         if candidate.is_dir():
             return candidate
     raise FileNotFoundError("data/astro not found; set DATA_DIR")
+
+
+@cache
+def marketplace_dir() -> Path:
+    """data/marketplace (taxonomy). Set MARKETPLACE_DIR in containers."""
+    env = os.environ.get("MARKETPLACE_DIR")
+    if env:
+        return Path(env)
+    for parent in Path(__file__).resolve().parents:
+        candidate = parent / "data" / "marketplace"
+        if candidate.is_dir():
+            return candidate
+    raise FileNotFoundError("data/marketplace not found; set MARKETPLACE_DIR")
+
+
+def repo_data_dir() -> Path | None:
+    """<repo>/data when running from a checkout (for dev-only defaults such as uploads)."""
+    for parent in Path(__file__).resolve().parents:
+        if (parent / "data" / "astro").is_dir():
+            return parent / "data"
+    return None
