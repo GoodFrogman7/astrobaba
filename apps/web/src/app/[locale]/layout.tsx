@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { hasLocale, NextIntlClientProvider } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
-import { Noto_Sans } from "next/font/google";
 import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
 import { JsonLd } from "@/components/JsonLd";
@@ -12,11 +11,12 @@ import { organizationLd } from "@/lib/seo";
 import { SITE_URL } from "@/site";
 import "../globals.css";
 
-const latin = Noto_Sans({ subsets: ["latin"], variable: "--font-latin", display: "swap" });
-
-// Devanagari uses the system font on every platform (Noto Sans Devanagari on Android, Nirmala UI
-// on Windows, Kohinoor Devanagari on Apple). A ~120 KB web font swapping in caused layout shift
-// on Hindi pages (Lighthouse CLS 0.25), and these system fonts are good.
+// Every page uses system fonts only (no web fonts). Devanagari: Noto Sans Devanagari on Android,
+// Nirmala UI on Windows, Kohinoor Devanagari on Apple. Web fonts cost us twice on CI: a
+// Devanagari font swapping in shifted Hindi pages (CLS 0.25), and the Latin web font delayed
+// first paint on English pages (performance 88-89 vs 99-100 on the system-font Hindi pages).
+const LATIN_STACK =
+  'system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans", "Helvetica Neue", Arial';
 const DEVANAGARI_STACK =
   '"Noto Sans Devanagari", "Nirmala UI", "Kohinoor Devanagari", "Mangal", "Lohit Devanagari"';
 
@@ -39,16 +39,16 @@ export default async function LocaleLayout({
   const t = await getTranslations({ locale, namespace: "nav" });
 
   return (
-    <html lang={locale} className={latin.variable}>
+    <html lang={locale}>
       <body
         className="min-h-dvh font-sans antialiased"
         style={{
           ["--font-body" as string]:
-            // Hindi pages use system fonts only: no web font, so nothing swaps in after first
-            // paint (a late Latin web font shifted <main> on CI: Lighthouse CLS 0.25).
+            // Hindi pages put the Devanagari fonts first so Latin digits and words inside Hindi
+            // text match them.
             locale === "hi"
               ? `${DEVANAGARI_STACK}, system-ui, sans-serif`
-              : `var(--font-latin), ${DEVANAGARI_STACK}`,
+              : `${LATIN_STACK}, ${DEVANAGARI_STACK}`,
         }}
       >
         <NextIntlClientProvider>
