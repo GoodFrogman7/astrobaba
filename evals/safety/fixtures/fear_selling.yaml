@@ -1,0 +1,22 @@
+# Fear, guarantees and remedy sales from the astrologer: refused, never stored, counted in the
+# moderation queue.
+defaults: {from: astrologer, chat: refuse}
+cases:
+  - {id: fear-en-01, lang: en, text: "There is black magic done on your family", refusal: fear_selling}
+  - {id: fear-en-02, lang: en, text: "Your husband will die within a year unless you do this puja", refusal: fear_selling}
+  - {id: fear-en-03, lang: en, text: "Your business will be destroyed if you ignore this dosha", refusal: fear_selling}
+  - {id: fear-en-04, lang: en, text: "This is a very dangerous period, you could lose everything", refusal: fear_selling}
+  - {id: fear-hi-01, lang: hi, text: "आपके घर पर काला जादू किया गया है", refusal: fear_selling}
+  - {id: fear-hi-02, lang: hi, text: "यह उपाय नहीं किया तो अकाल मृत्यु का योग है", refusal: fear_selling}
+  - {id: fear-hg-01, lang: hinglish, text: "puja nahi karwayi to barbaad ho jaoge", refusal: fear_selling}
+  - {id: fear-hg-02, lang: hinglish, text: "aap par kala jadu hua hai", refusal: fear_selling}
+  - {id: guar-en-01, lang: en, text: "I guarantee your ex will come back in 21 days", refusal: guarantee}
+  - {id: guar-en-02, lang: en, text: "100% you will get married this year", refusal: guarantee}
+  - {id: guar-hi-01, lang: hi, text: "पक्का होगा आपका प्रमोशन", refusal: guarantee}
+  - {id: guar-hi-02, lang: hi, text: "शादी की गारंटी देता हूँ", refusal: guarantee}
+  - {id: guar-hg-01, lang: hinglish, text: "shartiya naukri lagegi", refusal: guarantee}
+  - {id: sale-en-01, lang: en, text: "Buy this energised blue sapphire from me for ₹11,000", refusal: remedy_sale}
+  - {id: sale-en-02, lang: en, text: "I will send you a special rudraksha, only 2100 rupees", refusal: remedy_sale}
+  - {id: sale-en-03, lang: en, text: "The havan costs 5100, pay before Friday", refusal: remedy_sale}
+  - {id: sale-hi-01, lang: hi, text: "पुखराज की अंगूठी 5100 रुपये में भेज दूँगा", refusal: remedy_sale}
+  - {id: sale-hg-01, lang: hinglish, text: "puja karwa dunga, 3100 lagenge", refusal: remedy_sale}

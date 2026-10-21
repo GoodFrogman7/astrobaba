@@ -1,0 +1,55 @@
+{
+  "title": "{sign} Daily Horoscope, {window}: love, career, money",
+  "description": "{sign} daily horoscope for {window}: scores for love, career, money and health from today's planetary positions and the Moon's sign.",
+  "h1": "{sign} daily horoscope",
+  "intro": "Today's outlook for {sign} Moon sign, {window}: a score for each life area worked out from where the planets are, with the positions behind every score.",
+  "sections": [
+    {
+      "heading": "What changes from day to day",
+      "body": [
+        "The Moon moves through a whole sign in about two and a half days, so it is the main reason daily scores change. On days when it moves into a new sign, the page shows the time of the change in India time. Slower planets such as Jupiter and Saturn set the background for weeks or months."
+      ]
+    },
+    {
+      "heading": "How the scores are worked out",
+      "body": [
+        "Each score comes from fixed transit (gochara) rules, not from chance. We take the sidereal position of each planet for the period, count which house it occupies from {sign}, and look up whether classical tables treat that house as favourable or challenging for that planet. Each life area weighs the planets most associated with it, for example Venus for relationships and Saturn and the Sun for career.",
+        "The weighted result is placed on a five-step scale from challenging to excellent. The same positions always give the same score, and the planets behind every score are listed on the page so you can see the reasoning."
+      ]
+    },
+    {
+      "heading": "Why Moon signs",
+      "body": [
+        "Vedic astrology reads transits from the Moon sign (rashi), the sign the Moon occupied when you were born, rather than the Western Sun sign. If you do not know your Moon sign, the kundli tool shows it from your birth details. Your Moon sign is often different from the Sun sign you may know from magazines."
+      ]
+    },
+    {
+      "heading": "Reading a horoscope sensibly",
+      "body": [
+        "A horoscope describes broad tendencies of a period for everyone who shares a Moon sign. It cannot see your personal situation and it is not a prediction of specific events. Use it as one prompt for reflection; for decisions about health, money or law, speak to a qualified professional."
+      ]
+    }
+  ],
+  "faqs": [
+    {
+      "q": "Is this based on my Sun sign or Moon sign?",
+      "a": "On your Moon sign (rashi), as is usual in Vedic astrology. The kundli tool shows your Moon sign from your birth details."
+    },
+    {
+      "q": "How is the score calculated?",
+      "a": "Each planet's house from your Moon sign is checked against classical transit tables, weighted by how strongly it relates to each life area, and the result is placed on a fixed five-step scale. The rules are awaiting review by a vetted astrologer."
+    },
+    {
+      "q": "Who writes the commentary?",
+      "a": "Commentary is drafted from the calculated positions and is published only after a person on our team has reviewed it. Until then the page shows the plain facts behind each score."
+    },
+    {
+      "q": "Is this advice?",
+      "a": "No. It is for guidance and entertainment and is not medical, legal or financial advice."
+    },
+    {
+      "q": "When does the daily horoscope change?",
+      "a": "At midnight India time. The page always uses the current date in India, so it never shows yesterday's positions."
+    }
+  ]
+}

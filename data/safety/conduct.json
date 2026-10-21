@@ -1,0 +1,142 @@
+{
+  "$comment": "Astrologer conduct rules (docs/api/trust.md §3-§4, PLAN.md Phase 7). Shown in the astrologer portal and used as the text of `message_blocked` errors. Rules with enforced=auto are checked on every chat message by astro_api.safety (ids = refusal reason codes, test-enforced); enforced=review rules are handled through client reports and the moderation queue. Product copy: needs lawyer, editorial and native-speaker (Hindi) review before launch.",
+  "version": "2026-10-21",
+  "rules": [
+    {
+      "id": "contact_details",
+      "enforced": "auto",
+      "title": {
+        "en": "No contact details",
+        "hi": "संपर्क जानकारी नहीं"
+      },
+      "rule": {
+        "en": "Do not share or ask for phone numbers, email addresses, links or messaging app handles (WhatsApp, Telegram, Instagram). Keep every conversation on the platform.",
+        "hi": "फ़ोन नंबर, ईमेल, लिंक या मैसेजिंग ऐप (व्हाट्सऐप, टेलीग्राम, इंस्टाग्राम) की जानकारी न दें और न माँगें। हर बातचीत प्लेटफ़ॉर्म पर ही रखें।"
+      }
+    },
+    {
+      "id": "off_platform_payment",
+      "enforced": "auto",
+      "title": {
+        "en": "No payments outside the platform",
+        "hi": "प्लेटफ़ॉर्म के बाहर कोई भुगतान नहीं"
+      },
+      "rule": {
+        "en": "Do not ask clients to pay you directly (UPI, bank transfer, payment apps, cash) or to share an OTP. All payments go through the client's wallet on the platform.",
+        "hi": "क्लाइंट से सीधे भुगतान (यूपीआई, बैंक ट्रांसफ़र, पेमेंट ऐप, नकद) या ओटीपी न माँगें। हर भुगतान प्लेटफ़ॉर्म पर क्लाइंट के वॉलेट से ही होता है।"
+      }
+    },
+    {
+      "id": "cure_claim",
+      "enforced": "auto",
+      "title": {
+        "en": "No cure claims or medical advice",
+        "hi": "इलाज के दावे या चिकित्सा सलाह नहीं"
+      },
+      "rule": {
+        "en": "Do not claim that astrology, a remedy or a ritual can cure any illness, and never tell a client to stop or change medicine or treatment or to avoid a doctor. For health questions, ask the client to see a qualified doctor.",
+        "hi": "यह दावा न करें कि ज्योतिष, कोई उपाय या अनुष्ठान किसी बीमारी को ठीक कर सकता है, और क्लाइंट को कभी दवा या इलाज बंद करने, बदलने या डॉक्टर के पास न जाने को न कहें। सेहत से जुड़े सवालों पर क्लाइंट को किसी योग्य डॉक्टर से मिलने को कहें।"
+      }
+    },
+    {
+      "id": "guarantee",
+      "enforced": "auto",
+      "title": {
+        "en": "No guarantees",
+        "hi": "कोई गारंटी नहीं"
+      },
+      "rule": {
+        "en": "Do not guarantee or promise any outcome (\"100%\", \"guaranteed\", \"definitely will\"). Readings are guidance, not certainty.",
+        "hi": "किसी भी नतीजे की गारंटी या वादा न करें (\"100%\", \"गारंटी\", \"पक्का होगा\")। परामर्श मार्गदर्शन है, निश्चितता नहीं।"
+      }
+    },
+    {
+      "id": "fear_selling",
+      "enforced": "auto",
+      "title": {
+        "en": "No fear-based selling",
+        "hi": "डर दिखाकर कुछ न बेचें"
+      },
+      "rule": {
+        "en": "Do not frighten clients: no predictions of death, curses, black magic, or threats of disaster if they do not follow a remedy.",
+        "hi": "क्लाइंट को डराएँ नहीं: मृत्यु की भविष्यवाणी, श्राप, काला जादू या उपाय न करने पर अनर्थ की धमकी न दें।"
+      }
+    },
+    {
+      "id": "remedy_sale",
+      "enforced": "auto",
+      "title": {
+        "en": "No selling remedies or gemstones",
+        "hi": "उपाय या रत्न बेचना मना है"
+      },
+      "rule": {
+        "en": "Do not sell, price or offer to send gemstones, yantras, rudraksha, amulets, pujas or other remedies in a consultation.",
+        "hi": "परामर्श में रत्न, यंत्र, रुद्राक्ष, ताबीज़, पूजा या कोई और उपाय न बेचें, उसकी क़ीमत न बताएँ और भेजने की पेशकश न करें।"
+      }
+    },
+    {
+      "id": "financial_advice",
+      "enforced": "review",
+      "title": {
+        "en": "No investment or betting advice",
+        "hi": "निवेश या सट्टे की सलाह नहीं"
+      },
+      "rule": {
+        "en": "Do not tell clients to buy or sell shares or crypto, invest money, take loans, bet or play lotteries.",
+        "hi": "क्लाइंट को शेयर या क्रिप्टो ख़रीदने-बेचने, पैसा लगाने, क़र्ज़ लेने, सट्टा लगाने या लॉटरी खेलने की सलाह न दें।"
+      }
+    },
+    {
+      "id": "legal_advice",
+      "enforced": "review",
+      "title": {
+        "en": "No legal advice",
+        "hi": "क़ानूनी सलाह नहीं"
+      },
+      "rule": {
+        "en": "Do not advise on court cases, police matters or other legal decisions. Ask the client to speak to a qualified lawyer.",
+        "hi": "अदालत के मामलों, पुलिस से जुड़ी बातों या दूसरे क़ानूनी फ़ैसलों पर सलाह न दें। क्लाइंट को किसी योग्य वकील से बात करने को कहें।"
+      }
+    },
+    {
+      "id": "harassment",
+      "enforced": "review",
+      "title": {
+        "en": "Respect the client",
+        "hi": "क्लाइंट का सम्मान करें"
+      },
+      "rule": {
+        "en": "No abusive, sexual or discriminatory language, and no pressure to keep chatting or to recharge.",
+        "hi": "अपमानजनक, यौन या भेदभाव वाली भाषा का प्रयोग न करें, और बातचीत जारी रखने या रिचार्ज करने का दबाव न डालें।"
+      }
+    },
+    {
+      "id": "personal_details",
+      "enforced": "review",
+      "title": {
+        "en": "Ask only for what a reading needs",
+        "hi": "सिर्फ़ ज़रूरी जानकारी माँगें"
+      },
+      "rule": {
+        "en": "Birth date, time and place are enough. Do not ask for addresses, ID documents, photos or details about other people's finances.",
+        "hi": "जन्म की तारीख़, समय और स्थान काफ़ी हैं। पता, पहचान पत्र, फ़ोटो या दूसरों के पैसों से जुड़ी जानकारी न माँगें।"
+      }
+    },
+    {
+      "id": "crisis",
+      "enforced": "review",
+      "title": {
+        "en": "When a client is in crisis",
+        "hi": "जब क्लाइंट संकट में हो"
+      },
+      "rule": {
+        "en": "If a client mentions self-harm or danger, stop the reading, share the crisis numbers shown on screen and do not sell anything. The client may end the session at any time.",
+        "hi": "अगर क्लाइंट ख़ुद को नुक़सान पहुँचाने या ख़तरे की बात करे, तो परामर्श रोकें, स्क्रीन पर दिखाए गए संकट-सहायता नंबर साझा करें और कुछ भी न बेचें। क्लाइंट कभी भी सत्र ख़त्म कर सकता है।"
+      }
+    }
+  ],
+  "crisis_guidance": {
+    "en": "This client may be going through a crisis. Please pause the reading, share the crisis helpline numbers shown to them, and do not recommend any paid service or remedy. They can end the session at any time; recharge prompts are switched off for this session.",
+    "hi": "हो सकता है यह क्लाइंट किसी संकट से गुज़र रहा हो। कृपया परामर्श रोकें, उन्हें दिखाए गए संकट-सहायता नंबर साझा करें और कोई भी पेड सेवा या उपाय न सुझाएँ। वे कभी भी सत्र ख़त्म कर सकते हैं; इस सत्र में रिचार्ज के संदेश बंद कर दिए गए हैं।"
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "growth": {
+    "analytics": {
+      "label": "Usage analytics for this browser",
+      "on": "On: this browser sends page and tool usage events, never personal details.",
+      "off": "Off: this browser sends no analytics events.",
+      "browserOff": "Your browser asks sites not to track it (Global Privacy Control or Do Not Track), so nothing is collected whatever this switch shows.",
+      "saving": "Saving your choice…",
+      "error": "Your choice could not be saved. Please try again."
+    },
+    "learn": {
+      "title": "Learn Vedic astrology",
+      "description": "Plain-language articles on Vedic astrology: what kundli terms mean and how they are calculated, each one written and reviewed by a named person.",
+      "h1": "Learn Vedic astrology",
+      "intro": "Articles that explain the ideas behind kundli, panchang, dasha and the free tools on this site in plain language: what a term means, where it comes from in the classical texts, and how the numbers you see are calculated.",
+      "standardsHeading": "How these articles are written",
+      "standards": [
+        "Every article names its author and the person who reviewed it, and shows when it was published and last updated. An article is only listed here after that review.",
+        "Positions, tithis, nakshatras and dasha periods quoted in an article come from our calculation engine or our published data tables, never from memory. Articles explain and describe; they do not promise outcomes, and astrology is offered for guidance and entertainment."
+      ],
+      "listHeading": "Articles",
+      "read": "Read the article",
+      "byline": "By {author}",
+      "reviewedBy": "Reviewed by {reviewer}",
+      "published": "Published {date}",
+      "updated": "Updated {date}",
+      "relatedTools": "Related free tools",
+      "learnCrumb": "Learn",
+      "noteHeading": "Please note"
+    }
+  }
+}

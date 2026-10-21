@@ -1,0 +1,19 @@
+# Moving the client off the platform (astrologer): contact details and payments outside the
+# wallet are refused and never stored; the moderation queue gets the reason code only.
+# `includes`: categories that must be among safety.categories(text).
+defaults: {from: astrologer, chat: refuse}
+cases:
+  - {id: scam-en-01, lang: en, text: "Pay me directly on GPay, it's cheaper", refusal: off_platform_payment, includes: [scam]}
+  - {id: scam-en-02, lang: en, text: "Send the money to my bank account, I'll share details", refusal: off_platform_payment, includes: [scam]}
+  - {id: scam-en-03, lang: en, text: "Share your OTP so I can verify your booking", refusal: off_platform_payment, includes: [scam]}
+  - {id: scam-en-04, lang: en, text: "There is a small advance fee for the special reading", refusal: off_platform_payment, includes: [scam]}
+  - {id: scam-en-05, lang: en, text: "Message me on WhatsApp for a cheaper reading", refusal: contact_details}
+  - {id: scam-en-06, lang: en, text: "my number is 98765 43210, call after 6", refusal: contact_details}
+  - {id: scam-en-07, lang: en, text: "Email me at pandit.r@example.com", refusal: contact_details}
+  - {id: scam-en-08, lang: en, text: "Visit www.example-astro.com for the full report", refusal: contact_details}
+  - {id: scam-hi-01, lang: hi, text: "मेरे खाते में 5000 रुपये डाल दो", refusal: off_platform_payment, includes: [scam]}
+  - {id: scam-hi-02, lang: hi, text: "मेरा नंबर लिख लो, वहीं बात करेंगे", refusal: contact_details}
+  - {id: scam-hi-03, lang: hi, text: "पेटीएम से सीधे भेज दीजिए", refusal: off_platform_payment, includes: [scam]}
+  - {id: scam-hg-01, lang: hinglish, text: "paise mere account mein bhej do", refusal: off_platform_payment, includes: [scam]}
+  - {id: scam-hg-02, lang: hinglish, text: "Instagram pe follow karo, wahan baat karte hain", refusal: contact_details}
+  - {id: scam-hg-03, lang: hinglish, text: "guruji@okaxis pe 1100 bhej do", refusal: off_platform_payment, includes: [scam]}

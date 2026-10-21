@@ -1,0 +1,150 @@
+{
+  "$comment": "Twelve sidereal signs (rashi), 30° each from 0° Aries. lord = sign ruler; varna and vashya feed Ashtakoota.",
+  "source": "Standard Jyotish sign rulerships; varna and vashya per the common Ashtakoota convention (Sagittarius and Capricorn split at 15°).",
+  "signs": [
+    {
+      "id": "aries",
+      "en": "Aries",
+      "hi": "मेष",
+      "sa": "Mesha",
+      "lord": "mars",
+      "varna": "kshatriya",
+      "vashya": [
+        "chatushpada",
+        "chatushpada"
+      ]
+    },
+    {
+      "id": "taurus",
+      "en": "Taurus",
+      "hi": "वृषभ",
+      "sa": "Vrishabha",
+      "lord": "venus",
+      "varna": "vaishya",
+      "vashya": [
+        "chatushpada",
+        "chatushpada"
+      ]
+    },
+    {
+      "id": "gemini",
+      "en": "Gemini",
+      "hi": "मिथुन",
+      "sa": "Mithuna",
+      "lord": "mercury",
+      "varna": "shudra",
+      "vashya": [
+        "manava",
+        "manava"
+      ]
+    },
+    {
+      "id": "cancer",
+      "en": "Cancer",
+      "hi": "कर्क",
+      "sa": "Karka",
+      "lord": "moon",
+      "varna": "brahmin",
+      "vashya": [
+        "jalachara",
+        "jalachara"
+      ]
+    },
+    {
+      "id": "leo",
+      "en": "Leo",
+      "hi": "सिंह",
+      "sa": "Simha",
+      "lord": "sun",
+      "varna": "kshatriya",
+      "vashya": [
+        "vanachara",
+        "vanachara"
+      ]
+    },
+    {
+      "id": "virgo",
+      "en": "Virgo",
+      "hi": "कन्या",
+      "sa": "Kanya",
+      "lord": "mercury",
+      "varna": "vaishya",
+      "vashya": [
+        "manava",
+        "manava"
+      ]
+    },
+    {
+      "id": "libra",
+      "en": "Libra",
+      "hi": "तुला",
+      "sa": "Tula",
+      "lord": "venus",
+      "varna": "shudra",
+      "vashya": [
+        "manava",
+        "manava"
+      ]
+    },
+    {
+      "id": "scorpio",
+      "en": "Scorpio",
+      "hi": "वृश्चिक",
+      "sa": "Vrishchika",
+      "lord": "mars",
+      "varna": "brahmin",
+      "vashya": [
+        "keeta",
+        "keeta"
+      ]
+    },
+    {
+      "id": "sagittarius",
+      "en": "Sagittarius",
+      "hi": "धनु",
+      "sa": "Dhanu",
+      "lord": "jupiter",
+      "varna": "kshatriya",
+      "vashya": [
+        "manava",
+        "chatushpada"
+      ]
+    },
+    {
+      "id": "capricorn",
+      "en": "Capricorn",
+      "hi": "मकर",
+      "sa": "Makara",
+      "lord": "saturn",
+      "varna": "vaishya",
+      "vashya": [
+        "chatushpada",
+        "jalachara"
+      ]
+    },
+    {
+      "id": "aquarius",
+      "en": "Aquarius",
+      "hi": "कुम्भ",
+      "sa": "Kumbha",
+      "lord": "saturn",
+      "varna": "shudra",
+      "vashya": [
+        "manava",
+        "manava"
+      ]
+    },
+    {
+      "id": "pisces",
+      "en": "Pisces",
+      "hi": "मीन",
+      "sa": "Meena",
+      "lord": "jupiter",
+      "varna": "brahmin",
+      "vashya": [
+        "jalachara",
+        "jalachara"
+      ]
+    }
+  ]
+}

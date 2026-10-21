@@ -1,0 +1,34 @@
+{
+  "meta": {
+    "title": "Vedic astrology tools and trusted astrologers",
+    "description": "Free kundli, matchmaking and panchang tools computed from an astronomical ephemeris, with vetted astrologers when you want to talk it through."
+  },
+  "nav": {
+    "skipToContent": "Skip to content",
+    "switchTo": "हिन्दी",
+    "main": "Main",
+    "kundli": "Kundli",
+    "matching": "Kundli matching",
+    "panchang": "Panchang",
+    "horoscope": "Horoscope",
+    "tools": "Free tools",
+    "reports": "Reports"
+  },
+  "home": {
+    "eyebrow": "Today in India · {date}"
+  },
+  "footer": {
+    "rights": "© {year} {brand}",
+    "dataCredits": "Astronomical calculations: Swiss Ephemeris (AGPL). Place data © GeoNames, CC-BY 4.0."
+  },
+  "shell": {
+    "home": "Home",
+    "breadcrumbs": "Breadcrumb",
+    "faq": "Frequently asked questions"
+  },
+  "cta": {
+    "heading": "Want to talk it through with an astrologer?",
+    "body": "The calculations above are exact, but what they mean for your life is a conversation. We are bringing vetted astrologers onto the platform, each checked for identity, qualifications and experience.",
+    "status": "Consultations are open. Chat with astrologers who offer chat, and call those who take voice calls where calls are available. Each profile shows what the astrologer offers. No astrologer profiles are shown until they are real and verified."
+  }
+}

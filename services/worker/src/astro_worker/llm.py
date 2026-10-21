@@ -1,0 +1,274 @@
+"""LLM providers for horoscope prose (`generate`) and AI assistant answers (`answer`, ADR-0010).
+Providers only turn computed facts into wording; every output is validated
+(astro_api.horoscope_rules; AI answers also astro_api.ai_safety and ai_facts) before it is stored.
+Horoscopes then wait for human review.
+
+Use paid, no-training API tiers only (PLAN.md §6). Keys are SecretStr and never logged.
+"""
+
+import json
+from dataclasses import dataclass
+from typing import Any, Protocol, TypeGuard
+
+import anthropic
+import httpx
+from pydantic import SecretStr
+
+from astro_api.horoscope_rules import AREAS
+from astro_api.shared_files import data_dir
+from astro_worker.config import WorkerSettings
+
+SECTIONS_SCHEMA: dict[str, Any] = {
+    "type": "object",
+    "properties": {a: {"type": "string"} for a in AREAS},
+    "required": list(AREAS),
+    "additionalProperties": False,
+}
+
+
+# AI assistant answers (ADR-0010): one plain-text answer.
+ANSWER_SCHEMA: dict[str, Any] = {
+    "type": "object",
+    "properties": {"answer": {"type": "string"}},
+    "required": ["answer"],
+    "additionalProperties": False,
+}
+
+
+class ProviderError(RuntimeError):
+    pass
+
+
+def _present(key: SecretStr | None) -> TypeGuard[SecretStr]:
+    """An empty value (e.g. `GEMINI_API_KEY=` in .env) counts as unset."""
+    return key is not None and bool(key.get_secret_value().strip())
+
+
+def table(name: str) -> dict[str, dict[str, Any]]:
+    """data/astro/{name}.json rows (grahas, signs) by id."""
+    rows = json.loads((data_dir() / f"{name}.json").read_text(encoding="utf-8"))[name]
+    return {r["id"]: r for r in rows}
+
+
+@dataclass(frozen=True)
+class LlmRequest:
+    system: str
+    user: str
+    facts: dict[str, Any]
+    locale: str
+
+
+@dataclass(frozen=True)
+class LlmResult:
+    text: str  # JSON object with the five sections
+    model: str
+
+
+class LlmProvider(Protocol):
+    name: str
+
+    async def generate(self, req: LlmRequest) -> LlmResult: ...
+
+
+class QaProvider(Protocol):
+    """AI assistant answers: `LlmResult.text` is a JSON object {"answer": str}."""
+
+    name: str
+
+    async def answer(self, req: LlmRequest) -> LlmResult: ...
+
+
+class AnthropicProvider:
+    """Claude via the official SDK, with JSON structured output and server-side refusal fallback."""
+
+    name = "anthropic"
+
+    def __init__(
+        self, settings: WorkerSettings, client: anthropic.AsyncAnthropic | None = None
+    ) -> None:
+        if client is None:
+            key = settings.anthropic_api_key
+            if not _present(key):
+                raise ProviderError("ANTHROPIC_API_KEY is not set")
+            client = anthropic.AsyncAnthropic(
+                api_key=key.get_secret_value(),
+                timeout=settings.llm_timeout_s,
+                max_retries=0,  # the pipeline's single validation retry is the only retry
+            )
+        self.client = client
+        self.model = settings.anthropic_model
+        self.effort = settings.anthropic_effort
+
+    async def generate(self, req: LlmRequest) -> LlmResult:
+        return await self._json(req, SECTIONS_SCHEMA)
+
+    async def answer(self, req: LlmRequest) -> LlmResult:
+        return await self._json(req, ANSWER_SCHEMA)
+
+    async def _json(self, req: LlmRequest, schema: dict[str, Any]) -> LlmResult:
+        try:
+            response = await self.client.beta.messages.create(
+                model=self.model,
+                max_tokens=16000,
+                system=req.system,
+                messages=[{"role": "user", "content": req.user}],
+                output_config={
+                    "effort": self.effort,
+                    "format": {"type": "json_schema", "schema": schema},
+                },
+                betas=["server-side-fallback-2026-07-01"],
+                fallbacks="default",
+            )
+        except anthropic.APIConnectionError as exc:
+            raise ProviderError(f"Anthropic API unreachable: {type(exc).__name__}") from exc
+        except anthropic.APIStatusError as exc:
+            raise ProviderError(f"Anthropic API error {exc.status_code}") from exc
+        if response.stop_reason == "refusal":
+            raise ProviderError("model declined the request (refusal)")
+        if response.stop_reason == "max_tokens":
+            raise ProviderError("response hit max_tokens")
+        text = next((b.text for b in response.content if b.type == "text"), None)
+        if text is None:
+            raise ProviderError("no text block in the response")
+        return LlmResult(text=text, model=response.model)
+
+
+class GeminiProvider:
+    """Gemini generateContent over REST with a JSON response schema. The key goes in a header,
+    never in the URL, so it cannot end up in access logs."""
+
+    name = "gemini"
+    BASE = "https://generativelanguage.googleapis.com/v1beta/models"
+
+    def __init__(self, settings: WorkerSettings, http: httpx.AsyncClient | None = None) -> None:
+        key = settings.gemini_api_key
+        if not _present(key):
+            raise ProviderError("GEMINI_API_KEY is not set")
+        self.key = key
+        self.model = settings.gemini_model
+        self.http = http or httpx.AsyncClient(timeout=settings.llm_timeout_s)
+
+    async def generate(self, req: LlmRequest) -> LlmResult:
+        return await self._json(req, {a: {"type": "STRING"} for a in AREAS})
+
+    async def answer(self, req: LlmRequest) -> LlmResult:
+        return await self._json(req, {"answer": {"type": "STRING"}})
+
+    async def _json(self, req: LlmRequest, properties: dict[str, Any]) -> LlmResult:
+        body = {
+            "systemInstruction": {"parts": [{"text": req.system}]},
+            "contents": [{"role": "user", "parts": [{"text": req.user}]}],
+            "generationConfig": {
+                "responseMimeType": "application/json",
+                "responseSchema": {
+                    "type": "OBJECT",
+                    "properties": properties,
+                    "required": list(properties),
+                },
+            },
+        }
+        try:
+            r = await self.http.post(
+                f"{self.BASE}/{self.model}:generateContent",
+                json=body,
+                headers={"x-goog-api-key": self.key.get_secret_value()},
+            )
+        except httpx.HTTPError as exc:
+            raise ProviderError(f"Gemini API unreachable: {type(exc).__name__}") from exc
+        if r.status_code != 200:
+            raise ProviderError(f"Gemini API error {r.status_code}")
+        data = r.json()
+        try:
+            candidate = data["candidates"][0]
+            text = "".join(p.get("text", "") for p in candidate["content"]["parts"])
+        except (KeyError, IndexError, TypeError) as exc:
+            reason = (data.get("promptFeedback") or {}).get("blockReason", "no candidates")
+            raise ProviderError(f"Gemini returned no text ({reason})") from exc
+        return LlmResult(text=text, model=data.get("modelVersion", self.model))
+
+
+class FakeProvider:
+    """Deterministic, valid text built from the facts. Development and tests only."""
+
+    name = "fake"
+
+    def __init__(self, settings: WorkerSettings) -> None:
+        if settings.is_production:
+            raise ProviderError("the fake LLM provider is not allowed in staging/production")
+        self.grahas, self.signs = table("grahas"), table("signs")
+
+    def _line(self, facts: dict[str, Any], area: str, locale: str) -> str:
+        transits = {t["graha"]: t for t in facts["transits"]}
+        reasons = facts["areas"][area]["reasons"] or [{"graha": next(iter(transits))}]
+        t = transits[reasons[0]["graha"]]
+        graha, sign, house = self.grahas[t["graha"]], self.signs[t["sign"]], t["house_from_sign"]
+        if locale == "hi":
+            return (
+                f"{graha['hi']} {sign['hi']} में है और आपकी राशि से {house} वें स्थान पर है। "
+                "आज अपनी गति से चलें, ध्यान से सुनें और योजनाओं में थोड़ी लचक रखें। जो बात आपके "
+                "लिए सबसे ज़रूरी है, उसे पहले पूरा करें और छोटे क़दमों से आगे बढ़ें। शांत मन से "
+                "लिए गए फ़ैसले दिन को आसान बनाते हैं। अपने लिए थोड़ा आराम का समय रखें और उन "
+                "लोगों के साथ समय बिताएँ जिनसे आपको सुकून मिलता है।"
+            )
+        suffix = {1: "st", 2: "nd", 3: "rd"}.get(house, "th")  # houses are 1-12
+        return (
+            f"With {graha['en']} in {sign['en']}, in your {house}{suffix} house, this part of life "
+            "asks for patience. Take the day one step at a time, listen closely, and keep plans "
+            "flexible while you sort out what matters most to you. A calm pace suits you, and "
+            "small, steady choices add up over the coming hours. Leave room for rest and for "
+            "people who make you feel at ease."
+        )
+
+    async def generate(self, req: LlmRequest) -> LlmResult:
+        sections = {a: self._line(req.facts, a, req.locale) for a in AREAS}
+        return LlmResult(text=json.dumps(sections, ensure_ascii=False), model="fake")
+
+    async def answer(self, req: LlmRequest) -> LlmResult:
+        """A plain, grounded AI-assistant answer from the chart facts (ai_facts shape)."""
+        facts = req.facts
+        moon = next(p for p in facts["planets"] if p["graha"] == "moon")
+        dasha = facts.get("dasha")
+        g, s = self.grahas, self.signs
+        if req.locale == "hi":
+            parts = [f"आपकी कुंडली में {g['moon']['hi']} {s[moon['sign']]['hi']} राशि में है।"]
+            if dasha:
+                parts.append(f"अभी आपकी {g[dasha['mahadasha']]['hi']} की महादशा चल रही है।")
+            parts.append(
+                "इन ग्रह-स्थितियों को कई बातों में से एक मानें: सोच-समझकर क़दम उठाएँ, जुड़े हुए "
+                "लोगों से खुलकर बात करें और बड़े फ़ैसलों को समय दें। यह गणना की गई कुंडली की "
+                "सामान्य व्याख्या है, किसी ख़ास घटना की भविष्यवाणी नहीं।"
+            )
+        else:
+            where = ""
+            if moon.get("house"):
+                h = moon["house"]
+                suffix = {1: "st", 2: "nd", 3: "rd"}.get(h, "th")  # houses are 1-12
+                where = f", in your {h}{suffix} house"
+            parts = [f"Your Moon is in {s[moon['sign']]['en']}{where}."]
+            if dasha:
+                parts.append(f"You are now in the {g[dasha['mahadasha']]['en']} mahadasha.")
+            parts.append(
+                "Read these placements as one input among many: take practical, steady steps, "
+                "talk openly with the people involved and give big decisions the time they "
+                "need. This is a general reading of the computed chart, not a forecast of any "
+                "specific event."
+            )
+        answer = " ".join(parts)
+        return LlmResult(text=json.dumps({"answer": answer}, ensure_ascii=False), model="fake")
+
+
+def make_qa_provider(settings: WorkerSettings) -> QaProvider:
+    """Same providers and settings as horoscopes (LLM_PROVIDER); paid no-training tiers only."""
+    if settings.llm_provider == "anthropic":
+        return AnthropicProvider(settings)
+    if settings.llm_provider == "gemini":
+        return GeminiProvider(settings)
+    return FakeProvider(settings)
+
+
+def make_provider(settings: WorkerSettings) -> LlmProvider:
+    if settings.llm_provider == "anthropic":
+        return AnthropicProvider(settings)
+    if settings.llm_provider == "gemini":
+        return GeminiProvider(settings)
+    return FakeProvider(settings)

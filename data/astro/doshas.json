@@ -1,0 +1,61 @@
+{
+  "$comment": "Rules for the dosha checks. Each rule is one documented convention; traditions differ, and the API reports which rule it applied.",
+  "review": {
+    "status": "needs_astrologer_review",
+    "note": "Rules entered from commonly published conventions. A vetted astrologer must confirm them (and decide on cancellation rules) before results are shown publicly."
+  },
+  "mangal": {
+    "houses": [
+      1,
+      2,
+      4,
+      7,
+      8,
+      12
+    ],
+    "reference_points": [
+      "lagna",
+      "moon"
+    ],
+    "note": "Mars in these whole-sign houses from the lagna or from the Moon. No cancellation (parihara) rules are applied in v1."
+  },
+  "kaal_sarp": {
+    "planets": [
+      "sun",
+      "moon",
+      "mars",
+      "mercury",
+      "jupiter",
+      "venus",
+      "saturn"
+    ],
+    "note": "Present when all seven planets lie strictly on one side of the Rahu-Ketu axis. Type is named by Rahu's whole-sign house from the lagna.",
+    "types_by_rahu_house": {
+      "1": "Anant",
+      "2": "Kulik",
+      "3": "Vasuki",
+      "4": "Shankhpal",
+      "5": "Padma",
+      "6": "Mahapadma",
+      "7": "Takshak",
+      "8": "Karkotak",
+      "9": "Shankhachud",
+      "10": "Ghatak",
+      "11": "Vishdhar",
+      "12": "Sheshnag"
+    }
+  },
+  "sade_sati": {
+    "offsets_from_moon_sign": [
+      -1,
+      0,
+      1
+    ],
+    "phase_names": {
+      "-1": "rising",
+      "0": "peak",
+      "1": "setting"
+    },
+    "note": "Saturn transiting the 12th, 1st and 2nd sidereal signs counted from the natal Moon sign."
+  }
+}

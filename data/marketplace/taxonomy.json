@@ -1,0 +1,164 @@
+{
+  "$comment": "Marketplace taxonomy shared by the API, web and admin. Tier price bounds are defaults for the founder to confirm (PLAN.md §9.3).",
+  "skills": [
+    {
+      "id": "vedic",
+      "en": "Vedic astrology",
+      "hi": "वैदिक ज्योतिष"
+    },
+    {
+      "id": "kp",
+      "en": "KP system",
+      "hi": "केपी पद्धति"
+    },
+    {
+      "id": "nadi",
+      "en": "Nadi astrology",
+      "hi": "नाड़ी ज्योतिष"
+    },
+    {
+      "id": "prashna",
+      "en": "Prashna (horary)",
+      "hi": "प्रश्न ज्योतिष"
+    },
+    {
+      "id": "numerology",
+      "en": "Numerology",
+      "hi": "अंक ज्योतिष"
+    },
+    {
+      "id": "tarot",
+      "en": "Tarot",
+      "hi": "टैरो"
+    },
+    {
+      "id": "vastu",
+      "en": "Vastu",
+      "hi": "वास्तु"
+    },
+    {
+      "id": "palmistry",
+      "en": "Palmistry",
+      "hi": "हस्तरेखा"
+    },
+    {
+      "id": "lal_kitab",
+      "en": "Lal Kitab",
+      "hi": "लाल किताब"
+    }
+  ],
+  "languages": [
+    {
+      "id": "hi",
+      "en": "Hindi",
+      "hi": "हिन्दी"
+    },
+    {
+      "id": "en",
+      "en": "English",
+      "hi": "अंग्रेज़ी"
+    },
+    {
+      "id": "bn",
+      "en": "Bengali",
+      "hi": "बांग्ला"
+    },
+    {
+      "id": "mr",
+      "en": "Marathi",
+      "hi": "मराठी"
+    },
+    {
+      "id": "ta",
+      "en": "Tamil",
+      "hi": "तमिल"
+    },
+    {
+      "id": "te",
+      "en": "Telugu",
+      "hi": "तेलुगु"
+    },
+    {
+      "id": "gu",
+      "en": "Gujarati",
+      "hi": "गुजराती"
+    },
+    {
+      "id": "kn",
+      "en": "Kannada",
+      "hi": "कन्नड़"
+    },
+    {
+      "id": "ml",
+      "en": "Malayalam",
+      "hi": "मलयालम"
+    },
+    {
+      "id": "pa",
+      "en": "Punjabi",
+      "hi": "पंजाबी"
+    },
+    {
+      "id": "or",
+      "en": "Odia",
+      "hi": "ओड़िया"
+    },
+    {
+      "id": "ur",
+      "en": "Urdu",
+      "hi": "उर्दू"
+    }
+  ],
+  "genders": [
+    {
+      "id": "female",
+      "en": "Female",
+      "hi": "महिला"
+    },
+    {
+      "id": "male",
+      "en": "Male",
+      "hi": "पुरुष"
+    },
+    {
+      "id": "other",
+      "en": "Other",
+      "hi": "अन्य"
+    }
+  ],
+  "tiers": [
+    {
+      "id": "rising",
+      "en": "Rising",
+      "hi": "उभरते",
+      "min_price_per_min_paise": 1000,
+      "max_price_per_min_paise": 3000
+    },
+    {
+      "id": "top_choice",
+      "en": "Top choice",
+      "hi": "टॉप चॉइस",
+      "min_price_per_min_paise": 3000,
+      "max_price_per_min_paise": 8000
+    },
+    {
+      "id": "celebrity",
+      "en": "Celebrity",
+      "hi": "सेलिब्रिटी",
+      "min_price_per_min_paise": 8000,
+      "max_price_per_min_paise": 30000
+    }
+  ],
+  "review": {
+    "max_text_chars": 1000
+  },
+  "kyc": {
+    "max_file_bytes": 5242880,
+    "content_types": [
+      "application/pdf",
+      "image/jpeg",
+      "image/png"
+    ],
+    "max_documents": 10
+  }
+}

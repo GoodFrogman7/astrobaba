@@ -1,0 +1,168 @@
+{
+  "$comment": "27 yogas; yoga n spans (sidereal Sun + sidereal Moon) mod 360 in [13°20'(n-1), 13°20'n).",
+  "source": "Standard panchang definition.",
+  "yogas": [
+    {
+      "number": 1,
+      "id": "vishkambha",
+      "en": "Vishkambha",
+      "hi": "विष्कम्भ"
+    },
+    {
+      "number": 2,
+      "id": "priti",
+      "en": "Priti",
+      "hi": "प्रीति"
+    },
+    {
+      "number": 3,
+      "id": "ayushman",
+      "en": "Ayushman",
+      "hi": "आयुष्मान"
+    },
+    {
+      "number": 4,
+      "id": "saubhagya",
+      "en": "Saubhagya",
+      "hi": "सौभाग्य"
+    },
+    {
+      "number": 5,
+      "id": "shobhana",
+      "en": "Shobhana",
+      "hi": "शोभन"
+    },
+    {
+      "number": 6,
+      "id": "atiganda",
+      "en": "Atiganda",
+      "hi": "अतिगण्ड"
+    },
+    {
+      "number": 7,
+      "id": "sukarma",
+      "en": "Sukarma",
+      "hi": "सुकर्मा"
+    },
+    {
+      "number": 8,
+      "id": "dhriti",
+      "en": "Dhriti",
+      "hi": "धृति"
+    },
+    {
+      "number": 9,
+      "id": "shula",
+      "en": "Shula",
+      "hi": "शूल"
+    },
+    {
+      "number": 10,
+      "id": "ganda",
+      "en": "Ganda",
+      "hi": "गण्ड"
+    },
+    {
+      "number": 11,
+      "id": "vriddhi",
+      "en": "Vriddhi",
+      "hi": "वृद्धि"
+    },
+    {
+      "number": 12,
+      "id": "dhruva",
+      "en": "Dhruva",
+      "hi": "ध्रुव"
+    },
+    {
+      "number": 13,
+      "id": "vyaghata",
+      "en": "Vyaghata",
+      "hi": "व्याघात"
+    },
+    {
+      "number": 14,
+      "id": "harshana",
+      "en": "Harshana",
+      "hi": "हर्षण"
+    },
+    {
+      "number": 15,
+      "id": "vajra",
+      "en": "Vajra",
+      "hi": "वज्र"
+    },
+    {
+      "number": 16,
+      "id": "siddhi",
+      "en": "Siddhi",
+      "hi": "सिद्धि"
+    },
+    {
+      "number": 17,
+      "id": "vyatipata",
+      "en": "Vyatipata",
+      "hi": "व्यतीपात"
+    },
+    {
+      "number": 18,
+      "id": "variyana",
+      "en": "Variyana",
+      "hi": "वरीयान"
+    },
+    {
+      "number": 19,
+      "id": "parigha",
+      "en": "Parigha",
+      "hi": "परिघ"
+    },
+    {
+      "number": 20,
+      "id": "shiva",
+      "en": "Shiva",
+      "hi": "शिव"
+    },
+    {
+      "number": 21,
+      "id": "siddha",
+      "en": "Siddha",
+      "hi": "सिद्ध"
+    },
+    {
+      "number": 22,
+      "id": "sadhya",
+      "en": "Sadhya",
+      "hi": "साध्य"
+    },
+    {
+      "number": 23,
+      "id": "shubha",
+      "en": "Shubha",
+      "hi": "शुभ"
+    },
+    {
+      "number": 24,
+      "id": "shukla",
+      "en": "Shukla",
+      "hi": "शुक्ल"
+    },
+    {
+      "number": 25,
+      "id": "brahma",
+      "en": "Brahma",
+      "hi": "ब्रह्म"
+    },
+    {
+      "number": 26,
+      "id": "indra",
+      "en": "Indra",
+      "hi": "इन्द्र"
+    },
+    {
+      "number": 27,
+      "id": "vaidhriti",
+      "en": "Vaidhriti",
+      "hi": "वैधृति"
+    }
+  ]
+}

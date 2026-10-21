@@ -1,0 +1,226 @@
+{
+  "$comment": "30 tithis; tithi n spans Moon-Sun elongation [12(n-1), 12n) degrees.",
+  "source": "Standard panchang definition.",
+  "paksha": {
+    "shukla": {
+      "en": "Shukla",
+      "hi": "शुक्ल"
+    },
+    "krishna": {
+      "en": "Krishna",
+      "hi": "कृष्ण"
+    }
+  },
+  "tithis": [
+    {
+      "number": 1,
+      "paksha": "shukla",
+      "id": "pratipada",
+      "en": "Pratipada",
+      "hi": "प्रतिपदा"
+    },
+    {
+      "number": 2,
+      "paksha": "shukla",
+      "id": "dwitiya",
+      "en": "Dwitiya",
+      "hi": "द्वितीया"
+    },
+    {
+      "number": 3,
+      "paksha": "shukla",
+      "id": "tritiya",
+      "en": "Tritiya",
+      "hi": "तृतीया"
+    },
+    {
+      "number": 4,
+      "paksha": "shukla",
+      "id": "chaturthi",
+      "en": "Chaturthi",
+      "hi": "चतुर्थी"
+    },
+    {
+      "number": 5,
+      "paksha": "shukla",
+      "id": "panchami",
+      "en": "Panchami",
+      "hi": "पंचमी"
+    },
+    {
+      "number": 6,
+      "paksha": "shukla",
+      "id": "shashthi",
+      "en": "Shashthi",
+      "hi": "षष्ठी"
+    },
+    {
+      "number": 7,
+      "paksha": "shukla",
+      "id": "saptami",
+      "en": "Saptami",
+      "hi": "सप्तमी"
+    },
+    {
+      "number": 8,
+      "paksha": "shukla",
+      "id": "ashtami",
+      "en": "Ashtami",
+      "hi": "अष्टमी"
+    },
+    {
+      "number": 9,
+      "paksha": "shukla",
+      "id": "navami",
+      "en": "Navami",
+      "hi": "नवमी"
+    },
+    {
+      "number": 10,
+      "paksha": "shukla",
+      "id": "dashami",
+      "en": "Dashami",
+      "hi": "दशमी"
+    },
+    {
+      "number": 11,
+      "paksha": "shukla",
+      "id": "ekadashi",
+      "en": "Ekadashi",
+      "hi": "एकादशी"
+    },
+    {
+      "number": 12,
+      "paksha": "shukla",
+      "id": "dwadashi",
+      "en": "Dwadashi",
+      "hi": "द्वादशी"
+    },
+    {
+      "number": 13,
+      "paksha": "shukla",
+      "id": "trayodashi",
+      "en": "Trayodashi",
+      "hi": "त्रयोदशी"
+    },
+    {
+      "number": 14,
+      "paksha": "shukla",
+      "id": "chaturdashi",
+      "en": "Chaturdashi",
+      "hi": "चतुर्दशी"
+    },
+    {
+      "number": 15,
+      "paksha": "shukla",
+      "id": "purnima",
+      "en": "Purnima",
+      "hi": "पूर्णिमा"
+    },
+    {
+      "number": 16,
+      "paksha": "krishna",
+      "id": "pratipada",
+      "en": "Pratipada",
+      "hi": "प्रतिपदा"
+    },
+    {
+      "number": 17,
+      "paksha": "krishna",
+      "id": "dwitiya",
+      "en": "Dwitiya",
+      "hi": "द्वितीया"
+    },
+    {
+      "number": 18,
+      "paksha": "krishna",
+      "id": "tritiya",
+      "en": "Tritiya",
+      "hi": "तृतीया"
+    },
+    {
+      "number": 19,
+      "paksha": "krishna",
+      "id": "chaturthi",
+      "en": "Chaturthi",
+      "hi": "चतुर्थी"
+    },
+    {
+      "number": 20,
+      "paksha": "krishna",
+      "id": "panchami",
+      "en": "Panchami",
+      "hi": "पंचमी"
+    },
+    {
+      "number": 21,
+      "paksha": "krishna",
+      "id": "shashthi",
+      "en": "Shashthi",
+      "hi": "षष्ठी"
+    },
+    {
+      "number": 22,
+      "paksha": "krishna",
+      "id": "saptami",
+      "en": "Saptami",
+      "hi": "सप्तमी"
+    },
+    {
+      "number": 23,
+      "paksha": "krishna",
+      "id": "ashtami",
+      "en": "Ashtami",
+      "hi": "अष्टमी"
+    },
+    {
+      "number": 24,
+      "paksha": "krishna",
+      "id": "navami",
+      "en": "Navami",
+      "hi": "नवमी"
+    },
+    {
+      "number": 25,
+      "paksha": "krishna",
+      "id": "dashami",
+      "en": "Dashami",
+      "hi": "दशमी"
+    },
+    {
+      "number": 26,
+      "paksha": "krishna",
+      "id": "ekadashi",
+      "en": "Ekadashi",
+      "hi": "एकादशी"
+    },
+    {
+      "number": 27,
+      "paksha": "krishna",
+      "id": "dwadashi",
+      "en": "Dwadashi",
+      "hi": "द्वादशी"
+    },
+    {
+      "number": 28,
+      "paksha": "krishna",
+      "id": "trayodashi",
+      "en": "Trayodashi",
+      "hi": "त्रयोदशी"
+    },
+    {
+      "number": 29,
+      "paksha": "krishna",
+      "id": "chaturdashi",
+      "en": "Chaturdashi",
+      "hi": "चतुर्दशी"
+    },
+    {
+      "number": 30,
+      "paksha": "krishna",
+      "id": "amavasya",
+      "en": "Amavasya",
+      "hi": "अमावस्या"
+    }
+  ]
+}

@@ -1,0 +1,26 @@
+{
+  "slug": "fixture-english-only",
+  "status": "published",
+  "title": "Test fixture article fixture-english-only",
+  "description": "A fixture article (fixture-english-only) used only by the web tests; it is never shipped or published on the site.",
+  "h1": "Fixture article fixture-english-only",
+  "intro": "This text exists only so the tests can check routing, listing, structured data and the sitemap. It says nothing about astrology.",
+  "sections": [
+    {
+      "heading": "First fixture section",
+      "body": [
+        "Placeholder paragraph one for the fixture.",
+        "Placeholder paragraph two for the fixture."
+      ]
+    },
+    {
+      "heading": "Second fixture section",
+      "body": ["Placeholder paragraph three for the fixture."]
+    }
+  ],
+  "related_tools": [],
+  "author": "Fixture Author",
+  "reviewed_by": "Fixture Reviewer",
+  "published_at": "2026-10-10",
+  "updated_at": "2026-10-10"
+}

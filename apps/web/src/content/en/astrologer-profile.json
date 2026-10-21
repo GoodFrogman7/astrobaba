@@ -1,0 +1,45 @@
+{
+  "title": "{name}, verified astrologer",
+  "description": "Profile of {name}: specialities, languages, experience, price per minute and reviews from clients who completed a consultation.",
+  "h1": "{name}",
+  "intro": "{name} is a verified astrologer on our platform. Read their profile, specialities and reviews below, and check the price per minute before you start a consultation.",
+  "sections": [
+    {
+      "heading": "How a consultation works",
+      "body": [
+        "You choose an astrologer, add money to your wallet and start a chat or call. The per-minute price is shown before you begin and is charged only for the minutes you use. A warning appears when one minute of balance is left, and you can end the session at any time.",
+        "Share your birth details only if you want a chart-based reading. They are used for the consultation and are not shown publicly."
+      ]
+    },
+    {
+      "heading": "How we verified {name}",
+      "body": [
+        "Before any profile goes live we check proof of identity and proof of qualification, and an experienced reviewer interviews the astrologer about methods and ethics. New astrologers then work on probation while we review early sessions and feedback."
+      ]
+    },
+    {
+      "heading": "How reviews work",
+      "body": [
+        "Only clients who completed a consultation with {name} can leave a review, once per consultation. Astrologers can reply publicly. Anyone can report a review, and moderators remove reviews that are abusive, share personal data or break the rules. We never write, buy or edit reviews."
+      ]
+    }
+  ],
+  "faqs": [
+    {
+      "q": "Is {name} available now?",
+      "a": "The badge at the top of the profile shows whether {name} is online, in another consultation or offline. It updates from the astrologer's own availability, and we never show a made-up status."
+    },
+    {
+      "q": "How much does a consultation with {name} cost?",
+      "a": "The price per minute is shown on this page. You pay only for the minutes you use, from your wallet."
+    },
+    {
+      "q": "Can I see reviews before I book?",
+      "a": "Yes. All published reviews for {name} are listed on this page, with the astrologer's replies. Reviews come only from completed consultations."
+    },
+    {
+      "q": "What will {name} not do?",
+      "a": "Astrologers on this platform do not promise outcomes, do not use fear to sell remedies, and do not give medical, legal or financial advice. You can report a consultation that breaks these rules."
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "slug": "fixture-published",
+  "status": "published",
+  "title": "परीक्षण लेख fixture-published",
+  "description": "केवल वेब परीक्षणों के लिए बना एक नमूना लेख (fixture-published); यह साइट पर कभी प्रकाशित नहीं होता।",
+  "h1": "नमूना लेख fixture-published",
+  "intro": "यह पाठ केवल इसलिए है ताकि परीक्षण रूटिंग, सूची, संरचित डेटा और साइटमैप जाँच सकें।",
+  "sections": [
+    {
+      "heading": "पहला नमूना खंड",
+      "body": ["नमूने का पहला अनुच्छेद।"]
+    }
+  ],
+  "related_tools": ["kundli"],
+  "author": "नमूना लेखक",
+  "reviewed_by": "नमूना जाँचकर्ता",
+  "published_at": "2026-10-01",
+  "updated_at": "2026-10-15"
+}

@@ -1,0 +1,157 @@
+"""Record the astro engine responses that report tests replay (PLAN.md §0.4: fixtures come from
+the engine, never typed by hand).
+
+    uv run python services/api/tests/fixtures/record_report_engine.py            # in-process engine
+    uv run python services/api/tests/fixtures/record_report_engine.py --url http://localhost:8001
+
+It runs `astro_api.reports.build_snapshot` for a kundli report, a matching report and the
+public sample, through a transport that records every request and response, and writes
+`report_engine.json` next to this file. `replay_transport()` serves those responses back
+(unknown requests get a 599 so a test notices).
+
+The birth inputs below are test inputs (fictional people), not astrology data; every value in
+the responses is the engine's.
+"""
+
+import argparse
+import asyncio
+import datetime as dt
+import json
+import sys
+from pathlib import Path
+from typing import Any
+
+import httpx
+
+OUT = Path(__file__).with_name("report_engine.json")
+AS_OF = dt.date(2026, 10, 21)
+
+# Saved-kundli style inputs (with the resolved UTC offset, like astro_api.kundlis stores).
+# Places are copied from data/seo/cities.json (new-delhi, mumbai).
+PERSON_A = {
+    "label": "Asha Verma",
+    "date": "1990-08-15",
+    "time": "06:30",
+    "place_name": "New Delhi",
+    "lat": 28.62137,
+    "lon": 77.2148,
+    "tz": "Asia/Kolkata",
+    "utc_offset": "+05:30",
+}
+# A Devanagari name: numerology is not computed (the engine needs Latin letters).
+PERSON_B = {
+    "label": "रवि शर्मा",
+    "date": "1992-03-04",
+    "time": "18:45",
+    "place_name": "Mumbai",
+    "lat": 19.07283,
+    "lon": 72.88261,
+    "tz": "Asia/Kolkata",
+    "utc_offset": "+05:30",
+}
+
+
+def birth(spec: dict[str, Any]) -> Any:
+    from astro_api.reports import BirthInput
+
+    return BirthInput(
+        label=spec["label"],
+        date=dt.date.fromisoformat(spec["date"]),
+        time=dt.time.fromisoformat(spec["time"]) if spec.get("time") else None,
+        place_name=spec.get("place_name"),
+        lat=spec["lat"],
+        lon=spec["lon"],
+        tz=spec["tz"],
+        utc_offset=spec.get("utc_offset"),
+    )
+
+
+def request_key(request: httpx.Request) -> str:
+    query = sorted(httpx.QueryParams(request.url.query).multi_items())
+    body = json.loads(request.content) if request.content else None
+    return json.dumps(
+        [request.method, request.url.path, query, body], sort_keys=True, ensure_ascii=False
+    )
+
+
+class Recorder(httpx.AsyncBaseTransport):
+    def __init__(self, inner: httpx.AsyncBaseTransport) -> None:
+        self.inner = inner
+        self.exchanges: dict[str, dict[str, Any]] = {}
+
+    async def handle_async_request(self, request: httpx.Request) -> httpx.Response:
+        response = await self.inner.handle_async_request(request)
+        raw = await response.aread()
+        self.exchanges[request_key(request)] = {
+            "request": json.loads(request_key(request)),
+            "status": response.status_code,
+            "response": json.loads(raw),
+        }
+        return httpx.Response(response.status_code, content=raw, headers=response.headers)
+
+
+def load(path: Path = OUT) -> dict[str, Any]:
+    data: dict[str, Any] = json.loads(path.read_text(encoding="utf-8"))
+    return data
+
+
+def replay_transport(path: Path = OUT) -> httpx.MockTransport:
+    exchanges = {
+        json.dumps(e["request"], sort_keys=True, ensure_ascii=False): e
+        for e in load(path)["exchanges"]
+    }
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        found = exchanges.get(request_key(request))
+        if found is None:
+            return httpx.Response(599, json={"detail": {"code": "not_recorded"}})
+        return httpx.Response(found["status"], json=found["response"])
+
+    return httpx.MockTransport(handler)
+
+
+async def record(url: str | None) -> dict[str, Any]:
+    from astro_api import reports
+
+    if url:
+        inner: httpx.AsyncBaseTransport = httpx.AsyncHTTPTransport()
+        base = url
+    else:
+        from astro_engine.main import app
+
+        inner = httpx.ASGITransport(app=app)
+        base = "http://astro.test"
+    rec = Recorder(inner)
+    async with httpx.AsyncClient(base_url=base, transport=rec, timeout=60) as http:
+        await reports.build_snapshot(http, "kundli_report", [birth(PERSON_A)], AS_OF)
+        await reports.build_snapshot(
+            http, "matching_report", [birth(PERSON_A), birth(PERSON_B)], AS_OF
+        )
+        for language in ("en", "hi"):
+            sample = reports.sample_births("kundli_report", language)
+            assert sample is not None
+            await reports.build_snapshot(http, "kundli_report", sample, AS_OF)
+    bad = [e for e in rec.exchanges.values() if e["status"] != 200]
+    if bad:
+        raise SystemExit(f"engine refused {len(bad)} request(s): {[e['request'][1] for e in bad]}")
+    return {
+        "$comment": "Generated by record_report_engine.py from the astro engine. Do not edit.",
+        "engine": url or "in-process astro_engine.main:app",
+        "as_of": AS_OF.isoformat(),
+        "inputs": {"person_a": PERSON_A, "person_b": PERSON_B},
+        "exchanges": sorted(rec.exchanges.values(), key=lambda e: json.dumps(e["request"])),
+    }
+
+
+def main(argv: list[str]) -> int:
+    p = argparse.ArgumentParser()
+    p.add_argument("--url", help="engine base URL (default: the in-process engine)")
+    args = p.parse_args(argv)
+    data = asyncio.run(record(args.url))
+    OUT.write_text(json.dumps(data, indent=1, ensure_ascii=False) + "\n", encoding="utf-8")
+    print(f"wrote {OUT} ({len(data['exchanges'])} exchanges)")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main(sys.argv[1:]))

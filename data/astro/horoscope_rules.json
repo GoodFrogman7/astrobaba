@@ -1,0 +1,135 @@
+{
+  "$comment": "Rules for horoscope facts (gochara from the Moon sign). A graha in one of its favourable houses counted from the sign counts +weight, any other house -weight. r = sum / total weight in [-1, 1], mapped to a 5-step score by the thresholds (r <= t[0] -> 1, r <= t[1] -> 2, r < t[2] -> 3, r < t[3] -> 4, else 5).",
+  "source": "Classical gochara (transit) results from the Moon sign, e.g. Phaladeepika ch. 26. Area weights are this product's convention.",
+  "review": {
+    "status": "needs_astrologer_review",
+    "note": "Favourable houses entered from the classical lists; area weights and thresholds are a product convention. A vetted astrologer must review before horoscopes go public."
+  },
+  "favourable_houses": {
+    "sun": [
+      3,
+      6,
+      10,
+      11
+    ],
+    "moon": [
+      1,
+      3,
+      6,
+      7,
+      10,
+      11
+    ],
+    "mars": [
+      3,
+      6,
+      11
+    ],
+    "mercury": [
+      2,
+      4,
+      6,
+      8,
+      10,
+      11
+    ],
+    "jupiter": [
+      2,
+      5,
+      7,
+      9,
+      11
+    ],
+    "venus": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      8,
+      9,
+      11,
+      12
+    ],
+    "saturn": [
+      3,
+      6,
+      11
+    ],
+    "rahu": [
+      3,
+      6,
+      11
+    ],
+    "ketu": [
+      3,
+      6,
+      11
+    ]
+  },
+  "areas": {
+    "overall": {
+      "sun": 1,
+      "moon": 1,
+      "mars": 1,
+      "mercury": 1,
+      "jupiter": 1,
+      "venus": 1,
+      "saturn": 1,
+      "rahu": 1,
+      "ketu": 1
+    },
+    "love": {
+      "venus": 2,
+      "moon": 1,
+      "mars": 1,
+      "jupiter": 1
+    },
+    "career": {
+      "sun": 2,
+      "saturn": 2,
+      "jupiter": 1,
+      "mercury": 1,
+      "mars": 1
+    },
+    "money": {
+      "jupiter": 2,
+      "venus": 1,
+      "mercury": 1,
+      "saturn": 1
+    },
+    "health": {
+      "sun": 1,
+      "moon": 1,
+      "mars": 1,
+      "saturn": 1,
+      "rahu": 1
+    }
+  },
+  "daily_moon": {
+    "multiplier": 2,
+    "default_weight": 1,
+    "note": "Daily: Moon weight x2 in every area; areas without the Moon get weight 1 before doubling."
+  },
+  "periods_without_moon": [
+    "weekly",
+    "monthly"
+  ],
+  "thresholds": [
+    -0.6,
+    -0.2,
+    0.2,
+    0.6
+  ],
+  "labels": {
+    "1": "challenging",
+    "2": "mixed",
+    "3": "steady",
+    "4": "good",
+    "5": "excellent"
+  },
+  "positions": {
+    "slow_grahas": "window midpoint",
+    "daily_moon": "12:00 IST"
+  }
+}

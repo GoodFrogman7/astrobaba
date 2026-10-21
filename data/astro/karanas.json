@@ -1,0 +1,63 @@
+{
+  "$comment": "60 half-tithis per lunar month. Half 1 is Kimstughna; halves 2-57 cycle through the 7 movable karanas starting at Bava; 58-60 are Shakuni, Chatushpada, Naga.",
+  "source": "Standard panchang definition.",
+  "movable": [
+    {
+      "id": "bava",
+      "en": "Bava",
+      "hi": "बव"
+    },
+    {
+      "id": "balava",
+      "en": "Balava",
+      "hi": "बालव"
+    },
+    {
+      "id": "kaulava",
+      "en": "Kaulava",
+      "hi": "कौलव"
+    },
+    {
+      "id": "taitila",
+      "en": "Taitila",
+      "hi": "तैतिल"
+    },
+    {
+      "id": "gara",
+      "en": "Gara",
+      "hi": "गर"
+    },
+    {
+      "id": "vanija",
+      "en": "Vanija",
+      "hi": "वणिज"
+    },
+    {
+      "id": "vishti",
+      "en": "Vishti",
+      "hi": "विष्टि"
+    }
+  ],
+  "fixed": {
+    "1": {
+      "id": "kimstughna",
+      "en": "Kimstughna",
+      "hi": "किंस्तुघ्न"
+    },
+    "58": {
+      "id": "shakuni",
+      "en": "Shakuni",
+      "hi": "शकुनि"
+    },
+    "59": {
+      "id": "chatushpada",
+      "en": "Chatushpada",
+      "hi": "चतुष्पद"
+    },
+    "60": {
+      "id": "naga",
+      "en": "Naga",
+      "hi": "नाग"
+    }
+  }
+}

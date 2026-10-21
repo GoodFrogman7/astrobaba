@@ -1,0 +1,63 @@
+{
+  "$comment": "Choghadiya: daytime (sunrise to sunset) and night (sunset to next sunrise) are each split into 8 equal parts. The 7 choghadiyas cycle in the order below. Day: start at the choghadiya ruled by the weekday lord, step +1. Night: start at (day start index + night_start_offset) mod 7, step night_step.",
+  "source": "Standard choghadiya tables as published in North Indian panchangs.",
+  "review": {
+    "status": "needs_astrologer_review",
+    "note": "Order, natures and the day/night stepping rules were entered from the commonly published tables; a vetted astrologer must confirm them."
+  },
+  "cycle": [
+    {
+      "id": "udveg",
+      "en": "Udveg",
+      "hi": "उद्वेग",
+      "planet": "sun",
+      "nature": "bad"
+    },
+    {
+      "id": "char",
+      "en": "Char",
+      "hi": "चर",
+      "planet": "venus",
+      "nature": "neutral"
+    },
+    {
+      "id": "labh",
+      "en": "Labh",
+      "hi": "लाभ",
+      "planet": "mercury",
+      "nature": "good"
+    },
+    {
+      "id": "amrit",
+      "en": "Amrit",
+      "hi": "अमृत",
+      "planet": "moon",
+      "nature": "good"
+    },
+    {
+      "id": "kaal",
+      "en": "Kaal",
+      "hi": "काल",
+      "planet": "saturn",
+      "nature": "bad"
+    },
+    {
+      "id": "shubh",
+      "en": "Shubh",
+      "hi": "शुभ",
+      "planet": "jupiter",
+      "nature": "good"
+    },
+    {
+      "id": "rog",
+      "en": "Rog",
+      "hi": "रोग",
+      "planet": "mars",
+      "nature": "bad"
+    }
+  ],
+  "day_step": 1,
+  "night_start_offset": 5,
+  "night_step": -2,
+  "parts": 8
+}

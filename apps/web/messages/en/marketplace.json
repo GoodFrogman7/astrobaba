@@ -1,0 +1,201 @@
+{
+  "market": {
+    "presence": {
+      "online": "Online",
+      "busy": "In a session",
+      "offline": "Offline",
+      "wait": "About {minutes} min wait"
+    },
+    "card": {
+      "experience": "{years, plural, =0 {New to practice} one {# year experience} other {# years experience}}",
+      "perMin": "{price}/min",
+      "new": "New",
+      "reviews": "{count, plural, one {# review} other {# reviews}}",
+      "demo": "Demo profile",
+      "languages": "Languages",
+      "skills": "Skills"
+    },
+    "directory": {
+      "filters": "Filter astrologers",
+      "skill": "Speciality",
+      "language": "Language",
+      "gender": "Gender",
+      "tier": "Tier",
+      "any": "Any",
+      "minPrice": "Min ₹/min",
+      "maxPrice": "Max ₹/min",
+      "online": "Online now",
+      "sort": "Sort by",
+      "apply": "Show results",
+      "clear": "Clear filters",
+      "categories": "Browse by speciality",
+      "all": "All",
+      "results": "{total, plural, =0 {No astrologers match} one {# astrologer} other {# astrologers}}",
+      "loadMore": "Load more",
+      "unavailable": "The astrologer list is unavailable right now. Please try again in a few minutes.",
+      "noMatch": "No astrologers match these filters. Try removing one.",
+      "emptyTitle": "Astrologers are joining",
+      "emptyBody": "We list an astrologer only after checking their identity and qualifications, an interview, and a probation period. The first verified astrologers will appear here when consultations open.",
+      "emptyApply": "Are you an astrologer? Apply to join"
+    },
+    "sort": {
+      "recommended": "Recommended",
+      "price_asc": "Price: low to high",
+      "price_desc": "Price: high to low",
+      "experience": "Most experienced",
+      "rating": "Highest rated"
+    },
+    "profile": {
+      "about": "About",
+      "bioInEnglish": "This astrologer has written their profile in English.",
+      "verified": "Verified by our team",
+      "identity": "Identity checked",
+      "qualification": "Qualifications checked",
+      "interview": "Interview passed",
+      "since": "On the platform since {date}",
+      "tier": "Tier",
+      "experience": "Experience",
+      "price": "Price",
+      "languages": "Languages",
+      "skills": "Specialities",
+      "reviews": "Client reviews",
+      "noReviews": "No reviews yet. Reviews can only be written by clients after a completed consultation.",
+      "reviewsOnly": "Only clients who completed a consultation can review.",
+      "reply": "Reply from {name}",
+      "moreReviews": "More reviews",
+      "rating": "{avg} out of 5 from {count, plural, one {# review} other {# reviews}}",
+      "stars": "{rating} out of 5",
+      "report": "Report",
+      "reportReason": "Why are you reporting this review?",
+      "reportSend": "Send report",
+      "reported": "Thanks. A moderator will look at it.",
+      "reportSignIn": "Please sign in to report a review.",
+      "reportError": "Could not send the report. Please try again.",
+      "demoNotice": "This is a demo profile for development. It is not a real astrologer.",
+      "availability": {
+        "title": "Usually available (IST)",
+        "range": "{from} to {to}",
+        "pair": "{a} and {b}",
+        "note": "Times are India Standard Time. This is a usual schedule; the status above shows whether the astrologer is online now."
+      }
+    },
+    "consult": {
+      "title": "Consult {name}",
+      "perMin": "per minute",
+      "billing": "You pay per minute from your wallet. You can end anytime."
+    },
+    "experts": {
+      "heading": "Talk to a verified astrologer",
+      "all": "See all astrologers",
+      "note": "Every astrologer is checked for identity and qualifications and interviewed before listing."
+    },
+    "signin": {
+      "title": "Sign in with your phone",
+      "phone": "Mobile number",
+      "consent": "We'll text a one-time code. We use your number only to sign you in.",
+      "send": "Send code",
+      "code": "6-digit code",
+      "verify": "Verify",
+      "change": "Change number",
+      "busy": "Please wait…",
+      "errors": {
+        "unsupported_phone": "Please enter a 10-digit Indian mobile number.",
+        "rate_limited": "Too many attempts. Please wait a few minutes.",
+        "invalid_code": "That code is not correct.",
+        "challenge_expired": "The code has expired. Please request a new one.",
+        "generic": "Something went wrong. Please try again."
+      }
+    },
+    "apply": {
+      "signInFirst": "Sign in to apply. Your phone number becomes your astrologer login.",
+      "already": "You have already applied.",
+      "seeStatus": "See your application status",
+      "form": {
+        "title": "Your application",
+        "invite": "Invite code (if you have one)",
+        "inviteHint": "If we sent you an invite link, the code is already filled in.",
+        "displayName": "Display name",
+        "bio": "About you (shown on your profile, 50-2000 characters)",
+        "bioHi": "About you in Hindi (optional)",
+        "skills": "Specialities (up to 5)",
+        "languages": "Languages you consult in (up to 6)",
+        "gender": "Gender",
+        "experience": "Years of practice",
+        "price": "Requested price (₹ per minute)",
+        "priceHint": "Between {min} and {max}. We confirm the final tier and price after verification.",
+        "terms": "I confirm the details are true, and I agree to the platform's code of conduct: no fear-based advice, no guaranteed outcomes, and no medical, legal or financial advice.",
+        "submit": "Submit application",
+        "submitting": "Submitting…",
+        "errors": {
+          "display_name": "Enter a name of 2-60 characters.",
+          "bio": "Write 50-2000 characters about yourself.",
+          "bio_hi": "The Hindi text is too long.",
+          "skills": "Choose 1-5 specialities.",
+          "languages": "Choose 1-6 languages.",
+          "gender": "Choose an option.",
+          "experience_years": "Enter years of practice (0-70).",
+          "requested_price_per_min_paise": "Enter a price within the range.",
+          "accepts_terms": "Please confirm to continue.",
+          "already_applied": "You have already applied.",
+          "generic": "Could not submit. Please try again.",
+          "invite_required": "Applications are by invitation only right now. Open the invite link we sent you, or enter your invite code above.",
+          "invite_invalid": "This invite code is not valid. It may have expired, been used already or been withdrawn. Please ask us for a new one."
+        }
+      }
+    },
+    "status": {
+      "title": "Your astrologer application",
+      "signedOut": "Sign in with the phone number you applied with.",
+      "none": "You have not applied yet.",
+      "applyLink": "Start an application",
+      "loading": "Loading…",
+      "current": "Current status",
+      "steps": "Verification steps",
+      "statuses": {
+        "applied": "Application received: upload your documents",
+        "kyc_submitted": "Documents received: we are reviewing them",
+        "interview": "Documents verified: we will call you for an interview",
+        "probation": "Live on probation",
+        "approved": "Approved and live",
+        "suspended": "Suspended",
+        "rejected": "Not approved"
+      },
+      "step": {
+        "identity": "Identity",
+        "qualification": "Qualifications",
+        "interview": "Interview",
+        "probation": "Probation"
+      },
+      "stepStatus": {
+        "pending": "Pending",
+        "passed": "Passed",
+        "failed": "Not passed"
+      },
+      "documents": "Documents",
+      "noDocuments": "No documents uploaded yet.",
+      "kind": {
+        "identity": "Identity proof",
+        "qualification": "Qualification proof",
+        "other": "Other"
+      },
+      "kindLabel": "Document type",
+      "file": "File (PDF, JPEG or PNG, up to 5 MB)",
+      "uploadButton": "Upload",
+      "uploading": "Uploading…",
+      "uploaded": "Uploaded.",
+      "delete": "Delete",
+      "needs": "We need at least one identity proof and one qualification proof.",
+      "private": "Documents are visible only to our verification team and are never shown publicly.",
+      "errors": {
+        "file_too_large": "The file is larger than 5 MB.",
+        "unsupported_type": "Please upload a PDF, JPEG or PNG.",
+        "multipart_required": "Upload failed. Please try again.",
+        "too_many_documents": "You have reached the document limit.",
+        "locked": "Documents can no longer be changed.",
+        "generic": "Something went wrong. Please try again.",
+        "unsupported_file_type": "Please upload a PDF, JPEG or PNG.",
+        "empty_file": "The file is empty."
+      }
+    }
+  }
+}

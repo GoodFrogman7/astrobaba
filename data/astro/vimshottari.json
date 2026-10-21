@@ -1,0 +1,44 @@
+{
+  "$comment": "Vimshottari mahadasha order and lengths in years (total 120). Sequence starts from the lord of the Moon's nakshatra.",
+  "source": "Brihat Parashara Hora Shastra.",
+  "year_days": 365.25,
+  "year_days_note": "Julian year. Other conventions exist (365.2425, 360); see ADR-0004.",
+  "sequence": [
+    {
+      "lord": "ketu",
+      "years": 7
+    },
+    {
+      "lord": "venus",
+      "years": 20
+    },
+    {
+      "lord": "sun",
+      "years": 6
+    },
+    {
+      "lord": "moon",
+      "years": 10
+    },
+    {
+      "lord": "mars",
+      "years": 7
+    },
+    {
+      "lord": "rahu",
+      "years": 18
+    },
+    {
+      "lord": "jupiter",
+      "years": 16
+    },
+    {
+      "lord": "saturn",
+      "years": 19
+    },
+    {
+      "lord": "mercury",
+      "years": 17
+    }
+  ]
+}

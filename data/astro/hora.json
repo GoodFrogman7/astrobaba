@@ -1,0 +1,14 @@
+{
+  "$comment": "Hora: 12 equal parts of daytime from sunrise and 12 equal parts of night from sunset. The first hora is ruled by the weekday lord; lords then follow the Chaldean order below, repeating.",
+  "source": "Standard hora (planetary hour) rule.",
+  "chaldean_order": [
+    "saturn",
+    "jupiter",
+    "mars",
+    "sun",
+    "venus",
+    "mercury",
+    "moon"
+  ],
+  "parts_per_half": 12
+}

@@ -1,0 +1,26 @@
+{
+  "slug": "fixture-unreviewed",
+  "status": "published",
+  "title": "Test fixture article fixture-unreviewed",
+  "description": "A fixture article (fixture-unreviewed) used only by the web tests; it is never shipped or published on the site.",
+  "h1": "Fixture article fixture-unreviewed",
+  "intro": "This text exists only so the tests can check routing, listing, structured data and the sitemap. It says nothing about astrology.",
+  "sections": [
+    {
+      "heading": "First fixture section",
+      "body": [
+        "Placeholder paragraph one for the fixture.",
+        "Placeholder paragraph two for the fixture."
+      ]
+    },
+    {
+      "heading": "Second fixture section",
+      "body": ["Placeholder paragraph three for the fixture."]
+    }
+  ],
+  "related_tools": ["kundli", "nakshatra", "kundli-matching", "not-a-tool"],
+  "author": "Fixture Author",
+  "reviewed_by": "  ",
+  "published_at": "2026-10-01",
+  "updated_at": "2026-10-15"
+}

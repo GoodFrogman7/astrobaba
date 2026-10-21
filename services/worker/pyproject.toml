@@ -1,0 +1,18 @@
+[project]
+name = "astro-worker"
+version = "0.0.0"
+description = "Background jobs: horoscope generation and review."
+requires-python = ">=3.12"
+dependencies = [
+  "astro-api",
+  "httpx>=0.27",
+  # Official SDK for the Anthropic provider (LLM_PROVIDER=anthropic).
+  "anthropic>=1.9",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/astro_worker"]

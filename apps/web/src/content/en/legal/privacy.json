@@ -1,0 +1,97 @@
+{
+  "title": "Privacy notice",
+  "description": "What personal data {brand} collects, why, who processes it for us, how long it is kept, and how to download or delete your data.",
+  "h1": "Privacy notice",
+  "intro": "This notice explains what personal data we hold when you use {brand}, why we need it, which service providers process it for us, and how you can get a copy of it or have it deleted. It describes what the service does today.",
+  "sections": [
+    {
+      "id": "who",
+      "heading": "Who is responsible",
+      "body": [
+        "The operator named below decides how your personal data is used. Questions and complaints about your data go to our grievance officer."
+      ],
+      "slot": "operator",
+      "lawyer": "The operator's legal name and address, the grievance officer's name and contact, and the response timelines required under the Digital Personal Data Protection Act and its rules."
+    },
+    {
+      "id": "collect",
+      "heading": "What we collect",
+      "body": [
+        "Without an account: the birth details you type into a free tool are used to compute the result and are not saved. We set a random device identifier in a cookie, and we use your IP address for abuse checks such as limiting free first consultations.",
+        "With an account: your mobile number (to sign you in), your language, and the record of the policies you agreed to (version, time, and a scrambled form of your IP address and device identifier). If you save a kundli we keep its name and the birth date, time and place you entered.",
+        "When you consult: which astrologer, when the consultation started and ended, the minutes and the amount charged, your chat messages (stored encrypted) and any review you write. Voice calls are relayed live and are never recorded. Astrologers never see your phone number or name, only a short label such as “Client”.",
+        "When you pay: the amounts, the order and payment identifiers and the status Razorpay sends us. You enter card, UPI or bank details with Razorpay, not with us.",
+        "Reports, AI questions and partner requests: the snapshot of calculations a report is made from; an email address if you give one for the “report ready” message (stored encrypted, used once, then erased); your AI questions and the answers (stored encrypted); and, for a partner request, the note you write (stored encrypted) and your phone number, which is passed to that partner only because you ticked the box to agree."
+      ]
+    },
+    {
+      "id": "why",
+      "heading": "Why we use it",
+      "body": [
+        "To sign you in and run consultations, the wallet, reports and partner requests; to bill each minute and apply refunds; to prevent abuse of free offers and payments; to keep financial records that tax law requires; and to keep consultations safe. Every chat message is checked automatically before it is stored, so that signs of self-harm can bring up crisis resources and so that astrologers cannot send contact details, ask for payment off the platform or make banned claims.",
+        "We do not sell your data. Chat messages never go into analytics, logs or AI training. Our analytics events have a fixed list of fields that excludes chat text and contact details, and our logs hide phone numbers and email addresses. When the AI assistant answers, the AI provider receives your question and the computed chart placements, never your name, phone number or birth date, time and place."
+      ],
+      "lawyer": "The legal basis for each purpose (consent or legitimate use) under the DPDP Act, and the consent wording itself."
+    },
+    {
+      "id": "analytics",
+      "heading": "Analytics",
+      "body": [
+        "To learn which pages and free tools are useful, we record a small, fixed set of usage events: the pages you open (the address only, with record numbers removed), which free tool you start and finish, clicks on consultation buttons, sign-in steps and, on the first page of a visit, whether you came from a search engine, a social network, another site or a campaign link. Events never contain your name, phone number, email address, birth details, chat messages or anything you type.",
+        "This is first-party analytics: the events go only to our own servers, and we use no third-party analytics or advertising trackers. A random identifier in a cookie, kept for {aidDays} days, links the events from one browser; we do not store your IP address or browser details with them. After you sign in, that browser's events are linked to your account, so they are included when you download your data and deleted when your account is deleted. Raw events are deleted after {retentionDays} days.",
+        "If your browser sends Global Privacy Control or Do Not Track, nothing is collected. You can also turn analytics off for this browser with the switch below. Turning it off removes the identifier cookie and keeps only your choice, for one year."
+      ],
+      "slot": "analytics",
+      "lawyer": "Whether the analytics cookie needs prior consent under the DPDP Act, and the final cookie and retention periods."
+    },
+    {
+      "id": "processors",
+      "heading": "Who processes data for us",
+      "body": [
+        "We use the service providers listed below. Where a provider has not been chosen yet, the entry says so; the list will be complete before launch."
+      ],
+      "slot": "processors"
+    },
+    {
+      "id": "retention",
+      "heading": "How long we keep it",
+      "body": [
+        "We keep your data while your account is open. When your account is deleted, the items in the list below are handled as shown."
+      ],
+      "slot": "retention",
+      "lawyer": "Final retention periods for each category, including identity documents of astrologer applicants and inactive accounts."
+    },
+    {
+      "id": "rights",
+      "heading": "Your choices and rights",
+      "body": [
+        "On the My account page you can download a copy of everything we hold about you as a file (once every 24 hours) and ask us to delete your account. You can cancel a deletion request until it is carried out. Deletion happens after any open consultation has ended and your wallet balance has been settled; some records are kept, as explained there and on the My account page.",
+        "To correct your details, or for any other request about your data, write to the grievance officer."
+      ],
+      "lawyer": "How each right under the DPDP Act is exercised (access, correction, erasure, withdrawal of consent, nomination, grievance redressal) and the escalation route to the Data Protection Board."
+    },
+    {
+      "id": "security",
+      "heading": "How we protect it",
+      "body": [
+        "Chat messages, AI questions and answers, partner notes and report email addresses are encrypted in our database. Your sign-in token lives in a cookie that page scripts cannot read. Report and data download links are signed and stop working after 10 minutes. Staff can see an astrologer applicant's identity documents only through an admin tool that records every view, and a flagged chat message can be opened only through a recorded admin action."
+      ],
+      "lawyer": "Security safeguards statement and breach notification process."
+    },
+    {
+      "id": "children",
+      "heading": "Children",
+      "body": [
+        "Paid features are only for people aged 18 or older, and we ask for that confirmation before any of them can be used. The free tools work without an account and do not save what you enter."
+      ],
+      "lawyer": "Handling of children's data under the DPDP Act, including accounts used only to save kundlis."
+    },
+    {
+      "id": "changes",
+      "heading": "Changes to this notice",
+      "body": [
+        "Each version of this notice has a version number. When it changes we ask you to read and agree to the new version before your next paid action."
+      ]
+    }
+  ]
+}

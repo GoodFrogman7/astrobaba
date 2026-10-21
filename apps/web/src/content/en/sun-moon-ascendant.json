@@ -1,0 +1,39 @@
+{
+  "title": "Sun, Moon and ascendant calculator (Vedic, sidereal)",
+  "description": "Find your sidereal Sun sign, Moon sign (rashi) and ascendant (lagna) with degree and nakshatra, from your date, time and place of birth.",
+  "h1": "Sun sign, Moon sign and ascendant",
+  "intro": "Three placements answer the question people ask most: what are my signs? This tool shows your sidereal Sun sign, your Moon sign (rashi) and your ascendant (lagna), each with its degree, nakshatra and ruling planet.",
+  "sections": [
+    {
+      "heading": "Why three signs",
+      "body": [
+        "In Vedic astrology the Moon sign, or rashi, is the one most often used for daily horoscopes and for matching. The Sun sign describes where the Sun stood at birth. The ascendant, or lagna, is the sign rising in the east at that minute and sets the first house of the chart.",
+        "Because the ascendant moves through all twelve signs in about a day, it needs an accurate birth time. Without a time we show the Sun and Moon only."
+      ]
+    },
+    {
+      "heading": "How we calculate them",
+      "body": [
+        "Positions are computed with the Swiss Ephemeris for your exact birth instant and converted to the sidereal zodiac using the Lahiri ayanamsha. The degree shown is the position inside the sign, from 0 to 30 degrees, and the nakshatra is one of 27 equal divisions of the zodiac of 13 degrees 20 minutes each."
+      ]
+    }
+  ],
+  "faqs": [
+    {
+      "q": "Which sign should I read my horoscope for?",
+      "a": "Vedic horoscopes are usually written for the Moon sign (rashi). Some readers also check the ascendant."
+    },
+    {
+      "q": "Why is my Vedic Sun sign different?",
+      "a": "The sidereal zodiac is currently about 24 degrees behind the tropical zodiac used in Western astrology, so the Sun often falls in the previous sign."
+    },
+    {
+      "q": "What if I was born near a sign boundary?",
+      "a": "Small time differences can move the ascendant or Moon across a boundary. The degree shown helps you see how close it is."
+    },
+    {
+      "q": "Do you need my exact time?",
+      "a": "For the ascendant, yes. For the Sun sign, the date is almost always enough; for the Moon, the time matters on days it changes sign."
+    }
+  ]
+}

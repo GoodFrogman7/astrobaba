@@ -1,0 +1,163 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  web:
+    name: Web (lint, types, tests, SSR smoke)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm lint
+      - run: pnpm format:check
+      - run: pnpm claims-check
+      - run: pnpm typecheck
+      - run: pnpm test
+      - run: pnpm build
+      - run: pnpm --filter @astro/web smoke
+
+  python:
+    name: Python (lint, types, tests, migrations)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: astro
+          POSTGRES_PASSWORD: astro-ci-only
+          POSTGRES_DB: astro
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U astro" --health-interval 2s --health-timeout 3s --health-retries 30
+      redis:
+        image: redis:7-alpine
+        ports: ["6379:6379"]
+        options: >-
+          --health-cmd "redis-cli ping" --health-interval 2s --health-timeout 3s --health-retries 30
+    env:
+      DATABASE_URL: postgresql+asyncpg://astro:astro-ci-only@localhost:5432/astro
+      REDIS_URL: redis://localhost:6379/0
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+      - run: uv sync --frozen
+      - name: Engine data (Swiss Ephemeris files, GeoNames city index)
+        run: |
+          uv run python data/fetch_ephemeris.py
+          uv run python data/import_cities.py --source geonames
+      - run: uv run ruff check .
+      - run: uv run ruff format --check .
+      - run: uv run mypy
+      # Unit and integration tests together; integration tests use the services above.
+      - run: uv run pytest -rs
+
+  docker:
+    name: Docker images build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker compose build
+
+  hygiene:
+    name: Repo hygiene (no secrets or env files committed)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: No .env files tracked
+        run: |
+          if git ls-files | grep -E '(^|/)\.env($|\.)' | grep -v '\.env\.example$'; then
+            echo "::error::.env files must not be committed"; exit 1
+          fi
+      - name: No obvious live keys
+        run: |
+          if git grep -nE '(rzp_live_[A-Za-z0-9]{8,}|sk_live_[A-Za-z0-9]{8,}|AKIA[0-9A-Z]{16}|-----BEGIN [A-Z ]*PRIVATE KEY-----)' -- . ':!.github/workflows/ci.yml' ':!services/api/tests/**'; then
+            echo "::error::possible secret committed"; exit 1
+          fi
+
+  e2e:
+    name: End to end (SEO crawl, Lighthouse)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: astro
+          POSTGRES_PASSWORD: astro-ci-only
+          POSTGRES_DB: astro
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U astro" --health-interval 2s --health-timeout 3s --health-retries 30
+      redis:
+        image: redis:7-alpine
+        ports: ["6379:6379"]
+        options: >-
+          --health-cmd "redis-cli ping" --health-interval 2s --health-timeout 3s --health-retries 30
+    env:
+      APP_ENV: test
+      DATABASE_URL: postgresql+asyncpg://astro:astro-ci-only@localhost:5432/astro
+      REDIS_URL: redis://localhost:6379/0
+      SECRET_KEY: ci-only-not-secret
+      SMS_PROVIDER: console
+      ASTRO_URL: http://localhost:8001
+      API_URL: http://localhost:8000
+      NEXT_PUBLIC_SITE_URL: http://localhost:3000
+      BASE_URL: http://localhost:3000
+      CHROME_PATH: /usr/bin/google-chrome
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: uv sync --frozen
+      - name: Engine data
+        run: |
+          uv run python data/fetch_ephemeris.py
+          uv run python data/import_cities.py --source geonames
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @astro/web build
+      - name: Start astro engine, API and web
+        run: |
+          (cd services/api && uv run alembic upgrade head)
+          uv run python -m astro_api.seed demo-astrologers
+          # Straight from the venv, not `uv run`: a long-lived uv process holds the uv cache lock
+          # and makes setup-uv's post-job cache prune time out.
+          nohup .venv/bin/uvicorn astro_engine.main:app --port 8001 --no-access-log > astro.log 2>&1 &
+          nohup .venv/bin/uvicorn astro_api.main:app --port 8000 > api.log 2>&1 &
+          (cd apps/web && nohup node_modules/.bin/next start --port 3000 > ../../web.log 2>&1 &)
+          for url in http://localhost:8001/healthz http://localhost:8000/readyz http://localhost:3000/; do
+            for i in $(seq 1 60); do curl -fsS -o /dev/null "$url" && break; sleep 1; done
+            curl -fsS -o /dev/null "$url"
+          done
+      - name: SEO crawl (sitemap, canonicals, JSON-LD, >= 800 chars, IST date, Hindi)
+        run: pnpm --filter @astro/web seo-check
+      - name: Lighthouse (mobile, every category >= 90)
+        run: pnpm --filter @astro/web lighthouse
+      - name: Service logs
+        if: always()
+        run: tail -n 80 astro.log api.log web.log
+      - name: Stop services
+        if: always()
+        run: pkill -f "uvicorn astro_" || true; pkill -f "next start" || true

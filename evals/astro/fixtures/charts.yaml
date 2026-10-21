@@ -1,0 +1,140 @@
+# Golden birth-chart fixtures: inputs only.
+#
+# The charts are synthetic: invented instants and places, not real people. They are public domain
+# by construction, carry no privacy risk, and are chosen to hit edge cases. Coordinates are
+# inputs, so the reference values are generated for exactly these numbers.
+#
+# Expected values are never typed by hand (PLAN.md §0.4). scripts/fetch_reference.py stores raw
+# JPL Horizons data in ../reference/charts.json with provenance; test_golden.py compares.
+#
+# utc is derived from local + offset; tz is what the place picker would return. The offset is
+# stated explicitly so the reference never depends on our own tz handling.
+
+schema_version: 1
+tolerances:
+  tropical_longitude_arcsec: 1      # vs JPL Horizons, Sun to Saturn
+  sidereal_longitude_arcmin: 1      # vs Swiss Ephemeris Lahiri (eval-only oracle), all grahas
+  ascendant_arcmin: 1               # vs Swiss Ephemeris oracle
+  nakshatra_pada: exact
+  # Dasha dates scale with Moon longitude: 1" of Moon moves a 20-year Venus period by ~3.6 hours.
+  # The year length (365.25 days vs. others) is a convention; ours is fixed in the Phase 1 ADR.
+  vimshottari_dasha_start_days: 1
+
+charts:
+  - id: C01
+    purpose: Baseline near the J2000 epoch, India.
+    place: { name: New Delhi, lat: 28.6139, lon: 77.2090, tz: Asia/Kolkata }
+    local: "2000-01-01T12:00"
+    utc_offset: "+05:30"
+    utc: "2000-01-01T06:30:00Z"
+
+  - id: C02
+    purpose: Birth minutes after sunrise; ascendant should sit close to the Sun.
+    place: { name: Mumbai, lat: 19.0760, lon: 72.8777, tz: Asia/Kolkata }
+    local: "1985-07-15T06:10"
+    utc_offset: "+05:30"
+    utc: "1985-07-15T00:40:00Z"
+
+  - id: C03
+    purpose: Five minutes before local midnight at the equinox; UTC date equals local date.
+    place: { name: Chennai, lat: 13.0827, lon: 80.2707, tz: Asia/Kolkata }
+    local: "1972-03-21T23:55"
+    utc_offset: "+05:30"
+    utc: "1972-03-21T18:25:00Z"
+
+  - id: C04
+    purpose: Wartime India (+06:30 per tzdata, 1942-09 to 1945-10). Tests historical offsets.
+    place: { name: Kolkata, lat: 22.5726, lon: 88.3639, tz: Asia/Kolkata }
+    local: "1943-05-10T10:00"
+    utc_offset: "+06:30"
+    utc: "1943-05-10T03:30:00Z"
+    note: >-
+      Calcutta also kept its own local time in this era. tzdata does not model that, so the
+      engine must let the user confirm the offset for pre-1955 Indian births (Phase 1 task).
+
+  - id: C05
+    purpose: Pre-dawn birth whose UTC date is the previous day.
+    place: { name: Varanasi, lat: 25.3176, lon: 82.9739, tz: Asia/Kolkata }
+    local: "1955-11-02T04:30"
+    utc_offset: "+05:30"
+    utc: "1955-11-01T23:00:00Z"
+
+  - id: C06
+    purpose: Last minute of a year; date rollover in UTC and IST differ by a day boundary.
+    place: { name: Bengaluru, lat: 12.9716, lon: 77.5946, tz: Asia/Kolkata }
+    local: "1990-12-31T23:59"
+    utc_offset: "+05:30"
+    utc: "1990-12-31T18:29:00Z"
+
+  - id: C07
+    purpose: Diaspora birth during daylight saving time, western hemisphere.
+    place: { name: New York, lat: 40.7128, lon: -74.0060, tz: America/New_York }
+    local: "2010-06-21T14:30"
+    utc_offset: "-04:00"
+    utc: "2010-06-21T18:30:00Z"
+
+  - id: C08
+    purpose: Total solar eclipse day; Sun and Moon conjunct, tests Moon precision and amavasya.
+    place: { name: London, lat: 51.5074, lon: -0.1278, tz: Europe/London }
+    local: "1999-08-11T11:11"
+    utc_offset: "+01:00"
+    utc: "1999-08-11T10:11:00Z"
+
+  - id: C09
+    purpose: Southern hemisphere, leap day, local date ahead of UTC date.
+    place: { name: Sydney, lat: -33.8688, lon: 151.2093, tz: Australia/Sydney }
+    local: "2016-02-29T08:00"
+    utc_offset: "+11:00"
+    utc: "2016-02-28T21:00:00Z"
+
+  - id: C10
+    purpose: High latitude (64°N) at the winter solstice; fast-changing ascendant.
+    place: { name: Reykjavik, lat: 64.1466, lon: -21.9426, tz: Atlantic/Reykjavik }
+    local: "2012-12-21T12:00"
+    utc_offset: "+00:00"
+    utc: "2012-12-21T12:00:00Z"
+
+  - id: C11
+    purpose: Above the Arctic Circle under midnight sun. Quadrant house systems break here; whole-sign must still work.
+    place: { name: Tromsø, lat: 69.6492, lon: 18.9553, tz: Europe/Oslo }
+    local: "2020-06-21T12:00"
+    utc_offset: "+02:00"
+    utc: "2020-06-21T10:00:00Z"
+
+  - id: C12
+    purpose: Historical non-round offset (+07:30, Singapore 1965).
+    place: { name: Singapore, lat: 1.3521, lon: 103.8198, tz: Asia/Singapore }
+    local: "1965-08-09T09:00"
+    utc_offset: "+07:30"
+    utc: "1965-08-09T01:30:00Z"
+
+  - id: C13
+    purpose: Unknown birth time. No ascendant, no houses, clear flag; Moon sign may be ambiguous.
+    place: { name: Jaipur, lat: 26.9124, lon: 75.7873, tz: Asia/Kolkata }
+    local_date: "1995-04-14"
+    unknown_time: true
+    expected:
+      ascendant: null
+      houses: null
+      flags: [unknown_birth_time]
+      # Phase 1 fills: Moon sign at 00:00 and 23:59 local; if they differ, the API returns both.
+
+  - id: C14
+    purpose: Twenty minutes after local midnight in IST; the UTC date is still the previous day (the "tomorrow shows today" class of bug).
+    place: { name: Patna, lat: 25.5941, lon: 85.1376, tz: Asia/Kolkata }
+    local: "2026-10-20T00:20"
+    utc_offset: "+05:30"
+    utc: "2026-10-19T18:50:00Z"
+
+# Inputs the engine must reject or flag, rather than silently compute.
+invalid_inputs:
+  - id: X01
+    reason: Nonexistent local time (London clocks jump 01:00 to 02:00 on 2024-03-31).
+    place: { name: London, lat: 51.5074, lon: -0.1278, tz: Europe/London }
+    local: "2024-03-31T01:30"
+    expect: error_nonexistent_local_time
+  - id: X02
+    reason: Ambiguous local time (New York 01:30 occurs twice on 2024-11-03). Ask the user which.
+    place: { name: New York, lat: 40.7128, lon: -74.0060, tz: America/New_York }
+    local: "2024-11-03T01:30"
+    expect: error_ambiguous_local_time

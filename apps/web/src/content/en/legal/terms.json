@@ -1,0 +1,80 @@
+{
+  "title": "Terms of use",
+  "description": "The rules for using {brand}: free astrology tools, paid consultations with independent astrologers, the wallet, reports and partner requests.",
+  "h1": "Terms of use",
+  "intro": "These terms explain what {brand} offers, what you agree to when you use it, and what we and the astrologers on the platform will and will not do. They describe the service as it works today.",
+  "sections": [
+    {
+      "id": "service",
+      "heading": "What the service is",
+      "body": [
+        "{brand} offers free astrology tools (kundli, kundli matching, panchang, horoscopes and numerology) whose numbers are computed by an astronomical engine, paid chat and voice consultations with independent astrologers, printable kundli and matching reports, and a way to ask a partner about a puja. When it is switched on, an AI assistant answers questions about a saved kundli; its answers are always labelled as AI and it is never presented as a person.",
+        "Astrology is offered for guidance and entertainment. Nothing on the platform is medical, legal or financial advice, and no outcome is promised by us, by the astrologers or by the AI assistant."
+      ],
+      "lawyer": "Description of the operator, the legal basis of the service and any statutory disclaimers."
+    },
+    {
+      "id": "eligibility",
+      "heading": "Who can use what",
+      "body": [
+        "Anyone can use the free tools and read the horoscopes and panchang without an account. Consultations, recharges, reports, the AI assistant and partner requests are only for people aged 18 or older. Before you use them we ask you to confirm your age and to agree to these terms and the privacy notice; we record the version you agreed to and when.",
+        "You sign in with an Indian mobile number and a one-time code sent by SMS. Keep access to that number to yourself: anyone who can receive your codes can use your account and your wallet."
+      ]
+    },
+    {
+      "id": "astrologers",
+      "heading": "Astrologers on the platform",
+      "body": [
+        "Astrologers are independent professionals, not our employees. Before a profile is shown we check the applicant's identity, qualifications and experience, and an experienced reviewer interviews them. Each astrologer sets their own price per minute, which is shown on their profile and on the consultation screen before anything is charged.",
+        "Astrologers agree to a code of conduct: no fear-based selling, no claims of healing illness, no promises of outcomes, no medical, legal or financial advice, no sharing of contact details and no requests to pay outside the platform. Messages from an astrologer that share contact details, ask for payment outside the platform, claim to heal illness, promise outcomes, use fear or sell remedies are blocked before they reach you. You can report an astrologer from a consultation or from their profile, and we can warn or suspend astrologers who break the rules."
+      ],
+      "lawyer": "Nature of the relationship with astrologers (independent contractors), and our responsibility for their advice."
+    },
+    {
+      "id": "consultations",
+      "heading": "Paid chats and calls",
+      "body": [
+        "A consultation is charged per minute at the price shown when you start it. Each minute is charged from your wallet when it begins, and a minute you start counts as a whole minute. To start, your wallet must cover at least {minStart} minutes. You can end a consultation at any time; it also ends when your balance runs out, when free minutes are used up, or when one side stays disconnected for more than {grace} seconds.",
+        "Voice calls are relayed live and are not recorded. Chat messages are stored encrypted so that you can read the conversation later and download it with your data. Some problems are refunded automatically; see the refund policy."
+      ]
+    },
+    {
+      "id": "wallet",
+      "heading": "Your wallet",
+      "body": [
+        "The wallet holds prepaid credit that can only be spent on this platform. You add money through Razorpay; we never see your card or bank details. Promo credit (bonuses and free minutes) has no cash value. How credit is spent and when it expires is set out in the wallet credit policy."
+      ],
+      "lawyer": "Whether the closed-loop wallet needs RBI prepaid payment instrument authorisation; GST treatment; what happens to unused recharged balance (withdrawal, expiry, account closure)."
+    },
+    {
+      "id": "products",
+      "heading": "Reports, AI questions and partner requests",
+      "body": [
+        "Reports are priced at the moment you buy them and are made from a snapshot of the calculations for the kundli or kundlis you chose, so the numbers never change afterwards. AI questions are charged per question; a question the assistant cannot safely answer is not charged, or is refunded if it was. We do not sell pujas or other remedies ourselves: with your agreement we pass your request and phone number to a partner, who sets their own price and terms and contacts you directly."
+      ]
+    },
+    {
+      "id": "conduct",
+      "heading": "What we ask of you",
+      "body": [
+        "Please do not harass astrologers, share your contact details in a consultation, try to pay or be paid outside the platform, or try to get around payments, limits or safety checks. Reviews can only be written after a completed consultation, once per consultation; reviews that contain contact details or claims about outcomes are held for moderation."
+      ],
+      "lawyer": "Full acceptable-use terms and the consequences of breaking them (suspension, closure)."
+    },
+    {
+      "id": "safety",
+      "heading": "Not a helpline",
+      "body": [
+        "{brand} is not a helpline or a medical service. If you are thinking about harming yourself or are in danger, please call one of the free helplines on our safety page. If a consultation shows signs that you may be at risk, we show those numbers, stop all offers for that consultation, and you can end it at once."
+      ]
+    },
+    {
+      "id": "legal",
+      "heading": "Liability, disputes and changes",
+      "body": [
+        "Each version of these terms has a version number. When we publish a new version we ask you to read and agree to it before your next paid action. Complaints can be raised with our grievance officer."
+      ],
+      "lawyer": "Limitation of liability, indemnity, governing law and jurisdiction, dispute resolution, termination, and how notice of changes is given."
+    }
+  ]
+}

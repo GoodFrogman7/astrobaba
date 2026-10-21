@@ -1,0 +1,44 @@
+{
+  "title": "Free Vedic astrology tools: kundli, dasha, doshas, numerology",
+  "description": "Free Vedic astrology calculators: kundli, Sun Moon and ascendant, nakshatra, Vimshottari dasha, Mangal dosha, Sade Sati, Kaal Sarp and numerology.",
+  "h1": "Free astrology tools",
+  "intro": "Each tool answers one question from your birth details, calculated from astronomical data for your exact place and time. Pick a tool to begin; none of them needs an account.",
+  "sections": [
+    {
+      "heading": "Chart tools",
+      "body": [
+        "The kundli tool shows the full birth chart. The smaller tools pull out one part of it: your Sun sign, Moon sign and ascendant; your birth nakshatra; your Vimshottari dasha periods; and checks for Mangal dosha, Sade Sati and Kaal Sarp. They all use the same calculation engine and the same settings, so their answers agree with each other."
+      ]
+    },
+    {
+      "heading": "Numerology tools",
+      "body": [
+        "The numerology tools work from your date of birth and your name. Mulank comes from the day of the month you were born, bhagyank (destiny number) from the full date, and the name number from Chaldean letter values. Numerology is a separate tradition from jyotish and does not use planet positions."
+      ]
+    },
+    {
+      "heading": "How results are produced",
+      "body": [
+        "Astrological values come only from the calculation engine or from published tables, never from guesswork or AI. Where a rule varies between traditions, we name the rule we used, and tables still waiting for a vetted astrologer's review are marked as provisional."
+      ]
+    }
+  ],
+  "faqs": [
+    {
+      "q": "Are these tools free?",
+      "a": "Yes. All the calculators are free and need no sign-in."
+    },
+    {
+      "q": "What do I need to use them?",
+      "a": "For chart tools: date, time and place of birth. If you don't know the time, most tools still work but cannot show the ascendant or houses. Numerology tools need only your date of birth or name."
+    },
+    {
+      "q": "Which zodiac do the tools use?",
+      "a": "The sidereal zodiac with the Lahiri ayanamsha, as used in Vedic astrology."
+    },
+    {
+      "q": "Can I trust the results for decisions?",
+      "a": "The calculations are precise, but astrology is offered for guidance and entertainment. It is not medical, legal or financial advice."
+    }
+  ]
+}

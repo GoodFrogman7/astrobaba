@@ -1,0 +1,259 @@
+{
+  "trust": {
+    "links": {
+      "heading": "Policies and help",
+      "terms": "Terms of use",
+      "privacy": "Privacy notice",
+      "refunds": "Refund policy",
+      "credit": "Wallet credit policy",
+      "grievance": "Complaints and grievances",
+      "safety": "Safety and crisis help",
+      "account": "My account"
+    },
+    "legal": {
+      "version": "Version {version}",
+      "draftTitle": "Draft — under legal review",
+      "draftBody": "This text describes what the service does today. A lawyer has not approved it yet, and it may change before public launch. The approved text will carry a new version number.",
+      "lawyer": "To be completed with our lawyer before launch:",
+      "toBePublished": "To be published before launch",
+      "related": "Related policies"
+    },
+    "privacy": {
+      "operatorHeading": "Who is responsible for your data",
+      "operatorName": "Legal name of the operator",
+      "operatorAddress": "Registered address",
+      "grievanceHeading": "Grievance officer",
+      "grievanceName": "Name",
+      "grievanceEmail": "Email",
+      "processorsHeading": "Service providers who process data for us",
+      "processorsIntro": "These providers handle data on our behalf, only for the purpose shown. None of them may use it for their own purposes.",
+      "provider": "Provider",
+      "purpose": "Purpose",
+      "data": "Data involved",
+      "region": "Where",
+      "providerPending": "Provider to be named before launch",
+      "names": {
+        "aws": "Amazon Web Services",
+        "razorpay": "Razorpay",
+        "sms_provider": "SMS provider",
+        "email_provider": "Email provider",
+        "livekit": "LiveKit (voice calls)",
+        "llm_provider": "AI language model provider"
+      },
+      "processorText": {
+        "aws": {
+          "purpose": "Hosting, database and file storage (ap-south-1)",
+          "data": "All platform data"
+        },
+        "razorpay": {
+          "purpose": "Payments",
+          "data": "Payment details are entered with Razorpay; we receive payment ids, amounts and status"
+        },
+        "sms_provider": {
+          "purpose": "One-time sign-in codes",
+          "data": "Phone number, code"
+        },
+        "email_provider": {
+          "purpose": "Report links and partner enquiries",
+          "data": "Email address (reports), lead details (partner)"
+        },
+        "livekit": {
+          "purpose": "Voice calls (audio relay; nothing recorded)",
+          "data": "Call audio in transit, session ids"
+        },
+        "llm_provider": {
+          "purpose": "Horoscope prose drafts; AI assistant answers when enabled",
+          "data": "Computed chart placements and the question (no name, phone or birth details)"
+        }
+      },
+      "retentionText": {
+        "ledger_and_invoices": "Kept as required by tax law even after account deletion (identity removed)",
+        "chat_messages": "Deleted with the account",
+        "kyc_documents": "To be set with the lawyer",
+        "remedy_leads": "Deleted with the account",
+        "report_files": "Deleted with the account"
+      },
+      "regionIndia": "India",
+      "retentionHeading": "How long we keep data",
+      "retentionNote": "Proposed periods. They will be confirmed with our lawyer before launch.",
+      "retentionKeys": {
+        "ledger_and_invoices": "Wallet ledger and invoices",
+        "chat_messages": "Chat messages",
+        "kyc_documents": "Astrologer identity documents",
+        "remedy_leads": "Partner enquiries",
+        "report_files": "Report files"
+      }
+    },
+    "refunds": {
+      "rulesHeading": "When a consultation is refunded automatically",
+      "rulesIntro": "These rules run by themselves after every paid chat or call. You do not need to ask.",
+      "rules": {
+        "failed_connect": "The astrologer accepted but the consultation never started (for example, they did not join within {seconds} seconds): everything charged for it is refunded.",
+        "astrologer_drop": "The astrologer disconnected and did not come back within {seconds} seconds: the minutes that started after we last saw them are refunded. The minute in progress counts as served.",
+        "low_rating": "You rate the consultation 1 to {maxRating} stars within {hours} hours of its end: {percent}% of what you paid for it is refunded, up to {cap}. This applies to at most {perMonth, plural, one {# consultation} other {# consultations}} in any 30 days.",
+        "service_unavailable": "A call ended because our voice service could not confirm that both of you were present: the minutes after presence was last confirmed are refunded."
+      },
+      "noRules": "No automatic refund rules are switched on at the moment."
+    },
+    "credit": {
+      "factsHeading": "The numbers in short",
+      "spendOrder": "Spending order",
+      "spendOrderValue": "Promo credit first (the lot that expires soonest goes first), then your recharged balance",
+      "promoExpiry": "Promo credit expires",
+      "promoExpiryValue": "{days} days after it is given, unless a different date is shown on the credit",
+      "realExpiry": "Recharged balance expires",
+      "realExpiryValue": "Period to be set before launch (current setting: {days} days, under review)",
+      "rechargeLimits": "Recharge amount",
+      "rechargeLimitsValue": "{min} to {max} per recharge",
+      "bonus": "Recharge bonus",
+      "bonusOn": "Currently offered: {tiers}",
+      "bonusTier": "{percent}% extra from {amount}",
+      "bonusOff": "Not offered at the moment",
+      "free": "Free first consultation",
+      "freeOn": "Currently offered: up to {minutes} minutes, once per person",
+      "freeOff": "Not offered at the moment"
+    },
+    "grievance": {
+      "contactHeading": "Contact details",
+      "officer": "Grievance officer"
+    },
+    "safety": {
+      "pageHelplines": "Free helplines in India",
+      "panelTitle": "You don't have to face this alone",
+      "panelBody": "Please talk to someone who can help right now. The people at these numbers are trained to listen.",
+      "call": "Call {number}",
+      "hours": "Hours",
+      "officialSite": "Official website",
+      "end": "End consultation",
+      "ending": "Ending…",
+      "endError": "Could not end the consultation. Please try again.",
+      "upsellPaused": "We have stopped all offers and recharge reminders for this consultation. You can end it at any time; you pay only up to the current minute.",
+      "notice": "This is an astrology service, not a helpline.",
+      "noticeLink": "Crisis help"
+    },
+    "consent": {
+      "title": "Before you continue",
+      "intro": "Consultations, payments, reports and the AI assistant are for adults. Please confirm the two points below.",
+      "age": "I am 18 years old or older.",
+      "terms": "I have read and agree to the <terms>Terms of use</terms> and the <privacy>Privacy notice</privacy>.",
+      "version": "Policy version {version}",
+      "submit": "Confirm and continue",
+      "later": "Not now",
+      "busy": "Saving…",
+      "under18": "If you are under 18, you can keep using the free tools and horoscopes, but you cannot consult, pay or buy.",
+      "updated": "Our policies have changed since you last agreed. Please read and confirm the new version.",
+      "errors": {
+        "age": "Please confirm that you are 18 or older.",
+        "terms": "Please agree to the Terms of use and the Privacy notice.",
+        "stale": "The policies were updated a moment ago. Please confirm the new version shown above.",
+        "signin": "Your sign-in has expired. Please sign in again.",
+        "network": "Connection problem. Please try again.",
+        "generic": "Something went wrong. Please try again."
+      }
+    },
+    "report": {
+      "open": "Report this astrologer",
+      "title": "Report {name}",
+      "intro": "Tell our moderators what went wrong. The astrologer is not told who reported them.",
+      "reason": "What happened?",
+      "reasons": {
+        "harassment": "Harassment or abusive language",
+        "scam": "Scam or a request for money",
+        "fear_selling": "Used fear to sell something",
+        "medical_claims": "Claimed to heal an illness or gave medical advice",
+        "off_platform": "Asked to talk or pay outside this platform",
+        "other": "Something else"
+      },
+      "note": "More details (optional)",
+      "noteHint": "Up to {max} characters. Please don't include phone numbers or payment details.",
+      "chars": "{count} of {max}",
+      "submit": "Send report",
+      "sending": "Sending…",
+      "sent": "Thank you. A moderator will review your report. Astrologers who break the rules can be warned or suspended.",
+      "errors": {
+        "reason": "Please choose what happened.",
+        "note": "Please keep the details to {max} characters.",
+        "signin": "Please sign in to report an astrologer.",
+        "duplicate": "You already have an open report about this astrologer. A moderator will look at it.",
+        "network": "Connection problem. Press Send again; the same report will be sent, not a second one.",
+        "generic": "Something went wrong. Please try again."
+      }
+    },
+    "account": {
+      "title": "My account",
+      "intro": "Your sign-in details, the policies you agreed to, and your data.",
+      "loading": "Loading your account…",
+      "signIn": "Sign in to see your account.",
+      "error": "We could not load your account. Please try again in a minute.",
+      "retry": "Try again",
+      "profile": "Profile",
+      "phone": "Mobile number",
+      "since": "Member since",
+      "language": "Language",
+      "languages": { "en": "English", "hi": "Hindi" },
+      "astrologer": "Astrologer account",
+      "links": "Your activity",
+      "wallet": "Wallet and history",
+      "reports": "My reports",
+      "consents": "What you agreed to",
+      "consentsNone": "You have not agreed to the policies yet.",
+      "consentsCurrent": "Up to date with policy version {version}.",
+      "consentsOld": "Policy version {version} is newer than what you agreed to.",
+      "review": "Review and agree",
+      "kinds": {
+        "age_18": "Confirmed 18 or older",
+        "terms": "Terms of use",
+        "privacy": "Privacy notice",
+        "astrologer_terms": "Astrologer terms"
+      },
+      "acceptedOn": "version {version}, {date}",
+      "export": {
+        "heading": "Download my data",
+        "body": "Get a file (JSON) with everything we hold about you: profile, consents, saved kundlis, your consultations with your own chat messages, wallet history, reports, AI questions and answers, partner enquiries and reviews. Preparing it can take a few minutes. You can ask once every 24 hours.",
+        "button": "Prepare my data",
+        "busy": "Asking…",
+        "queued": "We are preparing your file. It will appear below.",
+        "tooSoon": "You asked for a copy in the last 24 hours. Please try again later.",
+        "list": "Your files",
+        "none": "No files yet.",
+        "status": { "queued": "Being prepared", "ready": "Ready", "failed": "Failed" },
+        "download": "Download",
+        "requested": "Asked {date}",
+        "failedHelp": "This file could not be prepared. Please ask again later."
+      },
+      "deletion": {
+        "heading": "Delete my account",
+        "body": "Deleting your account is permanent. Before we carry it out, any open consultation must end and any wallet balance must be settled.",
+        "deletedHeading": "What is deleted",
+        "deleted": [
+          "Your sign-in sessions; your phone number is replaced so it can no longer identify you",
+          "Your name and language preference",
+          "Saved kundlis and birth details",
+          "Chat messages, AI questions and answers, partner enquiries",
+          "Report files and data exports"
+        ],
+        "keptHeading": "What is kept, and why",
+        "kept": [
+          "Wallet ledger entries, as tax law requires; they no longer point to you",
+          "Your reviews, shown as “Former client”",
+          "The record of what you agreed to, as proof of consent"
+        ],
+        "again": "You can sign up again with the same number later; it will be a new account.",
+        "confirmLabel": "Type DELETE to confirm",
+        "button": "Request deletion",
+        "busy": "Sending…",
+        "pendingHeading": "Deletion requested",
+        "pending": "We received your request on {date}. Your account keeps working until it is carried out. You can cancel until then.",
+        "pendingNoDate": "We received your request. Your account keeps working until it is carried out. You can cancel until then.",
+        "cancel": "Cancel deletion request",
+        "cancelled": "Your deletion request was cancelled.",
+        "errors": {
+          "confirm": "Please type DELETE in capital letters to confirm.",
+          "signin": "Please sign in again.",
+          "network": "Connection problem. Please try again.",
+          "generic": "Something went wrong. Please try again."
+        }
+      }
+    }
+  }
+}

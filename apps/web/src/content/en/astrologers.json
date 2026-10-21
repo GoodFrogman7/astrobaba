@@ -1,0 +1,50 @@
+{
+  "title": "Talk to verified astrologers",
+  "description": "Browse astrologers verified for identity, qualifications and experience. Filter by speciality, language, price per minute and availability.",
+  "h1": "Verified astrologers",
+  "intro": "Every astrologer listed here has passed identity and qualification checks, an interview with our team and a probation period. Filter by speciality, language and price, and read reviews written only by clients who completed a consultation.",
+  "sections": [
+    {
+      "heading": "How we verify astrologers",
+      "body": [
+        "An astrologer applies with a short profile, then uploads proof of identity and proof of training or qualification. Our team checks both documents before anything else happens.",
+        "Next comes a conversation with an experienced reviewer, who asks about methods, ethics and how the astrologer handles difficult questions. Only after that does a profile go live, first on probation, while we watch early sessions and feedback closely."
+      ]
+    },
+    {
+      "heading": "Pricing per minute",
+      "body": [
+        "Each astrologer has a fixed price per minute, shown on their card and profile before you start. You are charged only for the minutes you use, from your wallet, and you can end a consultation at any time.",
+        "Prices differ by tier and experience. A higher price is not a promise of a better answer; read the profile and reviews and choose the person you are comfortable with."
+      ]
+    },
+    {
+      "heading": "Languages and specialities",
+      "body": [
+        "Astrologers list the languages they consult in and the systems they practise, such as Vedic astrology, KP, numerology, tarot or vastu. Use the filters to find someone who speaks your language and works in the method you prefer."
+      ]
+    }
+  ],
+  "faqs": [
+    {
+      "q": "Are the astrologers real people?",
+      "a": "Yes. Every listed astrologer is a person whose identity and qualifications our team has checked, followed by an interview and a probation period. The AI assistant, when available, is always labelled as AI."
+    },
+    {
+      "q": "How is the price calculated?",
+      "a": "You pay the astrologer's per-minute price for the minutes you spend in the consultation. The price is shown before you start and does not change during the session."
+    },
+    {
+      "q": "Who can write a review?",
+      "a": "Only a client who completed a consultation with that astrologer, and only once per consultation. Astrologers can reply, and our moderators remove reviews that break the rules."
+    },
+    {
+      "q": "What does online, busy and offline mean?",
+      "a": "Online means the astrologer is available now. Busy means they are in another consultation; a wait estimate appears only when we can calculate it. Offline means they are not taking consultations at the moment."
+    },
+    {
+      "q": "Can an astrologer tell me what will definitely happen?",
+      "a": "No. Astrology is offered for guidance and reflection. Astrologers on this platform agree not to promise outcomes, not to use fear, and not to give medical, legal or financial advice."
+    }
+  ]
+}

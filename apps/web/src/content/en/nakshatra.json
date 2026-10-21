@@ -1,0 +1,39 @@
+{
+  "title": "Nakshatra calculator: find your birth star and pada",
+  "description": "Find your janma nakshatra (birth star) and its pada and ruling planet from the Moon's sidereal position at your time and place of birth.",
+  "h1": "Find your birth nakshatra",
+  "intro": "Your janma nakshatra is the lunar mansion the Moon occupied when you were born. This tool shows the nakshatra, its pada (quarter) and the planet that rules it.",
+  "sections": [
+    {
+      "heading": "What a nakshatra is",
+      "body": [
+        "The zodiac is divided into 27 nakshatras of 13 degrees 20 minutes each, starting from 0 degrees of sidereal Aries. Each is divided into four padas of 3 degrees 20 minutes. The Moon spends about a day in each nakshatra, so the birth nakshatra is closely tied to the birth date and time.",
+        "The nakshatra's ruling planet sets the starting point of the Vimshottari dasha sequence, and the nakshatra is used in naming traditions, in muhurta and in kundli matching."
+      ]
+    },
+    {
+      "heading": "How we calculate it",
+      "body": [
+        "We compute the Moon's apparent position for your birth instant with the Swiss Ephemeris and subtract the Lahiri ayanamsha to get its sidereal longitude. The nakshatra and pada follow directly from that longitude."
+      ]
+    }
+  ],
+  "faqs": [
+    {
+      "q": "Is the nakshatra the same as the Moon sign?",
+      "a": "No. The Moon sign is one of 12 signs of 30 degrees; the nakshatra is one of 27 smaller divisions. Some nakshatras span two signs."
+    },
+    {
+      "q": "Why does the birth time matter?",
+      "a": "The Moon changes nakshatra about once a day, so on some days the morning and evening births have different nakshatras."
+    },
+    {
+      "q": "What is a pada used for?",
+      "a": "Padas are used for finer analysis and traditionally for the first syllable of a name."
+    },
+    {
+      "q": "Which ayanamsha do you use?",
+      "a": "Lahiri, the standard in India. A different ayanamsha can shift the Moon slightly and, near a boundary, change the nakshatra."
+    }
+  ]
+}

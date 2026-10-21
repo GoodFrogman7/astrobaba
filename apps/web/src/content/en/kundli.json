@@ -1,0 +1,50 @@
+{
+  "title": "Free Kundli: Vedic birth chart with dasha and doshas",
+  "description": "Make your free kundli: sidereal planet positions, lagna, whole-sign houses, Vimshottari dasha and dosha checks, calculated for your birth place and time.",
+  "h1": "Free kundli (Vedic birth chart)",
+  "intro": "Enter your date, time and place of birth to see your kundli: where each of the nine grahas stood in the sidereal zodiac at that moment, your lagna (ascendant), the twelve houses, the dasha period running today and the common dosha checks.",
+  "sections": [
+    {
+      "heading": "What a kundli shows",
+      "body": [
+        "A kundli is a map of the sky at the moment and place you were born. It records the sign and degree of the Sun, Moon, Mars, Mercury, Jupiter, Venus, Saturn and the two lunar nodes Rahu and Ketu, and the sign rising on the eastern horizon, called the lagna or ascendant.",
+        "From the lagna the chart is divided into twelve houses. Each house is traditionally linked with areas of life such as self, family, home, partnership and work. Reading a chart means looking at which grahas sit in which houses and signs, and how they relate to each other."
+      ]
+    },
+    {
+      "heading": "How we calculate it",
+      "body": [
+        "Positions come from the Swiss Ephemeris, an astronomical model, for the exact instant of your birth converted to universal time using your birth place's time zone history. We use the sidereal zodiac with the Lahiri ayanamsha, the mean lunar node for Rahu and Ketu, and whole-sign houses, where the lagna's sign is the first house.",
+        "Every value on this page is computed; nothing is estimated or written by AI. You can switch between North Indian and South Indian chart styles, which show the same chart in two traditional layouts."
+      ]
+    },
+    {
+      "heading": "If you don't know your birth time",
+      "body": [
+        "Tick the box for an unknown time. The planets are then calculated for local noon. The lagna and the houses depend on the exact minute, so they are not shown. The Moon moves about thirteen degrees a day, so we show where it was at the start and end of that day."
+      ]
+    }
+  ],
+  "faqs": [
+    {
+      "q": "Is this kundli free?",
+      "a": "Yes. The chart, the planet table, the dasha periods and the dosha checks are free. Saving a kundli to your account is optional and needs only a one-time code sent to your phone."
+    },
+    {
+      "q": "Why does my sign differ from Western astrology?",
+      "a": "Western astrology usually uses the tropical zodiac, tied to the seasons. Vedic astrology uses the sidereal zodiac, tied to the stars. The two currently differ by about 24 degrees, so many people see their Sun sign move back by one sign."
+    },
+    {
+      "q": "Which ayanamsha and house system do you use?",
+      "a": "Lahiri ayanamsha, the official Indian standard, and whole-sign houses. Rahu and Ketu use the mean node. The settings are shown under every result."
+    },
+    {
+      "q": "How accurate are the planet positions?",
+      "a": "Planet positions are checked against NASA JPL Horizons in our test suite and agree to within a second of arc. The accuracy of your chart depends mostly on how accurate your recorded birth time is."
+    },
+    {
+      "q": "Do you store my birth details?",
+      "a": "No, not unless you choose to save the kundli. The calculation runs on our server and the details are not logged or used for analytics."
+    }
+  ]
+}

@@ -1,0 +1,331 @@
+{
+  "printReport": {
+    "title": {
+      "kundli_report": "Kundli report",
+      "matching_report": "Kundli matching report"
+    },
+    "subtitle": {
+      "kundli_report": "Birth chart, planetary periods and dosha checks, calculated from the birth details below",
+      "matching_report": "Two birth charts and the Ashtakoota (guna milan) calculation, from the birth details below"
+    },
+    "howToRead": "How to read this",
+    "pageFooter": "Page",
+    "pageOf": "of",
+    "cover": {
+      "preparedFor": "Prepared for",
+      "preparedOn": "Prepared on {date}",
+      "reference": "Report reference {ref}",
+      "calculated": "Every position, date and table value in this report was calculated by our astro engine from the birth details given. Nothing in it was typed in by hand or written by AI."
+    },
+    "contents": {
+      "heading": "Contents",
+      "about": "About this report",
+      "aboutText": [
+        "This report sets out the calculated facts of a Vedic (sidereal) birth chart: where each planet was, which sign was rising in the east, the planetary periods (dashas) and the standard dosha checks. It does not contain predictions or personal readings.",
+        "Each section begins with a short note on how to read it. The method page lists the exact settings used, so that an astrologer can check every number.",
+        "Dates are in Indian Standard Time (IST). The birth time and the panchang of the day of birth are in the local time of the birth place."
+      ]
+    },
+    "common": {
+      "none": "—",
+      "unknown": "Unknown",
+      "yes": "Yes",
+      "no": "No",
+      "always": "Always",
+      "house": "House {house}",
+      "pendingTitle": "Pending review",
+      "verified": "Verified by a vetted astrologer",
+      "pending": "Pending astrologer review",
+      "engineRule": "Rule applied",
+      "male": "male",
+      "female": "female"
+    },
+    "birth": {
+      "heading": "Birth details",
+      "headingFor": "Birth details: {name}",
+      "howTo": [
+        "These are the details the chart was calculated from. The time is the local clock time at the birth place; the engine converts it to Universal Time (UTC) using the time zone rules in force on that date, including any daylight saving.",
+        "If any detail here is wrong, every later section will be wrong too."
+      ],
+      "name": "Name",
+      "date": "Date of birth",
+      "time": "Time of birth",
+      "place": "Place of birth",
+      "coords": "Latitude, longitude",
+      "tz": "Time zone",
+      "offset": "UTC offset at birth",
+      "utc": "Birth moment in UTC",
+      "jd": "Julian day (UT)",
+      "unknownTime": "Birth time unknown. Positions are calculated for local noon, so there is no ascendant and no houses, and the Moon may have changed sign or nakshatra during the day."
+    },
+    "panchang": {
+      "heading": "Panchang at birth",
+      "howTo": [
+        "A panchang describes a day by five elements: the weekday (vaara), the lunar day (tithi), the Moon's nakshatra, the yoga and the karana. Tithi, nakshatra, yoga and karana change at different moments, so the table shows the one running at the moment of birth and when it began and ended.",
+        "Sunrise, sunset and Rahu Kaal are for the birth place on the date of birth, in local time. In the panchang a day runs from sunrise to the next sunrise."
+      ],
+      "element": "Element",
+      "atBirth": "At birth",
+      "began": "Began",
+      "ended": "Ended",
+      "dayHeading": "The day of birth",
+      "beforeSunrise": "The birth was before sunrise. Because a panchang day runs from sunrise to sunrise, this birth falls in the previous day's panchang; the elements below are the ones running at the moment of birth.",
+      "wholeDay": "Without a birth time, every element of the day of birth is listed.",
+      "timesIn": "Times in local time at the birth place ({tz}), 24-hour clock."
+    },
+    "periods": {
+      "heading": "Choghadiya and hora on the day of birth",
+      "howTo": [
+        "Choghadiya divides daytime and night into eight parts each; hora divides the day into 24 planetary hours, each with a ruling planet. Panchangs label every choghadiya with a traditional nature. The labels describe the period of the day, not the person born in it.",
+        "The row containing the moment of birth is marked “Birth”."
+      ],
+      "birthMark": "Birth",
+      "nature": "Traditional label"
+    },
+    "charts": {
+      "northHeading": "North Indian chart",
+      "southHeading": "South Indian chart",
+      "headingFor": "Birth charts: {name}",
+      "northHowTo": [
+        "In the North Indian style the houses stay fixed and the signs move. The top centre diamond is house 1, the ascendant (lagna); the houses then run anticlockwise.",
+        "The small number in each house is the sign number: 1 is Aries, 2 Taurus, and so on up to 12, Pisces. Each planet is shown by a short name and its degree inside the sign; (R) marks a planet that was retrograde."
+      ],
+      "southHowTo": [
+        "In the South Indian style the signs stay fixed: Pisces is the top-left box and the signs run clockwise from there. The ascendant's sign is marked with a diagonal line and “Asc”.",
+        "Each planet is shown in the box of its sign, by a short name and its degree inside the sign; (R) marks a planet that was retrograde. Both charts show the same positions."
+      ],
+      "bothHowTo": [
+        "The same positions drawn in the two common styles. North Indian (left): houses fixed, house 1 at the top centre, small numbers are sign numbers (1 = Aries). South Indian (right): signs fixed, Pisces top left, the ascendant's sign marked with a diagonal."
+      ],
+      "legend": "Abbreviations"
+    },
+    "planets": {
+      "heading": "Planetary positions",
+      "headingFor": "Planetary positions: {name}",
+      "howTo": [
+        "Each row gives a planet's sidereal position at the moment of birth. “Degree” is the position inside the sign (0° to 30°); “Longitude” is the position along the whole zodiac from 0° Aries (0° to 360°).",
+        "The zodiac is divided into 27 nakshatras of 13°20′, and each nakshatra into four padas. The sign lord rules the sign; the nakshatra lord rules the nakshatra. Retrograde means the planet appeared to move backwards as seen from Earth; Rahu and Ketu always do."
+      ],
+      "graha": "Graha",
+      "sign": "Sign",
+      "degree": "Degree",
+      "longitude": "Longitude",
+      "nakshatra": "Nakshatra",
+      "pada": "Pada",
+      "signLord": "Sign lord",
+      "nakLord": "Nakshatra lord",
+      "house": "House",
+      "retro": "Retrograde",
+      "ascendant": "Ascendant"
+    },
+    "houses": {
+      "heading": "Houses, occupants and lords",
+      "howTo": [
+        "This chart uses whole-sign houses: the sign rising at birth is house 1, the next sign is house 2, and so on round the zodiac.",
+        "The lord of a house is the planet that rules its sign, from the standard sign-rulership table. The last column shows the house in which that lord sits in this chart."
+      ],
+      "house": "House",
+      "sign": "Sign",
+      "lord": "Lord",
+      "lordIn": "Lord placed in",
+      "occupants": "Planets in the house",
+      "noTime": "Houses need a birth time. Without one only the signs of the planets are known; see the planetary positions."
+    },
+    "nakshatras": {
+      "heading": "Nakshatras of the Moon, Sun and ascendant",
+      "howTo": [
+        "The zodiac is divided into 27 nakshatras of 13°20′ each, counted from 0° Aries. Each has a ruling planet (its Vimshottari lord) and four padas of 3°20′.",
+        "The Moon's nakshatra is the birth nakshatra (janma nakshatra). It fixes where the Vimshottari dasha starts and is the one used in matching. Gana, nadi and yoni are traditional attributes from the nakshatra table, used by the Ashtakoota calculation."
+      ],
+      "moon": "Moon",
+      "sun": "Sun",
+      "ascendant": "Ascendant",
+      "number": "Nakshatra number",
+      "numberValue": "{n} of 27",
+      "name": "Nakshatra",
+      "lord": "Lord",
+      "pada": "Pada",
+      "sign": "Sign and degree",
+      "gana": "Gana",
+      "nadi": "Nadi",
+      "yoni": "Yoni",
+      "attributes": "Table attributes",
+      "noAscendant": "Not available without a birth time."
+    },
+    "dasha": {
+      "heading": "Vimshottari dasha",
+      "howTo": [
+        "Vimshottari is a 120-year cycle of nine planetary periods (mahadashas) in a fixed order. The cycle starts from the lord of the Moon's nakshatra at birth; because the Moon was already part of the way through that nakshatra, the first period has only its remaining balance.",
+        "Each mahadasha divides into nine antardashas in the same order. Dates are in IST. The current period is the one running on the date the report data was calculated."
+      ],
+      "running": "On {date}: {maha} mahadasha, {antar} antardasha.",
+      "lord": "Mahadasha lord",
+      "from": "From",
+      "to": "To",
+      "years": "Years",
+      "now": "Running",
+      "antarHeading": "Antardashas of the {lord} mahadasha",
+      "current": "current",
+      "next": "next",
+      "antarLord": "Antardasha lord",
+      "noCurrent": "No period of this cycle runs on {date}."
+    },
+    "doshas": {
+      "heading": "Dosha checks",
+      "howTo": [
+        "These checks look for three commonly discussed placements. Each follows one fixed rule, quoted exactly as the engine applied it. Traditions differ, and no classical cancellation (parihara) rules are applied, so a “present” result is a description of the chart, not a verdict."
+      ],
+      "result": "Result",
+      "mangalHowTo": "Mangal dosha counts the whole-sign house Mars occupies from the lagna and from the Moon, and checks it against a fixed list of houses.",
+      "housesChecked": "Houses checked",
+      "fromLagna": "Mars from the lagna",
+      "fromMoon": "Mars from the Moon",
+      "foundFrom": "Found when counting from",
+      "lagna": "the lagna",
+      "moonRef": "the Moon",
+      "kaalSarpHowTo": "Kaal Sarp checks whether all seven planets from the Sun to Saturn lie on one side of the Rahu–Ketu axis.",
+      "direction": "Arrangement",
+      "type": "Named type",
+      "sadeSatiHeading": "Sade Sati",
+      "sadeSatiHowTo": "Sade Sati is the roughly seven-and-a-half-year period while Saturn passes through the sign before the Moon's sign, the Moon's sign itself and the sign after it (rising, peak and setting phases). Saturn sometimes moves back into a sign, so a phase can appear more than once. The table lists every period within {years} years of birth, in IST.",
+      "moonSign": "Moon sign",
+      "onDate": "On {date}",
+      "phase": "Phase",
+      "saturnIn": "Saturn in",
+      "cycle": "Period {n}: {start} to {end}"
+    },
+    "numerology": {
+      "heading": "Numerology",
+      "howTo": [
+        "Numbers are reduced to a single digit by adding their digits repeatedly. The mulank uses the day of birth, the bhagyank the full date of birth, and the name number the Chaldean values of the letters of the name. Each number is paired with a planet from the standard table."
+      ],
+      "nameMissing": "No name number: the name is not written in English letters (A to Z).",
+      "nameUsed": "Name used: {name}"
+    },
+    "matching": {
+      "moonsHeading": "Moon positions used for matching",
+      "moonsHowTo": [
+        "Ashtakoota matching compares only the two Moons: their signs and their nakshatras. Every score on the next pages follows from the values in this table."
+      ],
+      "partner": "Partner",
+      "role": "Role in the traditional tables",
+      "groom": "groom",
+      "bride": "bride",
+      "ashtakootaHeading": "Ashtakoota (guna milan)",
+      "ashtakootaHowTo": [
+        "Ashtakoota compares the two Moon positions in eight areas called kootas. Each koota has a fixed maximum, and the maxima add up to 36. The “Compared” column shows the table values the engine compared for each partner.",
+        "The total is the sum of the eight scores. It is a count of points under one traditional system, not a forecast."
+      ],
+      "compared": "Compared",
+      "max": "Maximum",
+      "total": "Total",
+      "taraDetail": "count from partner 2 to partner 1: tara {a}; from partner 1 to partner 2: tara {b}",
+      "maitriDetail": "{a} and {b}: {relation}",
+      "bhakootDetail": "sign distance {n}",
+      "doshaHeading": "Nadi and bhakoot",
+      "mangalHeading": "Mangal compatibility",
+      "mangalHowTo": [
+        "The Mangal dosha check is run for each partner separately, with the same rule as in a single-chart report. Many families look at whether both partners, one or neither has it; this page reports the two results and the rule used."
+      ],
+      "mangalBoth": "Mangal dosha is present for both partners.",
+      "mangalNeither": "Mangal dosha is present for neither partner.",
+      "mangalOne": "Mangal dosha is present for {name} only."
+    },
+    "method": {
+      "heading": "Method and sources",
+      "howTo": [
+        "These are the exact settings behind every number in this report, so that an astrologer or another program can reproduce them. Different settings, for example another ayanamsha, shift positions slightly and can change a sign or nakshatra near a boundary."
+      ],
+      "zodiac": "Zodiac",
+      "sidereal": "Sidereal",
+      "ayanamsha": "Ayanamsha",
+      "ayanamshaValue": "{name} ({deg} at birth)",
+      "node": "Rahu and Ketu",
+      "houses": "House system",
+      "wholeSign": "Whole-sign houses",
+      "positions": "Positions",
+      "ephemeris": "Ephemeris",
+      "engine": "Astro engine version",
+      "sunrise": "Sunrise convention",
+      "dashaYear": "Dasha year length",
+      "days": "{n} days",
+      "tables": "Table review status",
+      "table": {
+        "matching": "Ashtakoota tables",
+        "doshas": "Dosha rules",
+        "nakshatra_attributes": "Nakshatra attributes (gana, nadi, yoni)",
+        "numerology": "Numerology tables",
+        "choghadiya": "Choghadiya table"
+      },
+      "time": "Time",
+      "timeValue": "Instants are stored in UTC and shown in IST, except the birth time and the panchang of the day of birth, which are in the birth place's local time.",
+      "source": "Engine source code",
+      "places": "Place data",
+      "placesValue": "Coordinates and time zones from GeoNames (geonames.org), CC BY 4.0",
+      "names": "Names of signs, planets and nakshatras",
+      "namesValue": "From the engine's static tables (data/astro)"
+    },
+    "disclaimer": {
+      "heading": "Please read",
+      "body": [
+        "This report describes calculated positions and traditional conventions. It does not predict events and is not a substitute for professional medical, legal, financial or psychological advice.",
+        "Results marked as pending review use tables that a vetted astrologer has not yet signed off. Treat them as provisional.",
+        "Please do not make decisions about health, money, relationships or safety on the basis of this report. If you are in distress, contact a qualified professional or a local helpline.",
+        "No gemstones, rituals or remedies are recommended or sold with this report, and none can guarantee an outcome."
+      ]
+    },
+    "attr": {
+      "varna": {
+        "brahmin": "Brahmin",
+        "kshatriya": "Kshatriya",
+        "vaishya": "Vaishya",
+        "shudra": "Shudra"
+      },
+      "vashya": {
+        "chatushpada": "Chatushpada (quadruped)",
+        "manava": "Manava (human)",
+        "jalachara": "Jalachara (water)",
+        "vanachara": "Vanachara (wild)",
+        "keeta": "Keeta (insect)"
+      },
+      "gana": {
+        "deva": "Deva",
+        "manushya": "Manushya",
+        "rakshasa": "Rakshasa"
+      },
+      "nadi": {
+        "adi": "Adi",
+        "madhya": "Madhya",
+        "antya": "Antya"
+      },
+      "yoni": {
+        "horse": "Horse",
+        "elephant": "Elephant",
+        "sheep": "Sheep",
+        "serpent": "Serpent",
+        "dog": "Dog",
+        "cat": "Cat",
+        "rat": "Rat",
+        "cow": "Cow",
+        "buffalo": "Buffalo",
+        "tiger": "Tiger",
+        "deer": "Deer",
+        "monkey": "Monkey",
+        "mongoose": "Mongoose",
+        "lion": "Lion"
+      },
+      "relation": {
+        "same": "same lord",
+        "friend": "friend",
+        "neutral": "neutral",
+        "enemy": "enemy"
+      }
+    },
+    "errors": {
+      "403": "This report link is not valid or has expired.",
+      "404": "This report could not be found.",
+      "410": "This report link has expired.",
+      "502": "The report data could not be loaded. Please try again shortly."
+    }
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "$comment": "Shaped exactly like GET /v1/astrologers/{slug}/reviews.",
+  "items": [
+    {
+      "id": "r1",
+      "rating": 5,
+      "text": "Clear and calm. <script>alert(1)</script> stays text.",
+      "created_at": "2026-10-01T10:00:00Z",
+      "author_label": "Verified client",
+      "reply": { "text": "Thank you!", "at": "2026-10-02T08:00:00Z" }
+    },
+    {
+      "id": "r2",
+      "rating": 4,
+      "text": "Helpful.",
+      "created_at": "2026-10-05T10:00:00Z",
+      "author_label": "Verified client",
+      "reply": null
+    }
+  ],
+  "next_cursor": "cj0y",
+  "rating": { "average": 4.5, "count": 2 }
+}

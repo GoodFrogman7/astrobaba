@@ -1,0 +1,18 @@
+{
+  "$comment": "Phase 8 targets (docs/api/growth.md). Funnel rates are PLAN.md assumptions to validate, not facts. Supply minimums other than the 30-50 astrologers are proposals for the founder to confirm (founder_to_confirm).",
+  "funnel": {
+    "tool_use_to_otp": { "low": 0.08, "high": 0.12 },
+    "otp_to_free_session": { "low": 0.4, "high": null },
+    "free_session_to_first_recharge": { "low": 0.1, "high": 0.15 }
+  },
+  "supply": {
+    "astrologers": { "min": 30, "max": 50 },
+    "languages": [
+      { "id": "hi", "min": 15 },
+      { "id": "en", "min": 15 }
+    ],
+    "skills": [{ "id": "vedic", "min": 20 }],
+    "core_hours": { "weekdays": [0, 1, 2, 3, 4, 5, 6], "from_hour": 9, "to_hour": 23 },
+    "founder_to_confirm": ["languages", "skills", "core_hours"]
+  }
+}

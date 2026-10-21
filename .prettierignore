@@ -1,0 +1,10 @@
+pnpm-lock.yaml
+.next
+.next-*
+node_modules
+coverage
+docs
+*.md
+services
+evals
+data

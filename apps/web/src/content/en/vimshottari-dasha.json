@@ -1,0 +1,39 @@
+{
+  "title": "Vimshottari dasha calculator: mahadasha and antardasha",
+  "description": "See your Vimshottari dasha periods from birth: the mahadasha and antardasha running today and the full 120-year sequence with dates.",
+  "h1": "Vimshottari dasha calculator",
+  "intro": "Vimshottari dasha divides life into planetary periods. This tool shows the mahadasha and antardasha running today, how much of the first period was left at birth, and the full sequence of mahadashas with dates.",
+  "sections": [
+    {
+      "heading": "How the dasha system works",
+      "body": [
+        "The Vimshottari cycle lasts 120 years and has nine periods, one for each graha: Ketu 7 years, Venus 20, Sun 6, Moon 10, Mars 7, Rahu 18, Jupiter 16, Saturn 19 and Mercury 17. The cycle starts with the ruler of your birth nakshatra.",
+        "How far the Moon had travelled through that nakshatra at birth decides how much of the first period remained. Each mahadasha is split into nine antardashas in the same order, with lengths in proportion to the main periods."
+      ]
+    },
+    {
+      "heading": "How we calculate it",
+      "body": [
+        "We use the Moon's sidereal longitude from the Swiss Ephemeris with the Lahiri ayanamsha, and a year of 365.25 days. Some traditions use a different year length, which shifts dates by a few days over long spans; the convention is documented with every result."
+      ]
+    }
+  ],
+  "faqs": [
+    {
+      "q": "Why did my first dasha start before I was born?",
+      "a": "The sequence is anchored to the Moon's nakshatra. If the Moon was partway through it at birth, that period had already partly run, so we show its notional start date."
+    },
+    {
+      "q": "How exact are the dates?",
+      "a": "They are as exact as the birth time. A few minutes of time error shifts the dates by a few days."
+    },
+    {
+      "q": "What is an antardasha?",
+      "a": "A sub-period inside a mahadasha. Each mahadasha contains nine antardashas, starting with its own planet."
+    },
+    {
+      "q": "Can I use this without a birth time?",
+      "a": "The tool will use local noon, but the dates may then be off by weeks or months, so treat them as approximate."
+    }
+  ]
+}

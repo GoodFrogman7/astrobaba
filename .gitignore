@@ -1,0 +1,36 @@
+# secrets — never commit
+.env
+.env.*
+!.env.example
+
+# node
+node_modules/
+.next/
+.next-*/
+out/
+*.tsbuildinfo
+next-env.d.ts
+.turbo/
+coverage/
+
+# python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.hypothesis/
+*.egg-info/
+
+# data downloads (import scripts fetch these)
+data/raw/
+data/build/
+
+# os / editors
+.DS_Store
+.idea/
+.vscode/
+
+# uploaded KYC documents (local storage backend)
+data/uploads/

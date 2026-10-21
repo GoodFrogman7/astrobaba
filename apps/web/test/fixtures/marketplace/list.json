@@ -1,0 +1,39 @@
+{
+  "$comment": "Shaped exactly like GET /v1/astrologers in docs/api/marketplace.md. Marketplace data, not astro values.",
+  "items": [
+    {
+      "id": "a1",
+      "slug": "demo-astrologer-01",
+      "display_name": "Demo Astrologer 01",
+      "photo_url": null,
+      "skills": ["vedic", "kp"],
+      "languages": ["hi", "en"],
+      "gender": "female",
+      "tier": "top_choice",
+      "price_per_min_paise": 4500,
+      "experience_years": 12,
+      "rating": { "average": 4.62, "count": 18 },
+      "presence": "busy",
+      "wait_minutes": 7,
+      "is_demo": true
+    },
+    {
+      "id": "a2",
+      "slug": "meera-joshi",
+      "display_name": "Meera Joshi",
+      "photo_url": null,
+      "skills": ["tarot"],
+      "languages": ["mr"],
+      "gender": "female",
+      "tier": "rising",
+      "price_per_min_paise": 1250,
+      "experience_years": 1,
+      "rating": { "average": null, "count": 0 },
+      "presence": "busy",
+      "wait_minutes": null,
+      "is_demo": false
+    }
+  ],
+  "next_cursor": "b2Zmc2V0OjI=",
+  "total": 31
+}

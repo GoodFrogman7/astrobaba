@@ -1,0 +1,334 @@
+{
+  "$comment": "27 nakshatras of 13°20' from 0° sidereal Aries. lord = Vimshottari lord (Ketu, Venus, Sun, Moon, Mars, Rahu, Jupiter, Saturn, Mercury, repeating). gana, nadi and yoni feed Ashtakoota.",
+  "source": "Standard Jyotish tables (Brihat Parashara Hora Shastra lordship; Ashtakoota gana/nadi/yoni assignments as commonly published).",
+  "review": {
+    "status": "needs_astrologer_review",
+    "note": "Names and lords are standard. Gana, nadi and yoni assignments were entered from the commonly published tables and must be checked by a vetted astrologer before /v1/match is enabled in production."
+  },
+  "nakshatras": [
+    {
+      "id": "ashwini",
+      "en": "Ashwini",
+      "hi": "अश्विनी",
+      "lord": "ketu",
+      "gana": "deva",
+      "nadi": "adi",
+      "yoni": {
+        "animal": "horse",
+        "gender": "m"
+      }
+    },
+    {
+      "id": "bharani",
+      "en": "Bharani",
+      "hi": "भरणी",
+      "lord": "venus",
+      "gana": "manushya",
+      "nadi": "madhya",
+      "yoni": {
+        "animal": "elephant",
+        "gender": "m"
+      }
+    },
+    {
+      "id": "krittika",
+      "en": "Krittika",
+      "hi": "कृत्तिका",
+      "lord": "sun",
+      "gana": "rakshasa",
+      "nadi": "antya",
+      "yoni": {
+        "animal": "sheep",
+        "gender": "f"
+      }
+    },
+    {
+      "id": "rohini",
+      "en": "Rohini",
+      "hi": "रोहिणी",
+      "lord": "moon",
+      "gana": "manushya",
+      "nadi": "antya",
+      "yoni": {
+        "animal": "serpent",
+        "gender": "m"
+      }
+    },
+    {
+      "id": "mrigashira",
+      "en": "Mrigashira",
+      "hi": "मृगशिरा",
+      "lord": "mars",
+      "gana": "deva",
+      "nadi": "madhya",
+      "yoni": {
+        "animal": "serpent",
+        "gender": "f"
+      }
+    },
+    {
+      "id": "ardra",
+      "en": "Ardra",
+      "hi": "आर्द्रा",
+      "lord": "rahu",
+      "gana": "manushya",
+      "nadi": "adi",
+      "yoni": {
+        "animal": "dog",
+        "gender": "f"
+      }
+    },
+    {
+      "id": "punarvasu",
+      "en": "Punarvasu",
+      "hi": "पुनर्वसु",
+      "lord": "jupiter",
+      "gana": "deva",
+      "nadi": "adi",
+      "yoni": {
+        "animal": "cat",
+        "gender": "f"
+      }
+    },
+    {
+      "id": "pushya",
+      "en": "Pushya",
+      "hi": "पुष्य",
+      "lord": "saturn",
+      "gana": "deva",
+      "nadi": "madhya",
+      "yoni": {
+        "animal": "sheep",
+        "gender": "m"
+      }
+    },
+    {
+      "id": "ashlesha",
+      "en": "Ashlesha",
+      "hi": "आश्लेषा",
+      "lord": "mercury",
+      "gana": "rakshasa",
+      "nadi": "antya",
+      "yoni": {
+        "animal": "cat",
+        "gender": "m"
+      }
+    },
+    {
+      "id": "magha",
+      "en": "Magha",
+      "hi": "मघा",
+      "lord": "ketu",
+      "gana": "rakshasa",
+      "nadi": "antya",
+      "yoni": {
+        "animal": "rat",
+        "gender": "m"
+      }
+    },
+    {
+      "id": "purva_phalguni",
+      "en": "Purva Phalguni",
+      "hi": "पूर्वा फाल्गुनी",
+      "lord": "venus",
+      "gana": "manushya",
+      "nadi": "madhya",
+      "yoni": {
+        "animal": "rat",
+        "gender": "f"
+      }
+    },
+    {
+      "id": "uttara_phalguni",
+      "en": "Uttara Phalguni",
+      "hi": "उत्तरा फाल्गुनी",
+      "lord": "sun",
+      "gana": "manushya",
+      "nadi": "adi",
+      "yoni": {
+        "animal": "cow",
+        "gender": "m"
+      }
+    },
+    {
+      "id": "hasta",
+      "en": "Hasta",
+      "hi": "हस्त",
+      "lord": "moon",
+      "gana": "deva",
+      "nadi": "adi",
+      "yoni": {
+        "animal": "buffalo",
+        "gender": "f"
+      }
+    },
+    {
+      "id": "chitra",
+      "en": "Chitra",
+      "hi": "चित्रा",
+      "lord": "mars",
+      "gana": "rakshasa",
+      "nadi": "madhya",
+      "yoni": {
+        "animal": "tiger",
+        "gender": "f"
+      }
+    },
+    {
+      "id": "swati",
+      "en": "Swati",
+      "hi": "स्वाति",
+      "lord": "rahu",
+      "gana": "deva",
+      "nadi": "antya",
+      "yoni": {
+        "animal": "buffalo",
+        "gender": "m"
+      }
+    },
+    {
+      "id": "vishakha",
+      "en": "Vishakha",
+      "hi": "विशाखा",
+      "lord": "jupiter",
+      "gana": "rakshasa",
+      "nadi": "antya",
+      "yoni": {
+        "animal": "tiger",
+        "gender": "m"
+      }
+    },
+    {
+      "id": "anuradha",
+      "en": "Anuradha",
+      "hi": "अनुराधा",
+      "lord": "saturn",
+      "gana": "deva",
+      "nadi": "madhya",
+      "yoni": {
+        "animal": "deer",
+        "gender": "f"
+      }
+    },
+    {
+      "id": "jyeshtha",
+      "en": "Jyeshtha",
+      "hi": "ज्येष्ठा",
+      "lord": "mercury",
+      "gana": "rakshasa",
+      "nadi": "adi",
+      "yoni": {
+        "animal": "deer",
+        "gender": "m"
+      }
+    },
+    {
+      "id": "mula",
+      "en": "Mula",
+      "hi": "मूल",
+      "lord": "ketu",
+      "gana": "rakshasa",
+      "nadi": "adi",
+      "yoni": {
+        "animal": "dog",
+        "gender": "m"
+      }
+    },
+    {
+      "id": "purva_ashadha",
+      "en": "Purva Ashadha",
+      "hi": "पूर्वाषाढ़ा",
+      "lord": "venus",
+      "gana": "manushya",
+      "nadi": "madhya",
+      "yoni": {
+        "animal": "monkey",
+        "gender": "m"
+      }
+    },
+    {
+      "id": "uttara_ashadha",
+      "en": "Uttara Ashadha",
+      "hi": "उत्तराषाढ़ा",
+      "lord": "sun",
+      "gana": "manushya",
+      "nadi": "antya",
+      "yoni": {
+        "animal": "mongoose",
+        "gender": "m"
+      }
+    },
+    {
+      "id": "shravana",
+      "en": "Shravana",
+      "hi": "श्रवण",
+      "lord": "moon",
+      "gana": "deva",
+      "nadi": "antya",
+      "yoni": {
+        "animal": "monkey",
+        "gender": "f"
+      }
+    },
+    {
+      "id": "dhanishta",
+      "en": "Dhanishta",
+      "hi": "धनिष्ठा",
+      "lord": "mars",
+      "gana": "rakshasa",
+      "nadi": "madhya",
+      "yoni": {
+        "animal": "lion",
+        "gender": "f"
+      }
+    },
+    {
+      "id": "shatabhisha",
+      "en": "Shatabhisha",
+      "hi": "शतभिषा",
+      "lord": "rahu",
+      "gana": "rakshasa",
+      "nadi": "adi",
+      "yoni": {
+        "animal": "horse",
+        "gender": "f"
+      }
+    },
+    {
+      "id": "purva_bhadrapada",
+      "en": "Purva Bhadrapada",
+      "hi": "पूर्वा भाद्रपद",
+      "lord": "jupiter",
+      "gana": "manushya",
+      "nadi": "adi",
+      "yoni": {
+        "animal": "lion",
+        "gender": "m"
+      }
+    },
+    {
+      "id": "uttara_bhadrapada",
+      "en": "Uttara Bhadrapada",
+      "hi": "उत्तरा भाद्रपद",
+      "lord": "saturn",
+      "gana": "manushya",
+      "nadi": "madhya",
+      "yoni": {
+        "animal": "cow",
+        "gender": "f"
+      }
+    },
+    {
+      "id": "revati",
+      "en": "Revati",
+      "hi": "रेवती",
+      "lord": "mercury",
+      "gana": "deva",
+      "nadi": "antya",
+      "yoni": {
+        "animal": "elephant",
+        "gender": "f"
+      }
+    }
+  ]
+}

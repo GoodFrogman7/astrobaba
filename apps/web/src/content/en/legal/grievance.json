@@ -1,0 +1,41 @@
+{
+  "title": "Complaints and grievances",
+  "description": "How to raise a complaint with {brand}: our grievance officer, what to include, and the quicker in-app options for reports, refunds and your data.",
+  "h1": "Complaints and grievances",
+  "intro": "If something went wrong with a consultation, a payment, a report or your personal data, you can raise it with our grievance officer. For some problems there is a quicker way inside the app, listed below.",
+  "sections": [
+    {
+      "id": "contact",
+      "heading": "Our grievance officer",
+      "body": [
+        "Write to the grievance officer named here. The name and contact details will be published before launch."
+      ],
+      "slot": "contact",
+      "lawyer": "Grievance officer's name, contact details and postal address; acknowledgement and resolution timelines under the Consumer Protection (E-Commerce) Rules and the DPDP rules."
+    },
+    {
+      "id": "include",
+      "heading": "What to include",
+      "body": [
+        "Tell us the mobile number you signed in with, the date and time of the consultation or purchase, and what went wrong. Please do not send card numbers, passwords or one-time codes; we never ask for them.",
+        "If your complaint is about something said in a chat, describe it in your own words. Our staff do not read your chats by default: a single flagged message can only be opened through a recorded admin action."
+      ]
+    },
+    {
+      "id": "faster",
+      "heading": "Faster ways inside the app",
+      "body": [
+        "To report an astrologer, use “Report this astrologer” on the consultation page (during or after it) or on their profile; a moderator reviews every report and can warn or suspend the astrologer. To report a review, use the link next to it.",
+        "Most consultation, report and AI refunds are automatic; the refund policy lists the rules. To get a copy of your data or to delete your account, use the My account page."
+      ]
+    },
+    {
+      "id": "escalation",
+      "heading": "If you are not satisfied",
+      "body": [
+        "If our answer does not resolve your complaint, you may have the right to take it further to the authorities that handle consumer and data protection complaints in India."
+      ],
+      "lawyer": "Escalation routes to name here (consumer commission or National Consumer Helpline, Data Protection Board), with their current official contact details."
+    }
+  ]
+}

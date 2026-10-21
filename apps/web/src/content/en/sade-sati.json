@@ -1,0 +1,39 @@
+{
+  "title": "Sade Sati calculator: Saturn transit over your Moon sign",
+  "description": "Check whether Sade Sati is active for you and see every Saturn transit over your Moon sign in the hundred years from your birth, with dates.",
+  "h1": "Sade Sati check",
+  "intro": "Sade Sati is the roughly seven-and-a-half-year period when Saturn passes through the sign before your Moon sign, your Moon sign and the sign after it. This tool shows whether it is active today and lists every period from your birth onward.",
+  "sections": [
+    {
+      "heading": "What Sade Sati is",
+      "body": [
+        "Saturn takes about two and a half years to cross a sign and about 29.5 years to go round the zodiac. When it moves through the 12th, 1st and 2nd signs counted from your natal Moon sign, the three phases together make up Sade Sati, which comes round about every thirty years.",
+        "Because Saturn sometimes turns retrograde near a sign boundary, it can leave a sign and come back. Those short re-entries appear as separate phases within the same period."
+      ]
+    },
+    {
+      "heading": "How we calculate it",
+      "body": [
+        "We find your Moon sign with the Swiss Ephemeris (Lahiri), then track Saturn's sidereal sign day by day for a hundred years from your birth, refining each sign change to within seconds. Dates are shown in your birth place's time zone."
+      ]
+    }
+  ],
+  "faqs": [
+    {
+      "q": "How long does Sade Sati last?",
+      "a": "About seven and a half years in total, in three phases of about two and a half years each."
+    },
+    {
+      "q": "How many times does it happen in a life?",
+      "a": "Usually two or three times, since Saturn returns about every thirty years."
+    },
+    {
+      "q": "Do I need my birth time?",
+      "a": "Only to be sure of your Moon sign. On most days the date alone gives the same Moon sign."
+    },
+    {
+      "q": "Is Sade Sati always difficult?",
+      "a": "Traditions describe it as a time of responsibility and change, and outcomes depend on the whole chart. We report the dates; interpretation is a conversation with an astrologer."
+    }
+  ]
+}

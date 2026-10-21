@@ -1,0 +1,38 @@
+{
+  "title": "Safety and crisis help",
+  "description": "{brand} is not a helpline. Free crisis helplines in India, and what happens in a consultation if someone may be at risk of self-harm.",
+  "h1": "Safety and crisis help",
+  "intro": "{brand} is an astrology service. It cannot help in an emergency or a mental health crisis, but the free services below can. If you are thinking about harming yourself, please call one of them now.",
+  "sections": [
+    {
+      "id": "helplines",
+      "heading": "Free helplines in India",
+      "body": [
+        "Tap a number to call it from your phone. These are the only numbers we show; each one was confirmed against several independent sources."
+      ],
+      "slot": "helplines"
+    },
+    {
+      "id": "consultations",
+      "heading": "What happens in a consultation",
+      "body": [
+        "Every chat message is checked automatically for language about self-harm, in English, Hindi and Hinglish. If it appears in a client's message, the client sees these helplines straight away, and the astrologer is guided to share them, not to sell anything, and to let the client end the consultation whenever they want. For the rest of that consultation we stop all offers and recharge reminders. You can end it at any time and pay only up to the current minute.",
+        "The AI assistant does not answer questions about self-harm. It shows these helplines instead, and the question is not charged."
+      ]
+    },
+    {
+      "id": "advice",
+      "heading": "What astrology cannot do",
+      "body": [
+        "Astrology on this platform is for guidance and entertainment. It is not medical, legal or financial advice. For health worries, please see a doctor; for legal or money decisions, a qualified professional. Astrologers here may not claim to heal illness, promise outcomes, use fear to sell remedies, or ask you to pay or talk outside the platform."
+      ]
+    },
+    {
+      "id": "report",
+      "heading": "If an astrologer made you feel unsafe",
+      "body": [
+        "Use “Report this astrologer” on the consultation page or on their profile. Moderators review every report and can warn or suspend the astrologer. If you are in danger, call the emergency number above first."
+      ]
+    }
+  ]
+}
