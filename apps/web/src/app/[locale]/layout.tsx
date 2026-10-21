@@ -44,10 +44,10 @@ export default async function LocaleLayout({
         className="min-h-dvh font-sans antialiased"
         style={{
           ["--font-body" as string]:
-            // Hindi pages lead with the system Devanagari fonts (they include Latin letters), so
-            // text never waits for the Latin web font; English pages lead with the web font.
+            // Hindi pages use system fonts only: no web font, so nothing swaps in after first
+            // paint (a late Latin web font shifted <main> on CI: Lighthouse CLS 0.25).
             locale === "hi"
-              ? `${DEVANAGARI_STACK}, var(--font-latin)`
+              ? `${DEVANAGARI_STACK}, system-ui, sans-serif`
               : `var(--font-latin), ${DEVANAGARI_STACK}`,
         }}
       >
